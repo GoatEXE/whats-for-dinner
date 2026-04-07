@@ -3,6 +3,7 @@ data/
 .env
 coverage/
 .tmp/
+e2e/test-results/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal

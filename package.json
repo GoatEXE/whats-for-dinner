@@ -13,7 +13,9 @@
     "lint": "eslint .",
     "format": "prettier --check .",
     "typecheck": "tsc --project tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:ui": "playwright test --config e2e/playwright.config.js",
+    "test:ui:update": "playwright test --config e2e/playwright.config.js --update-snapshots"
   },
   "engines": {
     "node": ">=22"
@@ -26,6 +28,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
+    "@playwright/test": "^1.59.1",
     "@types/better-sqlite3": "^7.6.12",
     "@types/express": "^5.0.1",
     "@types/node": "^22.14.1",

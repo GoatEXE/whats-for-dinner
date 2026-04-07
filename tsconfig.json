@@ -15,8 +15,10 @@
   "include": [
     "src/**/*.js",
     "test/**/*.js",
+    "e2e/**/*.js",
     "eslint.config.js",
-    "vitest.config.js"
+    "vitest.config.js",
+    "e2e/playwright.config.js"
   ],
   "exclude": ["node_modules", "public", "data"]
 }
