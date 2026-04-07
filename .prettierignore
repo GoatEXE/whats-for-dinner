@@ -1,0 +1,6 @@
+node_modules
+coverage
+data
+docs/architecture.md
+docs/v1.1-shopping-list.md
+docs/v1.2-weekly-planning.md

@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_PATH: /data/whats-for-dinner.sqlite
+      SEED_ON_EMPTY: "true"
+    volumes:
+      - whats-for-dinner-data:/data
+
+volumes:
+  whats-for-dinner-data:
