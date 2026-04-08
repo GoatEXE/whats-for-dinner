@@ -1,24 +1,13 @@
 const { z } = require("zod");
-
-const booleanish = z.preprocess((value) => {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    return value.toLowerCase() === "true";
-  }
-
-  return value;
-}, z.boolean());
+const { booleanish } = require("../../lib/validation");
 
 const matchBodySchema = z
   .object({
     ingredientIds: z.array(z.coerce.number().int().positive()).optional(),
     ingredientNames: z.array(z.string().trim().min(1).max(120)).optional(),
-    useSavedPantry: booleanish.optional().default(false),
-    favoritesOnly: booleanish.optional().default(false),
-    includePartial: booleanish.optional().default(true),
+    useSavedPantry: booleanish().optional().default(false),
+    favoritesOnly: booleanish().optional().default(false),
+    includePartial: booleanish().optional().default(true),
   })
   .refine(
     (value) =>
@@ -29,8 +18,8 @@ const matchBodySchema = z
   );
 
 const randomQuerySchema = z.object({
-  favoritesOnly: booleanish.optional().default(false),
-  fullMatchOnly: booleanish.optional().default(false),
+  favoritesOnly: booleanish().optional().default(false),
+  fullMatchOnly: booleanish().optional().default(false),
   excludeServedWithinDays: z.coerce
     .number()
     .int()

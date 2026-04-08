@@ -1,31 +1,14 @@
 const { z } = require("zod");
+const { booleanish } = require("../../lib/validation");
 
-const booleanish = z.preprocess((value) => {
-  if (typeof value === "boolean") {
-    return value;
+const notesSchema = z.union([z.string(), z.null()]).transform((value) => {
+  if (value == null) {
+    return null;
   }
 
-  if (value === "true") {
-    return true;
-  }
-
-  if (value === "false") {
-    return false;
-  }
-
-  return value;
-}, z.boolean());
-
-const notesSchema = z
-  .union([z.string(), z.null()])
-  .transform((value) => {
-    if (value == null) {
-      return null;
-    }
-
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  });
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+});
 
 function parseIsoDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -42,10 +25,9 @@ function parseIsoDate(value) {
   return date;
 }
 
-const isoDateSchema = z.string().refine(
-  (value) => parseIsoDate(value) !== null,
-  "Invalid ISO date",
-);
+const isoDateSchema = z
+  .string()
+  .refine((value) => parseIsoDate(value) !== null, "Invalid ISO date");
 
 const createPlanSchema = z.object({
   weekStart: isoDateSchema.refine(
@@ -64,8 +46,8 @@ const updateSlotSchema = z.object({
 
 const randomSlotSchema = z
   .object({
-    favoritesOnly: booleanish.optional().default(false),
-    fullMatchOnly: booleanish.optional().default(false),
+    favoritesOnly: booleanish({ strict: true }).optional().default(false),
+    fullMatchOnly: booleanish({ strict: true }).optional().default(false),
     excludeServedWithinDays: z.coerce
       .number()
       .int()
@@ -73,14 +55,14 @@ const randomSlotSchema = z
       .max(365)
       .optional()
       .default(0),
-    excludePlannedMeals: booleanish.optional().default(true),
+    excludePlannedMeals: booleanish({ strict: true }).optional().default(true),
   })
   .default({});
 
 const autofillSchema = z
   .object({
-    favoritesOnly: booleanish.optional().default(false),
-    fullMatchOnly: booleanish.optional().default(false),
+    favoritesOnly: booleanish({ strict: true }).optional().default(false),
+    fullMatchOnly: booleanish({ strict: true }).optional().default(false),
     excludeServedWithinDays: z.coerce
       .number()
       .int()

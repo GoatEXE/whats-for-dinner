@@ -1,16 +1,5 @@
 const { z } = require("zod");
-
-const booleanish = z.preprocess((value) => {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    return value.toLowerCase() === "true";
-  }
-
-  return value;
-}, z.boolean());
+const { booleanish } = require("../../lib/validation");
 
 const stringOrNull = z
   .union([z.string(), z.null(), z.undefined()])
@@ -34,14 +23,14 @@ const nullableInteger = z.preprocess((value) => {
 const ingredientInputSchema = z.object({
   name: z.string().trim().min(1).max(120),
   quantityText: stringOrNull.optional(),
-  isOptional: booleanish.optional().default(false),
+  isOptional: booleanish().optional().default(false),
 });
 
 const mealWriteSchema = z.object({
   name: z.string().trim().min(1).max(120),
   notes: stringOrNull.optional(),
   prepMinutes: nullableInteger.optional(),
-  isFavorite: booleanish.optional().default(false),
+  isFavorite: booleanish().optional().default(false),
   ingredients: z.array(ingredientInputSchema).min(1),
   tags: z
     .array(z.string().trim().min(1).max(40))
@@ -62,14 +51,14 @@ const mealIdParamSchema = z.object({
 });
 
 const mealListQuerySchema = z.object({
-  favorite: booleanish.optional(),
-  archived: booleanish.optional(),
+  favorite: booleanish().optional(),
+  archived: booleanish().optional(),
   tag: z.string().trim().min(1).optional(),
   q: z.string().trim().min(1).optional(),
 });
 
 const favoriteBodySchema = z.object({
-  isFavorite: booleanish.optional(),
+  isFavorite: booleanish().optional(),
 });
 
 module.exports = {
