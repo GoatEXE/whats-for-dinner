@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-04-07
+Last updated: 2026-04-07 (updated after v1.8 WP2 completion)
 
 ## What's Complete
 
@@ -13,6 +13,15 @@ Last updated: 2026-04-07
 - **V1.5 Weekly share pack** — Combined plan + shopping list copy in one action
 - **V1.6 Weekly autofill** — Batch-fill empty plan slots with one click using configurable filters
 - **V1.7 Tabbed layout** — Three-tab structure (Plan / Shop / Meals) with mobile bottom-bar and cross-tab navigation
+
+### Test infrastructure (v1.8)
+
+- **V1.8 UI test harness (WP1+WP2)** — Playwright smoke tests covering structural rendering and tab switching across desktop + mobile viewports
+  - 4 test suites: tabs, meals, plan, shop (19 tests passing)
+  - Desktop (1280×800) and mobile (375×812) viewport coverage
+  - Screenshot regression baselines for tab bar shell
+  - Test server fixture with seeded data
+  - Runs in ~4s via `npm run test:ui`
 
 ### Completed cleanup items
 
@@ -35,14 +44,14 @@ None — no active worker tasks at this time.
 
 ## What's Next
 
-### Immediate priority: V1.8 UI test harness (planned)
+### Follow-up opportunities (not scheduled)
 
-Lightweight Playwright smoke tests covering:
-- Tab structure and switching at desktop + mobile viewports
-- Key panel rendering (meals, plan, pantry)
-- Cross-tab navigation flows
+From the v1.8 spec (intentionally deferred):
+- **Tier 2 interaction tests** — meal creation via form, quick picker, plan-to-shopping-list flow, clipboard copy
+- **Tier 3 visual regression** — full-page screenshots at each tab × viewport for diff comparison
+- **CI integration** — add `npm run test:ui` to GitHub Actions or similar pipeline
 
-See `docs/v1.8-ui-test-harness.md` for full spec. This is the next planned chunk.
+These are optional enhancements. The current Tier 1 smoke suite (19 tests) provides the intended safety net for layout changes.
 
 ### Remaining cleanup backlog (from docs/cleanup-backlog.md)
 
@@ -60,7 +69,9 @@ See `docs/v1.8-ui-test-harness.md` for full spec. This is the next planned chunk
 **P3 (nice-to-have):**
 - Items 10–12 — Minor polish (ingredient row labels, shared notes schema, testable prompts/confirms)
 
-No blocking issues. The app is fully functional and tested (42 passing backend tests).
+No blocking issues. The app is fully functional and tested:
+- 42 passing backend tests (Vitest + Supertest)
+- 19 passing UI smoke tests (Playwright, desktop + mobile)
 
 ## Current Scope Boundaries
 
@@ -84,6 +95,5 @@ No blocking issues. The app is fully functional and tested (42 passing backend t
 - `docs/current-plan.md` (this file) — overall status and what's next
 - `docs/current-scope-audit.md` — completed scope verification with known gap tracking
 - `docs/cleanup-backlog.md` — prioritized technical debt and polish tasks
-- `docs/v1.1-*.md` through `docs/v1.7-*.md` — feature implementation specs (all shipped)
-- `docs/v1.8-ui-test-harness.md` — next planned chunk
+- `docs/v1.1-*.md` through `docs/v1.8-*.md` — feature implementation specs (all shipped)
 - `README.md` — user/developer-facing documentation of shipped capabilities

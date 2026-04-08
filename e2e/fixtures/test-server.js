@@ -33,6 +33,8 @@ async function startTestServer() {
             }
             resolve();
           });
+          server.closeIdleConnections?.();
+          server.closeAllConnections?.();
         });
         context.cleanup();
       },
