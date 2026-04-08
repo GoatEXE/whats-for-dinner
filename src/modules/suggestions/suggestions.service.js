@@ -1,4 +1,7 @@
 const { HttpError } = require("../../lib/errors");
+const {
+  resolveAvailableIngredients,
+} = require("../../lib/ingredient-resolution");
 
 function sortMatches(a, b) {
   if (a.isFullMatch !== b.isFullMatch) {
@@ -25,44 +28,6 @@ function sortMatches(a, b) {
 }
 
 function createSuggestionsService(suggestionsRepo, catalogRepo) {
-  function resolveAvailableIngredients(input) {
-    const available = [];
-
-    if (input.useSavedPantry) {
-      available.push(
-        ...suggestionsRepo.listSavedPantryItems().map((item) => ({
-          ingredientId: item.ingredientId,
-          name: item.name,
-        })),
-      );
-    }
-
-    if (input.ingredientIds && input.ingredientIds.length > 0) {
-      const resolved = catalogRepo.resolveIngredientsByIds(input.ingredientIds);
-
-      if (resolved.length !== input.ingredientIds.length) {
-        throw new HttpError(404, "One or more ingredient IDs were not found");
-      }
-
-      available.push(
-        ...resolved.map((item) => ({ ingredientId: item.id, name: item.name })),
-      );
-    }
-
-    if (input.ingredientNames && input.ingredientNames.length > 0) {
-      const resolved = catalogRepo.ensureIngredients(
-        input.ingredientNames.map((name) => ({ name })),
-      );
-      available.push(
-        ...resolved.map((item) => ({ ingredientId: item.id, name: item.name })),
-      );
-    }
-
-    const deduped = new Map();
-    available.forEach((item) => deduped.set(item.ingredientId, item));
-    return [...deduped.values()];
-  }
-
   function buildMatch(meal, availableMap) {
     const requiredIngredients = meal.ingredients.filter(
       (ingredient) => !ingredient.isOptional,
@@ -106,7 +71,14 @@ function createSuggestionsService(suggestionsRepo, catalogRepo) {
   }
 
   function findMatches(input) {
-    const availableIngredients = resolveAvailableIngredients(input);
+    const availableIngredients = resolveAvailableIngredients(input, {
+      catalogRepo,
+      pantryLookup: () => suggestionsRepo.listSavedPantryItems(),
+      nameResolver: (ingredientNames) =>
+        catalogRepo.ensureIngredients(
+          ingredientNames.map((name) => ({ name })),
+        ),
+    });
     const availableMap = new Map(
       availableIngredients.map((ingredient) => [
         ingredient.ingredientId,

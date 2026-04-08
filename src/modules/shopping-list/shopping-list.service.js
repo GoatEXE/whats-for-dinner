@@ -1,4 +1,7 @@
 const { HttpError } = require("../../lib/errors");
+const {
+  resolveAvailableIngredients,
+} = require("../../lib/ingredient-resolution");
 
 function dedupeValues(values) {
   return [...new Set(values)];
@@ -162,56 +165,6 @@ function buildShoppingList({ meals, availableIngredients, includeOptional }) {
 }
 
 function createShoppingListService(shoppingListRepo, catalogRepo) {
-  function resolveAvailableIngredients(input) {
-    const availableIngredients = [];
-
-    if (input.useSavedPantry) {
-      availableIngredients.push(
-        ...shoppingListRepo.listPantryItems().map((item) => ({
-          ingredientId: item.ingredientId,
-          name: item.name,
-        })),
-      );
-    }
-
-    if (input.ingredientIds && input.ingredientIds.length > 0) {
-      const resolved = catalogRepo.resolveIngredientsByIds(input.ingredientIds);
-
-      if (resolved.length !== input.ingredientIds.length) {
-        throw new HttpError(404, "One or more ingredient IDs were not found");
-      }
-
-      availableIngredients.push(
-        ...resolved.map((ingredient) => ({
-          ingredientId: ingredient.id,
-          name: ingredient.name,
-        })),
-      );
-    }
-
-    if (input.ingredientNames && input.ingredientNames.length > 0) {
-      const resolved = catalogRepo.resolveIngredientsByNames(
-        input.ingredientNames,
-      );
-
-      availableIngredients.push(
-        ...resolved.map((ingredient) => ({
-          ingredientId: ingredient.id,
-          name: ingredient.name,
-        })),
-      );
-    }
-
-    const dedupedMap = new Map();
-    availableIngredients.forEach((ingredient) => {
-      dedupedMap.set(ingredient.ingredientId, ingredient);
-    });
-
-    return [...dedupedMap.values()].sort((left, right) =>
-      left.name.localeCompare(right.name),
-    );
-  }
-
   function generate(input) {
     const mealIds = dedupeMealIds(input.mealIds);
     const meals = shoppingListRepo.getSelectedMeals(mealIds);
@@ -222,7 +175,13 @@ function createShoppingListService(shoppingListRepo, catalogRepo) {
 
     return buildShoppingList({
       meals,
-      availableIngredients: resolveAvailableIngredients(input),
+      availableIngredients: resolveAvailableIngredients(input, {
+        catalogRepo,
+        pantryLookup: () => shoppingListRepo.listPantryItems(),
+        nameResolver: (ingredientNames) =>
+          catalogRepo.resolveIngredientsByNames(ingredientNames),
+        sortComparator: (left, right) => left.name.localeCompare(right.name),
+      }),
       includeOptional: input.includeOptional,
     });
   }

@@ -153,6 +153,42 @@ describe("application smoke tests", () => {
     ).toEqual(["Rice"]);
   });
 
+  it("persists unknown ad hoc ingredientNames for suggestions matching", async () => {
+    const { app } = setup();
+
+    const beforeIngredients = await request(app)
+      .get("/api/ingredients")
+      .expect(200);
+    const beforeUnknown = beforeIngredients.body.data.find(
+      (ingredient) => ingredient.name === "Dragon Fruit Powder",
+    );
+
+    expect(beforeUnknown).toBeUndefined();
+
+    const response = await request(app)
+      .post("/api/suggestions/matches")
+      .send({
+        ingredientNames: ["Dragon Fruit Powder"],
+        includePartial: true,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.availableIngredients).toEqual([
+      expect.objectContaining({ name: "Dragon Fruit Powder" }),
+    ]);
+
+    const afterIngredients = await request(app)
+      .get("/api/ingredients")
+      .expect(200);
+    const afterUnknown = afterIngredients.body.data.find(
+      (ingredient) => ingredient.name === "Dragon Fruit Powder",
+    );
+
+    expect(afterUnknown).toEqual(
+      expect.objectContaining({ name: "Dragon Fruit Powder" }),
+    );
+  });
+
   it("generates a shopping list from selected meals, pantry items, and ad hoc on-hand ingredients", async () => {
     const { app } = setup();
 
