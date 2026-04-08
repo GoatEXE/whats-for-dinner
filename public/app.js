@@ -1,11 +1,6 @@
 import { state } from "./state.js";
 import { elements } from "./elements.js";
-import {
-  apiFetch,
-  fetchCurrentPlan,
-  showStatus,
-  escapeHtml,
-} from "./helpers.js";
+import { apiFetch, fetchCurrentPlan, showStatus } from "./helpers.js";
 import {
   renderIngredientOptions,
   renderMeals,
@@ -32,66 +27,17 @@ import {
   handleShoppingChipRemove,
   handleShoppingResultActions,
 } from "./shopping.js";
-
-function createIngredientRow(values = {}) {
-  const row = document.createElement("div");
-  row.className = "ingredient-row";
-  row.innerHTML = `
-    <label>
-      Ingredient
-      <input list="ingredient-options" name="ingredientName" value="${escapeHtml(values.name ?? "")}" placeholder="Ingredient" />
-    </label>
-    <label>
-      Quantity note
-      <input name="quantityText" value="${escapeHtml(values.quantityText ?? "")}" placeholder="e.g. 1 lb" />
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" name="isOptional" ${values.isOptional ? "checked" : ""} />
-      Optional
-    </label>
-    <button type="button" class="secondary" aria-label="Remove ${escapeHtml(values.name || 'ingredient')}">Remove</button>
-  `;
-
-  row.querySelector("button").addEventListener("click", () => {
-    row.remove();
-    ensureAtLeastOneIngredientRow();
-  });
-
-  return row;
-}
-
-function ensureAtLeastOneIngredientRow() {
-  if (elements.ingredientRows.children.length === 0) {
-    elements.ingredientRows.appendChild(createIngredientRow());
-  }
-}
-
-function resetMealForm() {
-  state.editingMealId = null;
-  elements.mealForm.reset();
-  elements.ingredientRows.innerHTML = "";
-  ensureAtLeastOneIngredientRow();
-  elements.mealFormTitle.textContent = "Add meal";
-  elements.cancelEditButton.classList.add("hidden");
-}
-
-function fillMealForm(meal) {
-  state.editingMealId = meal.id;
-  elements.mealForm.name.value = meal.name;
-  elements.mealForm.prepMinutes.value = meal.prepMinutes ?? "";
-  elements.mealForm.notes.value = meal.notes ?? "";
-  elements.mealForm.tags.value = meal.tags.join(", ");
-  elements.mealForm.isFavorite.checked = meal.isFavorite;
-  elements.ingredientRows.innerHTML = "";
-  meal.ingredients.forEach((ingredient) => {
-    elements.ingredientRows.appendChild(createIngredientRow(ingredient));
-  });
-  ensureAtLeastOneIngredientRow();
-  elements.mealFormTitle.textContent = `Edit meal: ${meal.name}`;
-  elements.cancelEditButton.classList.remove("hidden");
-  switchTab("meals");
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
+import {
+  createIngredientRow,
+  resetMealForm,
+  fillMealForm,
+  saveMeal,
+  addPantryItem,
+  toggleFavorite,
+  archiveMeal,
+  addHistory,
+  handlePantryActions,
+} from "./meals.js";
 
 // ─── Tabs ─────────────────────────────────────────────────────────────
 
@@ -146,132 +92,6 @@ async function loadData() {
   renderPlanHistory();
 }
 
-function collectMealPayload() {
-  const ingredientRows = [
-    ...elements.ingredientRows.querySelectorAll(".ingredient-row"),
-  ]
-    .map((row) => ({
-      name: row.querySelector('[name="ingredientName"]').value.trim(),
-      quantityText: row.querySelector('[name="quantityText"]').value.trim(),
-      isOptional: row.querySelector('[name="isOptional"]').checked,
-    }))
-    .filter((ingredient) => ingredient.name);
-
-  return {
-    name: elements.mealForm.name.value.trim(),
-    prepMinutes: elements.mealForm.prepMinutes.value
-      ? Number(elements.mealForm.prepMinutes.value)
-      : null,
-    notes: elements.mealForm.notes.value.trim() || null,
-    isFavorite: elements.mealForm.isFavorite.checked,
-    tags: elements.mealForm.tags.value
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean),
-    ingredients: ingredientRows,
-  };
-}
-
-async function saveMeal(event) {
-  event.preventDefault();
-  const payload = collectMealPayload();
-
-  try {
-    if (state.editingMealId) {
-      await apiFetch(`/api/meals/${state.editingMealId}`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      });
-      showStatus("Meal updated");
-    } else {
-      await apiFetch("/api/meals", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-      showStatus("Meal created");
-    }
-
-    resetMealForm();
-    await loadData();
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-async function addPantryItem(event) {
-  event.preventDefault();
-  const formData = new FormData(elements.pantryForm);
-  const payload = {
-    name: String(formData.get("name")).trim(),
-    quantityText: String(formData.get("quantityText") || "").trim() || null,
-  };
-
-  try {
-    await apiFetch("/api/pantry/items", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-    elements.pantryForm.reset();
-    showStatus("Pantry updated");
-    await loadData();
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-async function removePantryItem(ingredientId) {
-  try {
-    await apiFetch(`/api/pantry/items/${ingredientId}`, { method: "DELETE" });
-    showStatus("Pantry item removed");
-    await loadData();
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-async function toggleFavorite(mealId, isFavorite) {
-  try {
-    await apiFetch(`/api/meals/${mealId}/favorite`, {
-      method: "POST",
-      body: JSON.stringify({ isFavorite: !isFavorite }),
-    });
-    showStatus("Favorite updated");
-    await loadData();
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-async function archiveMeal(mealId) {
-  if (!window.confirm("Archive this meal?")) {
-    return;
-  }
-
-  try {
-    await apiFetch(`/api/meals/${mealId}`, { method: "DELETE" });
-    showStatus("Meal archived");
-    if (state.editingMealId === mealId) {
-      resetMealForm();
-    }
-    await loadData();
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-async function addHistory(mealId, source = "manual") {
-  try {
-    await apiFetch("/api/history", {
-      method: "POST",
-      body: JSON.stringify({ mealId, source }),
-    });
-    showStatus("Saved to history");
-    await loadData();
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
 
 function handleMealActions(event) {
   const button = event.target.closest("button[data-action]");
@@ -284,17 +104,17 @@ function handleMealActions(event) {
   const meal = state.meals.find((item) => item.id === mealId);
 
   if (action === "edit" && meal) {
-    fillMealForm(meal);
+    fillMealForm(meal, switchTab);
     return;
   }
 
   if (action === "favorite" && meal) {
-    toggleFavorite(mealId, meal.isFavorite);
+    toggleFavorite(mealId, meal.isFavorite, loadData);
     return;
   }
 
   if (action === "archive") {
-    archiveMeal(mealId);
+    archiveMeal(mealId, loadData);
     return;
   }
 
@@ -304,7 +124,7 @@ function handleMealActions(event) {
   }
 
   if (action === "serve") {
-    addHistory(mealId, "manual");
+    addHistory(mealId, "manual", loadData);
   }
 }
 
@@ -814,25 +634,21 @@ function handleNewWeekPlan() {
   createWeeklyPlan(weekStart.trim());
 }
 
-function handlePantryActions(event) {
-  const button = event.target.closest('button[data-action="remove-pantry"]');
-  if (!button) {
-    return;
-  }
-
-  removePantryItem(Number(button.dataset.id));
-}
 
 async function init() {
-  elements.mealForm.addEventListener("submit", saveMeal);
+  elements.mealForm.addEventListener("submit", (e) => saveMeal(e, loadData));
   elements.cancelEditButton.addEventListener("click", resetMealForm);
   elements.addIngredientRowButton.addEventListener("click", () => {
     elements.ingredientRows.appendChild(createIngredientRow());
   });
-  elements.pantryForm.addEventListener("submit", addPantryItem);
+  elements.pantryForm.addEventListener("submit", (e) =>
+    addPantryItem(e, loadData),
+  );
   elements.mealsList.addEventListener("click", handleMealActions);
   elements.randomResult.addEventListener("click", handleMealActions);
-  elements.pantryList.addEventListener("click", handlePantryActions);
+  elements.pantryList.addEventListener("click", (e) =>
+    handlePantryActions(e, loadData),
+  );
   elements.matchPantryButton.addEventListener("click", runPantryMatch);
   elements.adHocMatchForm.addEventListener("submit", runAdHocMatch);
   elements.randomForm.addEventListener("submit", pickRandomMeal);
