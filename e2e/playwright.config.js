@@ -29,6 +29,22 @@ module.exports = defineConfig({
         hasTouch: true,
       },
     },
+    {
+      name: "firefox-desktop",
+      testIgnore: ["**/visual.pw.js", "**/clipboard.pw.js"],
+      use: {
+        browserName: "firefox",
+        viewport: { width: 1280, height: 800 },
+      },
+    },
+    {
+      name: "firefox-mobile",
+      testIgnore: ["**/visual.pw.js", "**/clipboard.pw.js"],
+      use: {
+        browserName: "firefox",
+        viewport: { width: 375, height: 812 },
+      },
+    },
   ],
   outputDir: path.join(__dirname, "test-results"),
 });

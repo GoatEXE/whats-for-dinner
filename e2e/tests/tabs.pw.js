@@ -68,7 +68,10 @@ test.describe("tab shell smoke", () => {
     page,
     testServer,
   }, testInfo) => {
-    test.skip(testInfo.project.name !== "mobile", "mobile viewport only");
+    test.skip(
+      !testInfo.project.name.endsWith("mobile"),
+      "mobile viewport only",
+    );
 
     await gotoApp(page, testServer);
 
@@ -93,7 +96,16 @@ test.describe("tab shell smoke", () => {
     expect(tabBarMetrics.viewportBottomGap).toBeLessThanOrEqual(1);
   });
 
-  test("matches the tab bar shell screenshot", async ({ page, testServer }) => {
+  test("matches the tab bar shell screenshot", async ({
+    page,
+    testServer,
+    browserName,
+  }) => {
+    test.skip(
+      browserName !== "chromium",
+      "tab bar screenshot baselines are Chromium-only for now",
+    );
+
     await gotoApp(page, testServer);
 
     await expect(page.locator(".tab-bar")).toHaveScreenshot("tab-bar-shell.png", {
