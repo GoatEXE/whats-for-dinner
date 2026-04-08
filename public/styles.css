@@ -263,6 +263,10 @@ p {
   gap: 0.7rem;
 }
 
+.stack-form + .list {
+  margin-top: 0.85rem;
+}
+
 .list-item,
 .meal-card,
 .result-card,
