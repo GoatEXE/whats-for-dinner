@@ -977,7 +977,6 @@ async function createWeeklyPlan(weekStart) {
       method: "POST",
       body: JSON.stringify({ weekStart }),
     });
-    renderWeeklyPlan();
     await loadData();
     showStatus("Weekly plan created");
   } catch (error) {
@@ -1564,7 +1563,6 @@ async function reusePlan(sourcePlanId) {
     );
     state.expandedPlanId = null;
     state.expandedPlanDetail = null;
-    renderWeeklyPlan();
     await loadData();
     showStatus("New plan created from past week");
   } catch (error) {
