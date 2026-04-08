@@ -21,30 +21,23 @@ Status: partially complete — items 1, 8, and 13 shipped in v1.7
 
 ---
 
-### 2. Dynamically generated buttons and interactive elements lack accessible labels
+### ~~2. Dynamically generated buttons and interactive elements lack accessible labels~~ — **FIXED**
 
-**Files:** `public/app.js` (multiple render functions)
+**Resolution:** Added `aria-label` attributes with contextual information to all dynamic interactive elements:
+- Meal card buttons include meal name (e.g., `aria-label="Edit Spaghetti Tacos"`)
+- Plan slot controls include day context (e.g., `aria-label="Random meal for Monday"`)
+- Shopping list chip remove buttons include meal name
+- Plan slot meal picker dropdowns include day context
 
-- Meal card action buttons (`Serve tonight`, `Archive`, `Edit`, `Favorite`) have no `aria-label` distinguishing which meal they act on — all say the same generic text.
-- Plan slot `select` dropdowns have no associated `<label>` or `aria-label` — screen readers announce them as unlabelled comboboxes.
-- Plan slot `Random`, `Clear`, `Serve` buttons have no context for which day they act on.
-- Shopping list chip remove buttons already have good `aria-label` — this pattern should be extended to the rest.
-
-**Fix:** Add `aria-label` attributes that include meal name or day context to interactive elements generated in `renderMeals()`, `renderWeeklyPlan()`, and `renderRandomResult()`.
-
-**Estimated size:** S (1 file, ~5 render functions touched)
+**Verification:** `public/app.js` lines 248-252 (meal cards), 916-941 (plan slots), 353 (shopping chips), 486-487 (random result).
 
 ---
 
-### 3. Plan slot notes input saves on every keystroke (change fires per-char on some browsers)
+### ~~3. Plan slot notes input saves on every keystroke~~ — **FIXED**
 
-**Files:** `public/app.js` (line ~1166, `handleWeeklyPlanChange` for `plan-notes`, `savePlanSlotNotes`)
+**Resolution:** Implemented a 350ms debounce on notes input changes via `notesSaveTimer`. Notes save is automatically flushed before any plan mutation (autofill, slot assignment) to prevent race conditions. In-flight saves are tracked and awaited when needed.
 
-The notes input fires `change` on the `weeklyPlanContent` container. In practice, `change` on `<input type="text">` fires on blur, but the code also listens for `keydown Enter → blur`, which triggers save correctly. However, if a browser or assistive tech fires change more aggressively, there is no debounce. The current approach is fragile rather than broken, but since each change fires a full PATCH+refetch of the plan, a debounce or explicit "save on blur" pattern would be safer.
-
-**Fix:** Add a small debounce (300–500ms) to `savePlanSlotNotes`, or switch to explicit blur-only save. Low risk either way.
-
-**Estimated size:** XS (1 file, ~10 lines)
+**Verification:** `public/app.js` lines 1192-1203 (debounce setup and flush), lines 1327-1331 (debounce trigger on input change).
 
 ---
 
@@ -181,28 +174,31 @@ Three flows use `window.confirm` or `window.prompt`. These block the thread and 
 ## Recommended Next Chunks
 
 ~~**First chunk (Items 1 + 8 + 13)** — COMPLETED in v1.7~~
+~~**Second chunk (Items 2 + 3)** — COMPLETED~~
 
-**Next recommended chunk: Item 2** — Accessible labels on dynamic elements.
+**All P1 items are now complete.** The remaining backlog is P2 (should-fix) and P3 (nice-to-have) polish.
 
-Rationale:
-- All changes in `public/app.js` (render functions)
-- Addresses the remaining P1 accessibility gap (dynamic button context)
-- Low risk — only adds `aria-label` attributes to existing elements
-- ~5 render functions to touch
-- Estimated size: S (1 file, ~20-30 lines)
-
-**Second chunk: Item 4** — Extract duplicated `booleanish` helper.
+**Next recommended chunk: Item 4** — Extract duplicated `booleanish` helper.
 
 Rationale:
 - Backend-only, mechanical refactor
 - 5 files (4 schema files + 1 new shared lib)
-- Easy to verify with existing test suite (42 tests)
+- Easy to verify with existing test suite (42 backend tests)
+- Low risk — purely internal DRY improvement
 - Estimated size: XS
 
-**Third chunk: Item 3** — Plan slot notes input debounce.
+**Second chunk: Item 5** — Extract duplicated `resolveAvailableIngredients`.
 
 Rationale:
-- Small, isolated change in `app.js`
-- Addresses remaining P1 fragility
-- Can use a simple 300ms debounce
+- Backend-only, addresses most significant DRY violation
+- 3 files (new shared module + 2 service files)
+- Existing tests verify behavior unchanged
+- Estimated size: S
+
+**Third chunk: Item 7** — Mobile plan slot layout polish.
+
+Rationale:
+- CSS-only, no behavior change
+- Improves mobile UX (better slot separation, clearer grouping)
+- Can be verified via existing UI smoke tests
 - Estimated size: XS

@@ -28,6 +28,8 @@ Last updated: 2026-04-07 (updated after v1.8 WP2 completion)
 From `docs/cleanup-backlog.md`:
 
 - **Item 1 (P1)** — Status banner screen reader support: added `role="status"` and `aria-live="polite"` to `#status-banner`
+- **Item 2 (P1)** — Accessible labels on dynamic elements: added contextual `aria-label` to all meal card buttons, plan slot controls, and interactive elements
+- **Item 3 (P1)** — Plan slot notes debounce: implemented 350ms debounce with flush-before-mutation and in-flight tracking
 - **Item 8 (P2)** — Section landmarks: added `aria-label` to all `<section>` elements for screen reader navigation
 - **Item 13 (P3)** — Header subtitle: updated to mention weekly planning and shopping lists
 
@@ -55,9 +57,7 @@ These are optional enhancements. The current Tier 1 smoke suite (19 tests) provi
 
 ### Remaining cleanup backlog (from docs/cleanup-backlog.md)
 
-**P1 (must-fix):**
-- Item 2 — Accessible labels on dynamic elements (meal card buttons, plan slot controls)
-- Item 3 — Plan slot notes input debounce or blur-only save
+**All P1 items complete.** Remaining work is P2 (should-fix) and P3 (nice-to-have) polish.
 
 **P2 (should-fix):**
 - Item 4 — Extract duplicated `booleanish` helper to shared module

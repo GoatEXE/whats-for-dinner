@@ -121,7 +121,7 @@ function createIngredientRow(values = {}) {
       <input type="checkbox" name="isOptional" ${values.isOptional ? "checked" : ""} />
       Optional
     </label>
-    <button type="button" class="secondary">Remove</button>
+    <button type="button" class="secondary" aria-label="Remove ${escapeHtml(values.name || 'ingredient')}">Remove</button>
   `;
 
   row.querySelector("button").addEventListener("click", () => {
@@ -411,7 +411,7 @@ function renderShoppingListResult(result) {
   }
 
   html += `<div class="shopping-copy-area">
-    <button type="button" id="copy-shopping-list" class="secondary">Copy to clipboard</button>
+    <button type="button" id="copy-shopping-list" class="secondary" aria-label="Copy shopping list to clipboard">Copy to clipboard</button>
     <pre class="shopping-copy-text">${escapeHtml(result.copyText)}</pre>
   </div>`;
 
@@ -956,7 +956,7 @@ function renderWeeklyPlan() {
       <label class="checkbox-row"><input type="checkbox" data-action="plan-autofill-full-match" ${state.weeklyAutofillOptions.fullMatchOnly ? "checked" : ""} /> Pantry-ready only</label>
       <label>
         Avoid recent meals
-        <input type="number" data-action="plan-autofill-exclude-days" min="0" max="365" value="${state.weeklyAutofillOptions.excludeServedWithinDays}" />
+        <input type="number" data-action="plan-autofill-exclude-days" min="0" max="365" value="${state.weeklyAutofillOptions.excludeServedWithinDays}" aria-label="Avoid recently served meals within days" />
         days
       </label>
       <button type="button" data-action="plan-autofill" class="secondary">Fill empty days</button>
@@ -1189,6 +1189,20 @@ function handleWeeklyPlanActions(event) {
 }
 
 let pendingNoteSave = null;
+let notesSaveTimer = null;
+let notesSaveArgs = null;
+
+function flushPendingNoteSave() {
+  if (notesSaveTimer) {
+    clearTimeout(notesSaveTimer);
+    notesSaveTimer = null;
+  }
+  if (notesSaveArgs) {
+    const [day, mealId, notes] = notesSaveArgs;
+    notesSaveArgs = null;
+    savePlanSlotNotes(day, mealId, notes);
+  }
+}
 
 async function savePlanSlotNotes(day, mealId, notes) {
   const savePromise = (async () => {
@@ -1215,7 +1229,8 @@ async function savePlanSlotNotes(day, mealId, notes) {
 }
 
 async function autofillPlan() {
-  // Await any in-flight note save to prevent stale PATCH race
+  // Flush any debounced note save, then await in-flight save to prevent stale PATCH race
+  flushPendingNoteSave();
   if (pendingNoteSave) {
     await pendingNoteSave;
   }
@@ -1309,7 +1324,12 @@ function handleWeeklyPlanChange(event) {
     const day = Number(notesInput.dataset.day);
     const mealIdStr = notesInput.dataset.mealId;
     const mealId = mealIdStr ? Number(mealIdStr) : null;
-    savePlanSlotNotes(day, mealId, notesInput.value);
+    clearTimeout(notesSaveTimer);
+    notesSaveArgs = [day, mealId, notesInput.value];
+    notesSaveTimer = setTimeout(() => {
+      notesSaveArgs = null;
+      savePlanSlotNotes(day, mealId, notesInput.value);
+    }, 350);
   }
 }
 
