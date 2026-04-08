@@ -16,16 +16,16 @@ Last updated: 2026-04-08 (updated after cleanup backlog item 6 completion)
 
 ### Test infrastructure (v1.8)
 
-- **V1.8 UI test harness (WP1+WP2 + Tier 2 complete + Tier 3 partial + CI)** — Playwright smoke tests, interaction tests, and visual regression across desktop + mobile viewports, running in GitHub Actions CI
-  - 7 test suites: tabs, meals, plan, shop, interactions, clipboard, visual (47 tests passing + 1 expected skip)
+- **V1.8 UI test harness (WP1+WP2 + Tier 2 complete + Tier 3 complete + CI)** — Playwright smoke tests, interaction tests, and visual regression across desktop + mobile viewports, running in GitHub Actions CI
+  - 7 test suites: tabs, meals, plan, shop, interactions, clipboard, visual (49 tests passing + 1 expected skip)
   - Tier 1 structural smoke: page shell, tab switching, panel rendering, mobile layout
   - Tier 2 interactions (complete): quick picker flow, archive meal dialog, new weekly plan dialog, meal creation via form, plan-to-shopping-list flow, clipboard copy
-  - Tier 3 visual regression (partial): full-page screenshots for Meals tab (seeded), Shop tab (seeded), Plan tab (empty state)
+  - Tier 3 visual regression (complete): full-page screenshots for Meals tab (seeded), Shop tab (seeded), Plan tab (empty + populated states)
   - Desktop (1280×800) and mobile (375×812) viewport coverage
-  - Screenshot regression baselines for tab bar shell and 6 full-page states (desktop + mobile)
+  - Screenshot regression baselines for tab bar shell and 8 full-page states (4 states × 2 viewports)
   - Test server fixture with seeded data
-  - CI: GitHub Actions runs backend (48 tests) + UI (47 tests) on all pushes/PRs
-  - Runs in ~10s locally via `npm run test:ui`
+  - CI: GitHub Actions runs backend (48 tests) + UI (49 tests) on all pushes/PRs
+  - Runs in ~9s locally via `npm run test:ui`
 
 ### Completed cleanup items
 
@@ -63,11 +63,12 @@ None — the remaining cleanup work is low-priority P3 polish only.
 
 From the v1.8 spec:
 - **Tier 2 interaction tests** — ✅ Complete. All key interaction flows covered.
-- **Tier 3 visual regression** — Partial coverage landed: Meals seeded, Shop seeded, Plan empty. Remaining: Plan populated state (optional).
+- **Tier 3 visual regression** — ✅ Complete. All key tab states covered: Meals, Shop, Plan (empty + populated).
 - **CI integration** — ✅ Complete. GitHub Actions runs both backend and UI tests on all pushes/PRs.
 - **Cross-browser testing** — expand beyond Chromium-only to Firefox/WebKit (optional enhancement)
+- **Accessibility auditing** — integrate `@axe-core/playwright` for automated a11y checks (optional enhancement)
 
-The current test suite (47 tests: Tier 1 structural + Tier 2 interactions + partial Tier 3 visual) provides comprehensive coverage for layout, core interaction flows, and visual regression detection. All tests run automatically in CI. Additional Tier 3 screenshots and cross-browser testing remain optional enhancements.
+The current test suite (49 tests: Tier 1 structural + Tier 2 interactions + Tier 3 visual, all complete) provides comprehensive coverage for layout, core interaction flows, and visual regression detection. All tests run automatically in CI. Cross-browser testing and accessibility auditing remain optional enhancements.
 
 ### Remaining cleanup backlog (from docs/cleanup-backlog.md)
 
@@ -80,7 +81,7 @@ The current test suite (47 tests: Tier 1 structural + Tier 2 interactions + part
 
 No blocking issues. The app is fully functional and tested:
 - 48 passing backend tests (Vitest + Supertest)
-- 47 passing UI tests (Playwright, desktop + mobile: Tier 1 smoke + Tier 2 interactions + partial Tier 3 visual)
+- 49 passing UI tests (Playwright, desktop + mobile: Tier 1 smoke + Tier 2 interactions + Tier 3 visual, all complete)
 
 ## Current Scope Boundaries
 
