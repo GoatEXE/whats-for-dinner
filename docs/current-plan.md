@@ -16,14 +16,15 @@ Last updated: 2026-04-08 (updated after cleanup backlog item 6 completion)
 
 ### Test infrastructure (v1.8)
 
-- **V1.8 UI test harness (WP1+WP2 + Tier 2 complete)** — Playwright smoke tests and interaction tests across desktop + mobile viewports
-  - 6 test suites: tabs, meals, plan, shop, interactions, clipboard (41 tests passing + 1 expected skip)
+- **V1.8 UI test harness (WP1+WP2 + Tier 2 complete + Tier 3 partial)** — Playwright smoke tests, interaction tests, and visual regression across desktop + mobile viewports
+  - 7 test suites: tabs, meals, plan, shop, interactions, clipboard, visual (47 tests passing + 1 expected skip)
   - Tier 1 structural smoke: page shell, tab switching, panel rendering, mobile layout
-  - Tier 2 interactions (complete): quick picker flow, archive meal dialog, new weekly plan dialog, meal creation via form, plan-to-shopping-list flow, clipboard copy (plan, shopping list, combined share pack)
+  - Tier 2 interactions (complete): quick picker flow, archive meal dialog, new weekly plan dialog, meal creation via form, plan-to-shopping-list flow, clipboard copy
+  - Tier 3 visual regression (partial): full-page screenshots for Meals tab (seeded), Shop tab (seeded), Plan tab (empty state)
   - Desktop (1280×800) and mobile (375×812) viewport coverage
-  - Screenshot regression baselines for tab bar shell
+  - Screenshot regression baselines for tab bar shell and 6 full-page states (desktop + mobile)
   - Test server fixture with seeded data
-  - Runs in ~9s via `npm run test:ui`
+  - Runs in ~10s via `npm run test:ui`
 
 ### Completed cleanup items
 
@@ -60,11 +61,12 @@ None — the remaining cleanup work is low-priority P3 polish only.
 ### Follow-up opportunities (not scheduled)
 
 From the v1.8 spec:
-- **Tier 2 interaction tests** — ✅ Complete. All key interaction flows covered: quick picker, dialogs, meal creation, plan-to-shopping-list, clipboard copy.
-- **Tier 3 visual regression** — full-page screenshots at each tab × viewport for diff comparison (optional enhancement)
+- **Tier 2 interaction tests** — ✅ Complete. All key interaction flows covered.
+- **Tier 3 visual regression** — Partial coverage landed: Meals seeded, Shop seeded, Plan empty. Remaining: Plan populated state (optional).
 - **CI integration** — add `npm run test:ui` to GitHub Actions or similar pipeline (optional enhancement)
+- **Cross-browser testing** — expand beyond Chromium-only to Firefox/WebKit (optional enhancement)
 
-The current test suite (41 tests: Tier 1 structural + Tier 2 interactions complete) provides comprehensive coverage for layout and core interaction flows. Tier 3 visual regression and CI integration remain optional enhancements.
+The current test suite (47 tests: Tier 1 structural + Tier 2 interactions + partial Tier 3 visual) provides comprehensive coverage for layout, core interaction flows, and visual regression detection. Additional Tier 3 screenshots, CI integration, and cross-browser testing remain optional enhancements.
 
 ### Remaining cleanup backlog (from docs/cleanup-backlog.md)
 
@@ -77,7 +79,7 @@ The current test suite (41 tests: Tier 1 structural + Tier 2 interactions comple
 
 No blocking issues. The app is fully functional and tested:
 - 48 passing backend tests (Vitest + Supertest)
-- 41 passing UI tests (Playwright, desktop + mobile: Tier 1 smoke + Tier 2 interactions complete)
+- 47 passing UI tests (Playwright, desktop + mobile: Tier 1 smoke + Tier 2 interactions + partial Tier 3 visual)
 
 ## Current Scope Boundaries
 
