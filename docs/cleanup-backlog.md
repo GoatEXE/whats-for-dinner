@@ -43,19 +43,11 @@ Status: partially complete — items 1, 8, and 13 shipped in v1.7
 
 ## P2 — Should-Fix
 
-### 4. `booleanish` Zod helper is copy-pasted across 4 schema files
+### ~~4. `booleanish` Zod helper is copy-pasted across 4 schema files~~ — **FIXED**
 
-**Files:**
-- `src/modules/meals/meals.schemas.js`
-- `src/modules/shopping-list/shopping-list.schemas.js`
-- `src/modules/suggestions/suggestions.schemas.js`
-- `src/modules/weekly-plans/weekly-plans.schemas.js`
+**Resolution:** Extracted `booleanish` into `src/lib/validation.js` and updated all four schema files to import from the shared module. The helper now includes an optional `strict` mode for enhanced validation control.
 
-The identical `booleanish` preprocessor is defined independently in each. If the coercion logic ever needs to change (e.g., to handle `"1"`/`"0"`), all four must be updated.
-
-**Fix:** Extract `booleanish` into `src/lib/validation.js` (which already exports `validate`) and import from each schema file.
-
-**Estimated size:** XS (5 files, mechanical move)
+**Verification:** `src/lib/validation.js` (exports booleanish), `src/modules/meals/meals.schemas.js`, `src/modules/shopping-list/shopping-list.schemas.js`, `src/modules/suggestions/suggestions.schemas.js`, `src/modules/weekly-plans/weekly-plans.schemas.js` (all import from validation lib).
 
 ---
 
@@ -175,19 +167,11 @@ Three flows use `window.confirm` or `window.prompt`. These block the thread and 
 
 ~~**First chunk (Items 1 + 8 + 13)** — COMPLETED in v1.7~~
 ~~**Second chunk (Items 2 + 3)** — COMPLETED~~
+~~**Third chunk (Item 4)** — COMPLETED~~
 
 **All P1 items are now complete.** The remaining backlog is P2 (should-fix) and P3 (nice-to-have) polish.
 
-**Next recommended chunk: Item 4** — Extract duplicated `booleanish` helper.
-
-Rationale:
-- Backend-only, mechanical refactor
-- 5 files (4 schema files + 1 new shared lib)
-- Easy to verify with existing test suite (42 backend tests)
-- Low risk — purely internal DRY improvement
-- Estimated size: XS
-
-**Second chunk: Item 5** — Extract duplicated `resolveAvailableIngredients`.
+**Next recommended chunk: Item 5** — Extract duplicated `resolveAvailableIngredients`.
 
 Rationale:
 - Backend-only, addresses most significant DRY violation

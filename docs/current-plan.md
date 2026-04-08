@@ -30,6 +30,7 @@ From `docs/cleanup-backlog.md`:
 - **Item 1 (P1)** — Status banner screen reader support: added `role="status"` and `aria-live="polite"` to `#status-banner`
 - **Item 2 (P1)** — Accessible labels on dynamic elements: added contextual `aria-label` to all meal card buttons, plan slot controls, and interactive elements
 - **Item 3 (P1)** — Plan slot notes debounce: implemented 350ms debounce with flush-before-mutation and in-flight tracking
+- **Item 4 (P2)** — Extract booleanish helper: moved shared Zod preprocessor to `src/lib/validation.js`, imported in all 4 schema files
 - **Item 8 (P2)** — Section landmarks: added `aria-label` to all `<section>` elements for screen reader navigation
 - **Item 13 (P3)** — Header subtitle: updated to mention weekly planning and shopping lists
 
@@ -60,7 +61,6 @@ These are optional enhancements. The current Tier 1 smoke suite (19 tests) provi
 **All P1 items complete.** Remaining work is P2 (should-fix) and P3 (nice-to-have) polish.
 
 **P2 (should-fix):**
-- Item 4 — Extract duplicated `booleanish` helper to shared module
 - Item 5 — Extract duplicated `resolveAvailableIngredients` to shared module
 - Item 6 — Split `app.js` monolith into ES modules
 - Item 7 — Mobile plan slot layout polish
