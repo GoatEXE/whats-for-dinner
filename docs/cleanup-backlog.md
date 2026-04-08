@@ -79,17 +79,11 @@ This can be done one module at a time without a build step.
 
 ---
 
-### 7. Mobile plan slot layout loses day↔meal↔action association
+### ~~7. Mobile plan slot layout loses day↔meal↔action association~~ — **FIXED**
 
-**Files:** `public/styles.css` (line ~288, `@media (max-width: 720px)`)
+**Resolution:** Enhanced mobile plan-slot layout with improved visual grouping and spacing. Changes include increased gap between slots, adjusted padding, bolder day labels, and better button wrapping behavior to improve scanability in the stacked vertical layout.
 
-At `≤720px`, `.plan-slot` switches to `grid-template-columns: 1fr`, stacking day label, meal display, actions, and notes vertically. This works but:
-- The select dropdown expands to full width (good), but the `Random` / `Clear` / `Serve` buttons wrap unpredictably.
-- No visual grouping distinguishes one slot from the next beyond the border — when all 7 slots are stacked, the view is a long undifferentiated list.
-
-**Fix:** Add slightly more padding/margin between slots at mobile breakpoint; consider a subtle background-color alternation or a bolder day label treatment. CSS-only change.
-
-**Estimated size:** XS (1 file, ~5 CSS rules)
+**Verification:** `public/styles.css` (mobile breakpoint at line ~598, plan-slot styling at lines 643-679). UI smoke tests continue to pass (19 tests).
 
 ---
 
@@ -159,13 +153,8 @@ Three flows use `window.confirm` or `window.prompt`. These block the thread and 
 ~~**Second chunk (Items 2 + 3)** — COMPLETED~~
 ~~**Third chunk (Item 4)** — COMPLETED~~
 ~~**Fourth chunk (Item 5)** — COMPLETED~~
+~~**Fifth chunk (Item 7)** — COMPLETED~~
 
 **All P1 items are now complete.** The remaining backlog is P2 (should-fix) and P3 (nice-to-have) polish.
 
-**Next recommended chunk: Item 7** — Mobile plan slot layout polish.
-
-Rationale:
-- CSS-only, no behavior change
-- Improves mobile UX (better slot separation, clearer grouping)
-- Can be verified via existing UI smoke tests
-- Estimated size: XS
+**Next recommended chunk: Item 9** — Remove redundant pre-reload render in plan creation.

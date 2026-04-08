@@ -32,6 +32,7 @@ From `docs/cleanup-backlog.md`:
 - **Item 3 (P1)** — Plan slot notes debounce: implemented 350ms debounce with flush-before-mutation and in-flight tracking
 - **Item 4 (P2)** — Extract booleanish helper: moved shared Zod preprocessor to `src/lib/validation.js`, imported in all 4 schema files
 - **Item 5 (P2)** — Extract ingredient-resolution logic: shared `resolveAvailableIngredients` now in `src/lib/ingredient-resolution.js`, used by both suggestions and shopping-list services
+- **Item 7 (P2)** — Mobile plan slot layout polish: improved spacing, visual grouping, and button wrapping in mobile view
 - **Item 8 (P2)** — Section landmarks: added `aria-label` to all `<section>` elements for screen reader navigation
 - **Item 13 (P3)** — Header subtitle: updated to mention weekly planning and shopping lists
 
@@ -63,7 +64,6 @@ These are optional enhancements. The current Tier 1 smoke suite (19 tests) provi
 
 **P2 (should-fix):**
 - Item 6 — Split `app.js` monolith into ES modules
-- Item 7 — Mobile plan slot layout polish
 - Item 9 — Remove redundant pre-reload render in plan creation (cosmetic timing issue)
 
 **P3 (nice-to-have):**
