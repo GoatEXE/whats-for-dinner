@@ -51,21 +51,11 @@ Status: partially complete — items 1, 8, and 13 shipped in v1.7
 
 ---
 
-### 5. `resolveAvailableIngredients` is duplicated between suggestions and shopping-list services
+### ~~5. `resolveAvailableIngredients` is duplicated between suggestions and shopping-list services~~ — **FIXED**
 
-**Files:**
-- `src/modules/suggestions/suggestions.service.js` (line 28)
-- `src/modules/shopping-list/shopping-list.service.js` (line 165)
+**Resolution:** Extracted shared ingredient-resolution logic into `src/lib/ingredient-resolution.js`. Both services now import and use `resolveAvailableIngredients()` with different name-resolution callbacks (`ensureIngredients` for suggestions, `resolveIngredientsByNames` for shopping-list). Deduplication logic and output shape are now centralized.
 
-These two functions do the same thing with minor differences:
-- Suggestions uses `catalogRepo.ensureIngredients()` for name lookup (upserts)
-- Shopping list uses `catalogRepo.resolveIngredientsByNames()` (read-only)
-
-The structure, dedup logic, and output shape are identical. This is the most significant DRY violation in the backend.
-
-**Fix:** Extract a shared `resolveAvailableIngredients(input, { catalogRepo, pantryLookup, nameResolver })` into a shared lib or the catalog module. Maintain the different name-resolution strategies via a callback/option.
-
-**Estimated size:** S (3 files: new shared module + 2 service files updated)
+**Verification:** `src/lib/ingredient-resolution.js` (shared module), `src/modules/suggestions/suggestions.service.js` and `src/modules/shopping-list/shopping-list.service.js` (both import and use shared function).
 
 ---
 
@@ -168,18 +158,11 @@ Three flows use `window.confirm` or `window.prompt`. These block the thread and 
 ~~**First chunk (Items 1 + 8 + 13)** — COMPLETED in v1.7~~
 ~~**Second chunk (Items 2 + 3)** — COMPLETED~~
 ~~**Third chunk (Item 4)** — COMPLETED~~
+~~**Fourth chunk (Item 5)** — COMPLETED~~
 
 **All P1 items are now complete.** The remaining backlog is P2 (should-fix) and P3 (nice-to-have) polish.
 
-**Next recommended chunk: Item 5** — Extract duplicated `resolveAvailableIngredients`.
-
-Rationale:
-- Backend-only, addresses most significant DRY violation
-- 3 files (new shared module + 2 service files)
-- Existing tests verify behavior unchanged
-- Estimated size: S
-
-**Third chunk: Item 7** — Mobile plan slot layout polish.
+**Next recommended chunk: Item 7** — Mobile plan slot layout polish.
 
 Rationale:
 - CSS-only, no behavior change
