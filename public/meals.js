@@ -1,6 +1,7 @@
 import { state } from "./state.js";
 import { elements } from "./elements.js";
 import { apiFetch, showStatus, escapeHtml } from "./helpers.js";
+import { confirm } from "./dialog.js";
 
 export function createIngredientRow(values = {}) {
   const row = document.createElement("div");
@@ -159,7 +160,8 @@ export async function toggleFavorite(mealId, isFavorite, loadData) {
 }
 
 export async function archiveMeal(mealId, loadData) {
-  if (!window.confirm("Archive this meal?")) {
+  const ok = await confirm("Archive meal", "Archive this meal?");
+  if (!ok) {
     return;
   }
 

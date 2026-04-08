@@ -1,5 +1,6 @@
 import { state } from "./state.js";
 import { apiFetch, showStatus } from "./helpers.js";
+import { confirm, prompt } from "./dialog.js";
 import {
   getNextMonday,
   formatWeeklyPlanText,
@@ -70,8 +71,9 @@ export async function togglePlanDetail(planId) {
 
 export async function reusePlan(sourcePlanId, loadData) {
   const nextMonday = getNextMonday();
-  const weekStart = window.prompt(
-    "Reuse this plan as a starting point.\nEnter the Monday date for the new week (YYYY-MM-DD):",
+  const weekStart = await prompt(
+    "Reuse past plan",
+    "Enter the Monday date for the new week (YYYY-MM-DD):",
     nextMonday,
   );
   if (!weekStart) {
@@ -81,11 +83,11 @@ export async function reusePlan(sourcePlanId, loadData) {
   const trimmed = weekStart.trim();
 
   if (state.currentPlan && state.currentPlan.weekStart !== trimmed) {
-    if (
-      !window.confirm(
-        "This will archive your current weekly plan. Continue?",
-      )
-    ) {
+    const ok = await confirm(
+      "Replace current plan",
+      "This will archive your current weekly plan. Continue?",
+    );
+    if (!ok) {
       return;
     }
   }
@@ -130,10 +132,11 @@ export function handlePlanHistoryActions(event, loadData) {
   }
 }
 
-export function handleNewWeekPlan(createWeeklyPlan) {
+export async function handleNewWeekPlan(createWeeklyPlan) {
   const nextMonday = getNextMonday();
-  const weekStart = window.prompt(
-    "Start a new weekly plan.\nEnter the Monday date (YYYY-MM-DD):",
+  const weekStart = await prompt(
+    "New weekly plan",
+    "Enter the Monday date (YYYY-MM-DD):",
     nextMonday,
   );
   if (!weekStart) {

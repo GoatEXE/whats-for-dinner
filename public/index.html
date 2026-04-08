@@ -366,5 +366,28 @@
     </main>
 
     <datalist id="ingredient-options"></datalist>
+
+    <div
+      id="dialog-overlay"
+      class="dialog-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      aria-labelledby="dialog-title-id"
+      aria-describedby="dialog-body-id"
+    >
+      <div class="dialog-box">
+        <h3 class="dialog-title" id="dialog-title-id"></h3>
+        <p class="dialog-body" id="dialog-body-id"></p>
+        <label class="dialog-input-label hidden"
+          ><span class="dialog-input-hint">Value</span>
+          <input class="dialog-input" type="text"
+        /></label>
+        <div class="dialog-actions">
+          <button type="button" class="dialog-cancel secondary">Cancel</button>
+          <button type="button" class="dialog-confirm">Confirm</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
