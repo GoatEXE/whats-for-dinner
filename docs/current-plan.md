@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-04-08 (updated after cleanup backlog item 6 completion)
+Last updated: 2026-04-08 (updated after Firefox Playwright expansion)
 
 ## What's Complete
 
@@ -16,17 +16,17 @@ Last updated: 2026-04-08 (updated after cleanup backlog item 6 completion)
 
 ### Test infrastructure (v1.8)
 
-- **V1.8 UI test harness (WP1+WP2 + Tier 2 complete + Tier 3 complete + a11y complete + CI)** — Playwright smoke tests, interaction tests, visual regression, and axe-core accessibility audits across desktop + mobile viewports, running in GitHub Actions CI
-  - 8 test suites: tabs, meals, plan, shop, interactions, clipboard, visual, a11y (55 tests passing + 1 expected skip)
+- **V1.8 UI test harness (WP1+WP2 + Tier 2 complete + Tier 3 complete + a11y complete + CI + Firefox partial)** — Playwright smoke tests, interaction tests, visual regression, and axe-core accessibility audits across Chromium desktop/mobile plus a Firefox expansion for the stable non-screenshot suites, all running in GitHub Actions CI
+  - 8 test suites: tabs, meals, plan, shop, interactions, clipboard, visual, a11y (**94 tests passing + 4 expected skips**)
   - Tier 1 structural smoke: page shell, tab switching, panel rendering, mobile layout
   - Tier 2 interactions (complete): quick picker flow, archive meal dialog, new weekly plan dialog, meal creation via form, plan-to-shopping-list flow, clipboard copy
-  - Tier 3 visual regression (complete): full-page screenshots for Meals tab (seeded), Shop tab (seeded), Plan tab (empty + populated states)
+  - Tier 3 visual regression (complete in Chromium): full-page screenshots for Meals tab (seeded), Shop tab (seeded), Plan tab (empty + populated states)
   - Accessibility audits (complete): axe-core checks for Plan, Meals, and Shop seeded states on desktop + mobile
-  - Desktop (1280×800) and mobile (375×812) viewport coverage
-  - Screenshot regression baselines for tab bar shell and 8 full-page states (4 states × 2 viewports)
+  - Chromium desktop/mobile plus Firefox desktop/narrow-mobile projects for stable non-screenshot coverage
+  - Screenshot regression baselines for tab bar shell and 8 full-page states (4 states × 2 viewports), kept Chromium-only for now
   - Test server fixture with seeded data
-  - CI: GitHub Actions runs backend (48 tests) + UI (55 tests) on all pushes/PRs
-  - Runs in ~17s locally via `npm run test:ui`
+  - CI: GitHub Actions runs backend (48 tests) + Playwright across Chromium and Firefox on all pushes/PRs
+  - Runs in ~40s locally via `npm run test:ui`
 
 ### Completed cleanup items
 
@@ -64,12 +64,12 @@ None — the remaining cleanup work is low-priority P3 polish only.
 
 From the v1.8 spec:
 - **Tier 2 interaction tests** — ✅ Complete. All key interaction flows covered.
-- **Tier 3 visual regression** — ✅ Complete. All key tab states covered: Meals, Shop, Plan (empty + populated).
+- **Tier 3 visual regression** — ✅ Complete in Chromium. All key tab states covered: Meals, Shop, Plan (empty + populated).
 - **Accessibility auditing** — ✅ Complete. axe-core audits run for Plan, Meals, and Shop on desktop + mobile.
-- **CI integration** — ✅ Complete. GitHub Actions runs both backend and UI tests on all pushes/PRs.
-- **Cross-browser testing** — expand beyond Chromium-only to Firefox/WebKit (optional enhancement)
+- **CI integration** — ✅ Complete. GitHub Actions runs backend and Playwright suites on all pushes/PRs.
+- **Cross-browser testing** — 🔶 Partial. Firefox desktop and narrow-mobile projects now run the stable non-screenshot suites; Chromium-only remains for clipboard and visual snapshot coverage. WebKit remains optional.
 
-The current test suite (55 tests: Tier 1 structural + Tier 2 interactions + Tier 3 visual + accessibility audits, all complete) provides comprehensive coverage for layout, core interaction flows, visual regression detection, and basic accessibility checks. All tests run automatically in CI. Cross-browser testing remains the main optional harness enhancement.
+The current test suite (94 passing tests plus 4 expected skips) provides comprehensive Chromium coverage plus a solid Firefox pass over the stable structural, interaction, and accessibility suites. Remaining harness work is optional, mainly deeper cross-browser expansion.
 
 ### Remaining cleanup backlog (from docs/cleanup-backlog.md)
 
@@ -82,7 +82,7 @@ The current test suite (55 tests: Tier 1 structural + Tier 2 interactions + Tier
 
 No blocking issues. The app is fully functional and tested:
 - 48 passing backend tests (Vitest + Supertest)
-- 55 passing UI tests (Playwright, desktop + mobile: Tier 1 smoke + Tier 2 interactions + Tier 3 visual + accessibility audits, all complete)
+- 94 passing UI tests with 4 expected skips (Playwright across Chromium + Firefox; visual snapshots and clipboard flows remain Chromium-only by design)
 
 ## Current Scope Boundaries
 
