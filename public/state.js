@@ -1,0 +1,20 @@
+export const state = {
+  meals: [],
+  pantry: [],
+  history: [],
+  ingredients: [],
+  editingMealId: null,
+  shoppingMealIds: new Set(),
+  shoppingListResult: null,
+  shoppingMealOverrides: new Map(),
+  currentPlan: null,
+  weeklyAutofillOptions: {
+    favoritesOnly: false,
+    fullMatchOnly: false,
+    excludeServedWithinDays: 0,
+  },
+  archivedPlans: [],
+  expandedPlanId: null,
+  expandedPlanDetail: null,
+  activeTab: sessionStorage.getItem("activeTab") || "plan",
+};

@@ -1,109 +1,11 @@
-const state = {
-  meals: [],
-  pantry: [],
-  history: [],
-  ingredients: [],
-  editingMealId: null,
-  shoppingMealIds: new Set(),
-  shoppingListResult: null,
-  shoppingMealOverrides: new Map(),
-  currentPlan: null,
-  weeklyAutofillOptions: {
-    favoritesOnly: false,
-    fullMatchOnly: false,
-    excludeServedWithinDays: 0,
-  },
-  archivedPlans: [],
-  expandedPlanId: null,
-  expandedPlanDetail: null,
-  activeTab: sessionStorage.getItem("activeTab") || "plan",
-};
-
-const elements = {
-  statusBanner: document.querySelector("#status-banner"),
-  refreshButton: document.querySelector("#refresh-button"),
-  mealsList: document.querySelector("#meals-list"),
-  mealStats: document.querySelector("#meal-stats"),
-  mealSearchInput: document.querySelector("#meal-search-input"),
-  mealForm: document.querySelector("#meal-form"),
-  mealFormTitle: document.querySelector("#meal-form-title"),
-  cancelEditButton: document.querySelector("#cancel-edit-button"),
-  ingredientRows: document.querySelector("#ingredient-rows"),
-  addIngredientRowButton: document.querySelector("#add-ingredient-row-button"),
-  pantryList: document.querySelector("#pantry-list"),
-  pantryForm: document.querySelector("#pantry-form"),
-  matchesResult: document.querySelector("#matches-result"),
-  matchPantryButton: document.querySelector("#match-pantry-button"),
-  adHocMatchForm: document.querySelector("#ad-hoc-match-form"),
-  randomForm: document.querySelector("#random-form"),
-  randomResult: document.querySelector("#random-result"),
-  historyList: document.querySelector("#history-list"),
-  ingredientOptions: document.querySelector("#ingredient-options"),
-  shoppingSelectedMeals: document.querySelector("#shopping-selected-meals"),
-  shoppingListForm: document.querySelector("#shopping-list-form"),
-  shoppingListResult: document.querySelector("#shopping-list-result"),
-  clearShoppingSelection: document.querySelector("#clear-shopping-selection"),
-  weeklyPlanContent: document.querySelector("#weekly-plan-content"),
-  newWeekPlanButton: document.querySelector("#new-week-plan-button"),
-  planHistory: document.querySelector("#plan-history"),
-  tabBar: document.querySelector(".tab-bar"),
-};
-
-async function apiFetch(path, options = {}) {
-  const response = await fetch(path, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
-    ...options,
-  });
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(payload.error?.message ?? "Request failed");
-  }
-
-  return payload.data;
-}
-
-async function fetchCurrentPlan() {
-  const response = await fetch("/api/weekly-plans/current", {
-    headers: { "Content-Type": "application/json" },
-  });
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(payload.error?.message ?? "Request failed");
-  }
-
-  return payload.data;
-}
-
-function showStatus(message, type = "success") {
-  elements.statusBanner.textContent = message;
-  elements.statusBanner.className = `status-banner ${type}`;
-
-  window.clearTimeout(showStatus.timeoutId);
-  showStatus.timeoutId = window.setTimeout(() => {
-    elements.statusBanner.className = "status-banner hidden";
-    elements.statusBanner.textContent = "";
-  }, 3500);
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+import { state } from "./state.js";
+import { elements } from "./elements.js";
+import {
+  apiFetch,
+  fetchCurrentPlan,
+  showStatus,
+  escapeHtml,
+} from "./helpers.js";
 
 function createIngredientRow(values = {}) {
   const row = document.createElement("div");
