@@ -16,12 +16,14 @@ Last updated: 2026-04-08 (updated after cleanup backlog item 6 completion)
 
 ### Test infrastructure (v1.8)
 
-- **V1.8 UI test harness (WP1+WP2)** — Playwright smoke tests covering structural rendering and tab switching across desktop + mobile viewports
-  - 4 test suites: tabs, meals, plan, shop (19 tests passing)
+- **V1.8 UI test harness (WP1+WP2 + initial Tier 2)** — Playwright smoke tests and interaction tests across desktop + mobile viewports
+  - 5 test suites: tabs, meals, plan, shop, interactions (31 tests passing + 1 expected skip)
+  - Tier 1 structural smoke: page shell, tab switching, panel rendering, mobile layout
+  - Tier 2 interactions (partial): quick picker flow, archive meal dialog (confirm/cancel), new weekly plan dialog
   - Desktop (1280×800) and mobile (375×812) viewport coverage
   - Screenshot regression baselines for tab bar shell
   - Test server fixture with seeded data
-  - Runs in ~4s via `npm run test:ui`
+  - Runs in ~14s via `npm run test:ui`
 
 ### Completed cleanup items
 
@@ -57,12 +59,12 @@ None — the remaining cleanup work is low-priority P3 polish only.
 
 ### Follow-up opportunities (not scheduled)
 
-From the v1.8 spec (intentionally deferred):
-- **Tier 2 interaction tests** — meal creation via form, quick picker, plan-to-shopping-list flow, clipboard copy
+From the v1.8 spec:
+- **Tier 2 interaction tests (partial coverage landed)** — First chunk complete: quick picker flow, archive meal dialog, new plan dialog. Remaining: meal creation via form, plan-to-shopping-list flow, clipboard copy.
 - **Tier 3 visual regression** — full-page screenshots at each tab × viewport for diff comparison
 - **CI integration** — add `npm run test:ui` to GitHub Actions or similar pipeline
 
-These are optional enhancements. The current Tier 1 smoke suite (19 tests) provides the intended safety net for layout changes.
+The current test suite (31 tests: Tier 1 structural + partial Tier 2 interactions) provides strong coverage for layout and core interaction flows. Additional Tier 2/3 tests remain optional enhancements.
 
 ### Remaining cleanup backlog (from docs/cleanup-backlog.md)
 
@@ -75,7 +77,7 @@ These are optional enhancements. The current Tier 1 smoke suite (19 tests) provi
 
 No blocking issues. The app is fully functional and tested:
 - 48 passing backend tests (Vitest + Supertest)
-- 19 passing UI smoke tests (Playwright, desktop + mobile)
+- 31 passing UI tests (Playwright, desktop + mobile: Tier 1 smoke + partial Tier 2 interactions)
 
 ## Current Scope Boundaries
 
