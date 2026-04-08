@@ -34,6 +34,7 @@ From `docs/cleanup-backlog.md`:
 - **Item 5 (P2)** — Extract ingredient-resolution logic: shared `resolveAvailableIngredients` now in `src/lib/ingredient-resolution.js`, used by both suggestions and shopping-list services
 - **Item 7 (P2)** — Mobile plan slot layout polish: improved spacing, visual grouping, and button wrapping in mobile view
 - **Item 8 (P2)** — Section landmarks: added `aria-label` to all `<section>` elements for screen reader navigation
+- **Item 9 (P2)** — Remove redundant pre-reload render: `createWeeklyPlan` and `reusePlan` now call `loadData()` before rendering/status
 - **Item 13 (P3)** — Header subtitle: updated to mention weekly planning and shopping lists
 
 ### Fixed scope-audit gaps
@@ -64,7 +65,6 @@ These are optional enhancements. The current Tier 1 smoke suite (19 tests) provi
 
 **P2 (should-fix):**
 - Item 6 — Split `app.js` monolith into ES modules
-- Item 9 — Remove redundant pre-reload render in plan creation (cosmetic timing issue)
 
 **P3 (nice-to-have):**
 - Items 10–12 — Minor polish (ingredient row labels, shared notes schema, testable prompts/confirms)

@@ -95,15 +95,11 @@ This can be done one module at a time without a build step.
 
 ---
 
-### 9. Stale archived-plan list after creating a new week (known audit gap)
+### ~~9. Stale archived-plan list after creating a new week~~ — **FIXED**
 
-**Files:** `public/app.js` (`createWeeklyPlan`, `reusePlan`)
+**Resolution:** Removed redundant `renderWeeklyPlan()` calls from `createWeeklyPlan()` and `reusePlan()`. Both functions now update state, call `await loadData()` (which refreshes all data and re-renders all panels), then show status. This ensures archived plans are current before any rendering happens.
 
-Already documented in `docs/current-scope-audit.md` (risk #2). When a new plan is created, the old plan is archived server-side but `state.archivedPlans` is stale until full reload. The current code calls `await loadData()` after `renderWeeklyPlan()`, which does refresh — but the initial `renderWeeklyPlan()` call and status message happen before the reload completes, creating a brief inconsistency.
-
-**Fix:** Remove the redundant pre-reload render: just `await loadData()` first, then `showStatus(...)`. Or accept the current behavior since `loadData()` follows immediately.
-
-**Estimated size:** XS (1 file, reorder 2–3 lines)
+**Verification:** `public/app.js` `createWeeklyPlan()` and `reusePlan()` functions — both call `await loadData()` immediately after the API call, with status shown after data refresh completes.
 
 ---
 
@@ -154,7 +150,8 @@ Three flows use `window.confirm` or `window.prompt`. These block the thread and 
 ~~**Third chunk (Item 4)** — COMPLETED~~
 ~~**Fourth chunk (Item 5)** — COMPLETED~~
 ~~**Fifth chunk (Item 7)** — COMPLETED~~
+~~**Sixth chunk (Item 9)** — COMPLETED~~
 
 **All P1 items are now complete.** The remaining backlog is P2 (should-fix) and P3 (nice-to-have) polish.
 
-**Next recommended chunk: Item 9** — Remove redundant pre-reload render in plan creation.
+**Next recommended chunk: Item 6** — Split `app.js` monolith into ES modules.
