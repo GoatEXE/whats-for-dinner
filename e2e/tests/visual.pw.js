@@ -30,6 +30,46 @@ test.describe("visual regression — seeded states", () => {
     );
   });
 
+  test("Plan tab with populated weekly plan", async ({
+    page,
+    request,
+    testServer,
+  }) => {
+    // Create plan and assign 3 meals deterministically via API
+    await request.post(`${testServer.baseURL}/api/weekly-plans`, {
+      data: { weekStart: "2030-01-07" },
+    });
+    await request.patch(
+      `${testServer.baseURL}/api/weekly-plans/current/slots/0`,
+      { data: { mealId: 1, notes: "Use leftover noodles" } },
+    );
+    await request.patch(
+      `${testServer.baseURL}/api/weekly-plans/current/slots/2`,
+      { data: { mealId: 2 } },
+    );
+    await request.patch(
+      `${testServer.baseURL}/api/weekly-plans/current/slots/4`,
+      { data: { mealId: 3 } },
+    );
+    // Serve Monday's meal to show served state
+    await request.post(
+      `${testServer.baseURL}/api/weekly-plans/current/slots/0/serve`,
+    );
+
+    await gotoApp(page, testServer);
+
+    // Verify populated state is rendered
+    const planPanel = page.locator("#weekly-plan-panel");
+    await expect(planPanel).toContainText("3/7 meals planned");
+    await expect(planPanel).toContainText("Spaghetti Tacos");
+    await expect(planPanel).toContainText("Served");
+
+    await expect(page.locator("#tab-plan")).toHaveScreenshot(
+      "plan-tab-populated.png",
+      { maxDiffPixelRatio: 0.01 },
+    );
+  });
+
   test("Plan tab empty state", async ({ page, testServer }) => {
     await gotoApp(page, testServer);
 
