@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-04-07 (updated after v1.8 WP2 completion)
+Last updated: 2026-04-08 (updated after cleanup backlog item 6 completion)
 
 ## What's Complete
 
@@ -27,14 +27,18 @@ Last updated: 2026-04-07 (updated after v1.8 WP2 completion)
 
 From `docs/cleanup-backlog.md`:
 
+**All P1 and P2 items are now complete.**
+
 - **Item 1 (P1)** — Status banner screen reader support: added `role="status"` and `aria-live="polite"` to `#status-banner`
 - **Item 2 (P1)** — Accessible labels on dynamic elements: added contextual `aria-label` to all meal card buttons, plan slot controls, and interactive elements
 - **Item 3 (P1)** — Plan slot notes debounce: implemented 350ms debounce with flush-before-mutation and in-flight tracking
 - **Item 4 (P2)** — Extract booleanish helper: moved shared Zod preprocessor to `src/lib/validation.js`, imported in all 4 schema files
 - **Item 5 (P2)** — Extract ingredient-resolution logic: shared `resolveAvailableIngredients` now in `src/lib/ingredient-resolution.js`, used by both suggestions and shopping-list services
+- **Item 6 (P2)** — Split app.js monolith: refactored 1,650-line file into 11 ES modules (state, elements, helpers, renderers, plan-renderers, meals, shopping, suggestions, plan-actions, plan-workflow, app)
 - **Item 7 (P2)** — Mobile plan slot layout polish: improved spacing, visual grouping, and button wrapping in mobile view
 - **Item 8 (P2)** — Section landmarks: added `aria-label` to all `<section>` elements for screen reader navigation
 - **Item 9 (P2)** — Remove redundant pre-reload render: `createWeeklyPlan` and `reusePlan` now call `loadData()` before rendering/status
+- **Item 10 (P3)** — Ingredient row Remove button accessible label: aria-label includes ingredient name context (fixed as part of Item 2)
 - **Item 13 (P3)** — Header subtitle: updated to mention weekly planning and shopping lists
 
 ### Fixed scope-audit gaps
@@ -46,7 +50,7 @@ From `docs/current-scope-audit.md`:
 
 ## What's In Progress
 
-None — no active worker tasks at this time.
+None — the remaining cleanup work is low-priority P3 polish only.
 
 ## What's Next
 
@@ -61,13 +65,13 @@ These are optional enhancements. The current Tier 1 smoke suite (19 tests) provi
 
 ### Remaining cleanup backlog (from docs/cleanup-backlog.md)
 
-**All P1 items complete.** Remaining work is P2 (should-fix) and P3 (nice-to-have) polish.
-
-**P2 (should-fix):**
-- Item 6 — Split `app.js` monolith into ES modules
+**All P1 and P2 items complete.** Remaining work is P3 (nice-to-have) polish only.
 
 **P3 (nice-to-have):**
-- Items 10–12 — Minor polish (ingredient row labels, shared notes schema, testable prompts/confirms)
+- Item 11 — Deferred: only worth doing as a broader shared nullable-trimmed-string helper across weekly plans, meals, and pantry
+- Item 12 — Replace `window.confirm`/`window.prompt` with testable alternatives if frontend tests expand beyond the current smoke suite
+
+**Next actionable cleanup item:** Item 12, if improving frontend testability is worth the extra UI work now.
 
 No blocking issues. The app is fully functional and tested:
 - 48 passing backend tests (Vitest + Supertest)

@@ -1,7 +1,7 @@
 # Cleanup Backlog
 
-Date: 2026-04-02 (updated 2026-04-07)
-Status: partially complete — items 1, 8, and 13 shipped in v1.7
+Date: 2026-04-02 (updated 2026-04-08)
+Status: all P1 and P2 items complete; remaining backlog is P3 polish only
 
 ## Priority Legend
 
@@ -29,7 +29,7 @@ Status: partially complete — items 1, 8, and 13 shipped in v1.7
 - Shopping list chip remove buttons include meal name
 - Plan slot meal picker dropdowns include day context
 
-**Verification:** `public/app.js` lines 248-252 (meal cards), 916-941 (plan slots), 353 (shopping chips), 486-487 (random result).
+**Verification:** `public/renderers.js` (meal cards, shopping chips, random result), `public/plan-renderers.js` (plan slot controls), `public/meals.js` (`createIngredientRow` Remove button).
 
 ---
 
@@ -37,7 +37,7 @@ Status: partially complete — items 1, 8, and 13 shipped in v1.7
 
 **Resolution:** Implemented a 350ms debounce on notes input changes via `notesSaveTimer`. Notes save is automatically flushed before any plan mutation (autofill, slot assignment) to prevent race conditions. In-flight saves are tracked and awaited when needed.
 
-**Verification:** `public/app.js` lines 1192-1203 (debounce setup and flush), lines 1327-1331 (debounce trigger on input change).
+**Verification:** `public/plan-workflow.js` (`flushPendingNoteSave()`, `savePlanSlotNotes()`, and `handleWeeklyPlanChange()` implement the debounce, flush-before-mutation, and in-flight save handling).
 
 ---
 
@@ -59,23 +59,22 @@ Status: partially complete — items 1, 8, and 13 shipped in v1.7
 
 ---
 
-### 6. `app.js` monolith — 1,650-line single-file frontend
+### ~~6. `app.js` monolith — 1,650-line single-file frontend~~ — **FIXED**
 
-**Files:** `public/app.js`
-
-The entire frontend is one file with ~1,650 lines covering state management, API calls, DOM rendering, event delegation, and business logic for 8+ features. It follows clean function-per-concern patterns internally but has no module boundaries.
-
-This is not blocking, but it increases the cost of every future change and makes it hard to test any frontend logic in isolation.
-
-**Fix (incremental):** Split into logical modules using ES modules (`<script type="module">`):
-- `api.js` — `apiFetch`, `fetchCurrentPlan`
+**Resolution:** Split the frontend into ES modules using `<script type="module">`, reducing `public/app.js` from the original 1,650+ line monolith to a 354-line orchestration/init entrypoint. The extracted modules now separate concerns by role:
 - `state.js` — shared state object
-- `render/meals.js`, `render/weekly-plan.js`, `render/shopping-list.js`, etc.
-- `app.js` — init + event wiring
+- `elements.js` — DOM element references
+- `helpers.js` — API utilities and shared helpers
+- `renderers.js` — meals, pantry, history, shopping renderers
+- `plan-renderers.js` — weekly plan and plan history rendering/formatting
+- `suggestions.js` — quick picker and ingredient match flows
+- `shopping.js` — shopping list selection/generation flows
+- `meals.js` — meal editor, meal CRUD, pantry actions
+- `plan-actions.js` — plan history expand/copy/reuse and new-week prompt flow
+- `plan-workflow.js` — plan creation, slot assignment, random fill, serve, autofill, notes debounce
+- `app.js` — top-level orchestration, cross-module bridge logic, and init/event wiring
 
-This can be done one module at a time without a build step.
-
-**Estimated size:** M (create 4–6 new files, refactor imports)
+**Verification:** `public/index.html` uses `<script type="module" src="/app.js">`; module files live under `public/`. `npm run lint`, `npm run typecheck`, `npm test` (48 passing), and `npm run test:ui` (19 passing, 1 skipped) all pass.
 
 ---
 
@@ -99,27 +98,25 @@ This can be done one module at a time without a build step.
 
 **Resolution:** Removed redundant `renderWeeklyPlan()` calls from `createWeeklyPlan()` and `reusePlan()`. Both functions now update state, call `await loadData()` (which refreshes all data and re-renders all panels), then show status. This ensures archived plans are current before any rendering happens.
 
-**Verification:** `public/app.js` `createWeeklyPlan()` and `reusePlan()` functions — both call `await loadData()` immediately after the API call, with status shown after data refresh completes.
+**Verification:** `public/plan-workflow.js` (`createWeeklyPlan()`) and `public/plan-actions.js` (`reusePlan()`) both call `await loadData()` after the API request so rendering happens from refreshed state.
 
 ---
 
 ## P3 — Nice-to-Have
 
-### 10. Ingredient row "Remove" button has no accessible label
+### ~~10. Ingredient row "Remove" button has no accessible label~~ — **FIXED**
 
-**Files:** `public/app.js` (`createIngredientRow`)
+**Resolution:** Fixed as part of Item 2 (accessible labels on dynamic elements). The ingredient editor "Remove" button now includes contextual aria-label with the ingredient name (e.g., `aria-label="Remove Garlic"` or `aria-label="Remove ingredient"` for empty rows).
 
-The dynamically created "Remove" button in the ingredient editor has no `aria-label`. When there are multiple ingredient rows, screen readers cannot distinguish which row each "Remove" button belongs to.
-
-**Estimated size:** XS
+**Verification:** `public/meals.js` `createIngredientRow()` function — aria-label includes ingredient name context.
 
 ---
 
 ### 11. `notesSchema` in weekly-plans schemas could be shared
 
-**Files:** `src/modules/weekly-plans/weekly-plans.schemas.js`
+**Files:** `src/modules/weekly-plans/weekly-plans.schemas.js`, `src/modules/meals/meals.schemas.js`, `src/modules/pantry/pantry.schemas.js`, `src/lib/validation.js`
 
-The `notesSchema` (string-or-null with trim transform) is specific to weekly plans currently but could be reused if notes fields appear elsewhere. Low priority since it's only used in one place today.
+Current assessment: **defer for now.** Extracting only weekly-plans `notesSchema` would create a one-off abstraction with little payoff. The worthwhile future version is a broader shared nullable-trimmed-string helper in `src/lib/validation.js` that can also replace the equivalent trim-to-null logic already used in meals and pantry schemas.
 
 **Estimated size:** XS
 
@@ -127,9 +124,9 @@ The `notesSchema` (string-or-null with trim transform) is specific to weekly pla
 
 ### 12. `window.confirm` / `window.prompt` for plan creation and archive are not testable
 
-**Files:** `public/app.js` (`archiveMeal`, `handleNewWeekPlan`, `reusePlan`)
+**Files:** `public/meals.js` (`archiveMeal`), `public/plan-actions.js` (`handleNewWeekPlan`, `reusePlan`)
 
-Three flows use `window.confirm` or `window.prompt`. These block the thread and are impossible to intercept in automated tests. This is a known limitation of the vanilla-JS approach and only worth fixing if frontend tests are added.
+Three flows still use `window.confirm` or `window.prompt`. These block the thread and are awkward to intercept in automated tests. This is only worth fixing if the frontend test suite expands beyond the current smoke coverage.
 
 **Estimated size:** S
 
@@ -151,7 +148,12 @@ Three flows use `window.confirm` or `window.prompt`. These block the thread and 
 ~~**Fourth chunk (Item 5)** — COMPLETED~~
 ~~**Fifth chunk (Item 7)** — COMPLETED~~
 ~~**Sixth chunk (Item 9)** — COMPLETED~~
+~~**Seventh chunk (Item 6)** — COMPLETED~~
 
-**All P1 items are now complete.** The remaining backlog is P2 (should-fix) and P3 (nice-to-have) polish.
+**All P1 items are now complete. All P2 items are now complete.** The remaining backlog is P3 (nice-to-have) polish only.
 
-**Next recommended chunk: Item 6** — Split `app.js` monolith into ES modules.
+**Remaining P3 items:**
+- Item 11 — Deferred: only worth doing as a broader shared nullable-trimmed-string helper across weekly plans, meals, and pantry
+- Item 12 — Replace `window.confirm`/`window.prompt` with testable alternatives if frontend tests expand beyond the current smoke suite
+
+**Next recommended chunk: Item 12** — replace blocking browser dialogs with testable in-app flows, but only if improving frontend testability is worth the extra UI work now.
