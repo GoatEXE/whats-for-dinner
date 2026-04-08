@@ -12,11 +12,11 @@
   --border: #d7deeb;
   --text: #1f2937;
   --muted: #6b7280;
-  --accent: #2563eb;
+  --accent: #1d4ed8;
   --accent-soft: #dbeafe;
-  --danger: #dc2626;
+  --danger: #b91c1c;
   --success: #15803d;
-  --warning: #b45309;
+  --warning: #92400e;
 }
 
 * {
@@ -54,7 +54,7 @@ button.secondary {
 button.danger {
   background: white;
   color: var(--danger);
-  border-color: rgba(220, 38, 38, 0.3);
+  border-color: rgba(185, 28, 28, 0.3);
 }
 
 button:disabled {
@@ -363,12 +363,12 @@ p {
 }
 
 .status-banner.error {
-  border-color: rgba(220, 38, 38, 0.3);
+  border-color: rgba(185, 28, 28, 0.3);
   color: var(--danger);
 }
 
 .status-banner.warning {
-  border-color: rgba(180, 83, 9, 0.3);
+  border-color: rgba(146, 64, 14, 0.3);
   color: var(--warning);
 }
 
