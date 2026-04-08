@@ -13,8 +13,6 @@ import {
   renderHistory,
   renderShoppingSelection,
   renderShoppingListResult,
-  renderMatches,
-  renderRandomResult,
 } from "./renderers.js";
 import {
   getNextMonday,
@@ -22,6 +20,18 @@ import {
   renderWeeklyPlan,
   renderPlanHistory,
 } from "./plan-renderers.js";
+import {
+  runPantryMatch,
+  runAdHocMatch,
+  pickRandomMeal,
+} from "./suggestions.js";
+import {
+  toggleShoppingMeal,
+  clearShoppingSelection,
+  generateShoppingList,
+  handleShoppingChipRemove,
+  handleShoppingResultActions,
+} from "./shopping.js";
 
 function createIngredientRow(values = {}) {
   const row = document.createElement("div");
@@ -262,62 +272,6 @@ async function addHistory(mealId, source = "manual") {
   }
 }
 
-async function runPantryMatch() {
-  try {
-    const result = await apiFetch("/api/suggestions/matches", {
-      method: "POST",
-      body: JSON.stringify({ useSavedPantry: true, includePartial: true }),
-    });
-    renderMatches(result);
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-async function runAdHocMatch(event) {
-  event.preventDefault();
-  const formData = new FormData(elements.adHocMatchForm);
-  const ingredientNames = String(formData.get("ingredientNames") || "")
-    .split("\n")
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  try {
-    const result = await apiFetch("/api/suggestions/matches", {
-      method: "POST",
-      body: JSON.stringify({
-        ingredientNames,
-        favoritesOnly: formData.get("favoritesOnly") === "on",
-        includePartial: formData.get("includePartial") === "on",
-      }),
-    });
-    renderMatches(result);
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-async function pickRandomMeal(event) {
-  event.preventDefault();
-  const formData = new FormData(elements.randomForm);
-  const searchParams = new URLSearchParams({
-    favoritesOnly: String(formData.get("favoritesOnly") === "on"),
-    fullMatchOnly: String(formData.get("fullMatchOnly") === "on"),
-    excludeServedWithinDays: String(
-      formData.get("excludeServedWithinDays") || "0",
-    ),
-  });
-
-  try {
-    const result = await apiFetch(
-      `/api/suggestions/random?${searchParams.toString()}`,
-    );
-    renderRandomResult(result);
-  } catch (error) {
-    renderRandomResult(null);
-    showStatus(error.message, "error");
-  }
-}
 
 function handleMealActions(event) {
   const button = event.target.closest("button[data-action]");
@@ -354,99 +308,6 @@ function handleMealActions(event) {
   }
 }
 
-function toggleShoppingMeal(mealId) {
-  if (state.shoppingMealIds.has(mealId)) {
-    state.shoppingMealIds.delete(mealId);
-    state.shoppingMealOverrides.delete(mealId);
-  } else {
-    state.shoppingMealIds.add(mealId);
-  }
-
-  state.shoppingListResult = null;
-  renderShoppingSelection();
-  renderShoppingListResult(null);
-  renderMeals();
-}
-
-function clearShoppingSelection() {
-  state.shoppingMealIds.clear();
-  state.shoppingMealOverrides.clear();
-  state.shoppingListResult = null;
-  renderShoppingSelection();
-  renderShoppingListResult(null);
-  renderMeals();
-}
-
-async function generateShoppingList(event) {
-  event.preventDefault();
-
-  if (state.shoppingMealIds.size === 0) {
-    showStatus("Select at least one meal first", "error");
-    return;
-  }
-
-  const formData = new FormData(elements.shoppingListForm);
-  const ingredientNames = String(formData.get("ingredientNames") || "")
-    .split("\n")
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  const payload = {
-    mealIds: [...state.shoppingMealIds],
-    useSavedPantry: formData.get("useSavedPantry") === "on",
-    includeOptional: formData.get("includeOptional") === "on",
-  };
-
-  if (ingredientNames.length > 0) {
-    payload.ingredientNames = ingredientNames;
-  }
-
-  try {
-    const result = await apiFetch("/api/shopping-list/generate", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-    state.shoppingListResult = result;
-    renderShoppingListResult(result);
-    showStatus("Shopping list generated");
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-async function copyShoppingList() {
-  if (!state.shoppingListResult || !state.shoppingListResult.copyText) {
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(state.shoppingListResult.copyText);
-    showStatus("Shopping list copied to clipboard");
-  } catch {
-    showStatus(
-      "Failed to copy \u2014 try selecting the text manually",
-      "error",
-    );
-  }
-}
-
-function handleShoppingChipRemove(event) {
-  const button = event.target.closest('button[data-action="remove-shopping"]');
-  if (!button) {
-    return;
-  }
-
-  toggleShoppingMeal(Number(button.dataset.id));
-}
-
-function handleShoppingResultActions(event) {
-  const button = event.target.closest("#copy-shopping-list");
-  if (!button) {
-    return;
-  }
-
-  copyShoppingList();
-}
 
 
 async function createWeeklyPlan(weekStart) {
