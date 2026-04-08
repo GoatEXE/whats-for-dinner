@@ -10,7 +10,6 @@ import {
   renderShoppingListResult,
 } from "./renderers.js";
 import {
-  getNextMonday,
   formatWeeklyPlanText,
   renderWeeklyPlan,
   renderPlanHistory,
@@ -38,6 +37,12 @@ import {
   addHistory,
   handlePantryActions,
 } from "./meals.js";
+import {
+  copyWeeklyPlan,
+  togglePlanDetail,
+  handlePlanHistoryActions,
+  handleNewWeekPlan,
+} from "./plan-actions.js";
 
 // ─── Tabs ─────────────────────────────────────────────────────────────
 
@@ -496,144 +501,6 @@ function handleWeeklyPlanChange(event) {
   }
 }
 
-async function copyWeeklyPlan() {
-  if (!state.currentPlan) {
-    return;
-  }
-
-  const text = formatWeeklyPlanText(state.currentPlan);
-
-  try {
-    await navigator.clipboard.writeText(text);
-    showStatus("Weekly plan copied to clipboard");
-  } catch {
-    showStatus(
-      "Failed to copy \u2014 try selecting the text manually",
-      "error",
-    );
-  }
-}
-
-async function copyArchivedPlan() {
-  if (!state.expandedPlanDetail) {
-    return;
-  }
-
-  const text = formatWeeklyPlanText(state.expandedPlanDetail);
-
-  try {
-    await navigator.clipboard.writeText(text);
-    showStatus("Archived plan copied to clipboard");
-  } catch {
-    showStatus(
-      "Failed to copy \u2014 try selecting the text manually",
-      "error",
-    );
-  }
-}
-
-
-async function togglePlanDetail(planId) {
-  if (state.expandedPlanId === planId) {
-    state.expandedPlanId = null;
-    state.expandedPlanDetail = null;
-    renderPlanHistory();
-    return;
-  }
-
-  // Show loading state immediately
-  state.expandedPlanId = planId;
-  state.expandedPlanDetail = null;
-  renderPlanHistory();
-
-  try {
-    state.expandedPlanDetail = await apiFetch(
-      `/api/weekly-plans/history/${planId}`,
-    );
-    renderPlanHistory();
-  } catch (error) {
-    state.expandedPlanId = null;
-    state.expandedPlanDetail = null;
-    renderPlanHistory();
-    showStatus(error.message, "error");
-  }
-}
-
-async function reusePlan(sourcePlanId) {
-  const nextMonday = getNextMonday();
-  const weekStart = window.prompt(
-    "Reuse this plan as a starting point.\nEnter the Monday date for the new week (YYYY-MM-DD):",
-    nextMonday,
-  );
-  if (!weekStart) {
-    return;
-  }
-
-  const trimmed = weekStart.trim();
-
-  if (state.currentPlan && state.currentPlan.weekStart !== trimmed) {
-    if (
-      !window.confirm(
-        "This will archive your current weekly plan. Continue?",
-      )
-    ) {
-      return;
-    }
-  }
-
-  try {
-    state.currentPlan = await apiFetch(
-      `/api/weekly-plans/from/${sourcePlanId}`,
-      {
-        method: "POST",
-        body: JSON.stringify({ weekStart: trimmed }),
-      },
-    );
-    state.expandedPlanId = null;
-    state.expandedPlanDetail = null;
-    await loadData();
-    showStatus("New plan created from past week");
-  } catch (error) {
-    showStatus(error.message, "error");
-  }
-}
-
-function handlePlanHistoryActions(event) {
-  const toggle = event.target.closest(
-    '[data-action="toggle-plan-detail"]',
-  );
-  if (toggle) {
-    togglePlanDetail(Number(toggle.dataset.id));
-    return;
-  }
-
-  const reuse = event.target.closest('[data-action="plan-reuse"]');
-  if (reuse) {
-    reusePlan(Number(reuse.dataset.id));
-    return;
-  }
-
-  if (
-    event.target.closest('[data-action="plan-history-copy"]') &&
-    state.expandedPlanDetail
-  ) {
-    copyArchivedPlan();
-  }
-}
-
-function handleNewWeekPlan() {
-  const nextMonday = getNextMonday();
-  const weekStart = window.prompt(
-    "Start a new weekly plan.\nEnter the Monday date (YYYY-MM-DD):",
-    nextMonday,
-  );
-  if (!weekStart) {
-    return;
-  }
-
-  createWeeklyPlan(weekStart.trim());
-}
-
 
 async function init() {
   elements.mealForm.addEventListener("submit", (e) => saveMeal(e, loadData));
@@ -691,8 +558,12 @@ async function init() {
       event.target.blur();
     }
   });
-  elements.newWeekPlanButton.addEventListener("click", handleNewWeekPlan);
-  elements.planHistory.addEventListener("click", handlePlanHistoryActions);
+  elements.newWeekPlanButton.addEventListener("click", () =>
+    handleNewWeekPlan(createWeeklyPlan),
+  );
+  elements.planHistory.addEventListener("click", (e) =>
+    handlePlanHistoryActions(e, loadData),
+  );
   elements.planHistory.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       const toggle = event.target.closest(
