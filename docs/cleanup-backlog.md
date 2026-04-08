@@ -122,13 +122,11 @@ Current assessment: **defer for now.** Extracting only weekly-plans `notesSchema
 
 ---
 
-### 12. `window.confirm` / `window.prompt` for plan creation and archive are not testable
+### ~~12. `window.confirm` / `window.prompt` are not testable~~ — **FIXED**
 
-**Files:** `public/meals.js` (`archiveMeal`), `public/plan-actions.js` (`handleNewWeekPlan`, `reusePlan`)
+**Resolution:** Replaced all `window.confirm` and `window.prompt` calls with a reusable in-app dialog module (`public/dialog.js`). The module provides async `confirm()` and `prompt()` helpers, uses accessible dialog semantics (`aria-labelledby` / `aria-describedby`), traps focus while open, makes background content inert, restores focus on close, and is fully scriptable in UI tests. Updated callers in `public/meals.js` and `public/plan-actions.js`, added dialog markup to `public/index.html`, and styled it in `public/styles.css`.
 
-Three flows still use `window.confirm` or `window.prompt`. These block the thread and are awkward to intercept in automated tests. This is only worth fixing if the frontend test suite expands beyond the current smoke coverage.
-
-**Estimated size:** S
+**Verification:** `public/dialog.js`, dialog markup in `public/index.html`, dialog styles in `public/styles.css`, and no remaining `window.confirm`/`window.prompt` calls in `public/*.js`. `npm test` passes (48 tests) and `npm run test:ui` passes (19 tests, 1 skipped).
 
 ---
 
@@ -149,11 +147,11 @@ Three flows still use `window.confirm` or `window.prompt`. These block the threa
 ~~**Fifth chunk (Item 7)** — COMPLETED~~
 ~~**Sixth chunk (Item 9)** — COMPLETED~~
 ~~**Seventh chunk (Item 6)** — COMPLETED~~
+~~**Eighth chunk (Item 12)** — COMPLETED~~
 
-**All P1 items are now complete. All P2 items are now complete.** The remaining backlog is P3 (nice-to-have) polish only.
+**All P1 and P2 items are now complete. All actionable P3 items are now complete.**
 
-**Remaining P3 items:**
-- Item 11 — Deferred: only worth doing as a broader shared nullable-trimmed-string helper across weekly plans, meals, and pantry
-- Item 12 — Replace `window.confirm`/`window.prompt` with testable alternatives if frontend tests expand beyond the current smoke suite
+**Remaining P3 item:**
+- Item 11 — Intentionally deferred. The `notesSchema` is currently only used in weekly-plans module. Extracting to a shared helper provides minimal value unless notes fields appear in multiple modules. This can be revisited if the need arises.
 
-**Next recommended chunk: Item 12** — replace blocking browser dialogs with testable in-app flows, but only if improving frontend testability is worth the extra UI work now.
+**Cleanup backlog is effectively complete.** Item 11 remains as a low-priority optimization that can be deferred indefinitely.

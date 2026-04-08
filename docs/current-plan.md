@@ -27,7 +27,7 @@ Last updated: 2026-04-08 (updated after cleanup backlog item 6 completion)
 
 From `docs/cleanup-backlog.md`:
 
-**All P1 and P2 items are now complete.**
+**All P1 and P2 items are now complete. All actionable P3 items are now complete.**
 
 - **Item 1 (P1)** — Status banner screen reader support: added `role="status"` and `aria-live="polite"` to `#status-banner`
 - **Item 2 (P1)** — Accessible labels on dynamic elements: added contextual `aria-label` to all meal card buttons, plan slot controls, and interactive elements
@@ -39,6 +39,7 @@ From `docs/cleanup-backlog.md`:
 - **Item 8 (P2)** — Section landmarks: added `aria-label` to all `<section>` elements for screen reader navigation
 - **Item 9 (P2)** — Remove redundant pre-reload render: `createWeeklyPlan` and `reusePlan` now call `loadData()` before rendering/status
 - **Item 10 (P3)** — Ingredient row Remove button accessible label: aria-label includes ingredient name context (fixed as part of Item 2)
+- **Item 12 (P3)** — Replace blocking dialogs: implemented an accessible, focus-trapped, testable in-app dialog module (`dialog.js`) replacing all `window.confirm`/`window.prompt` calls
 - **Item 13 (P3)** — Header subtitle: updated to mention weekly planning and shopping lists
 
 ### Fixed scope-audit gaps
@@ -65,13 +66,12 @@ These are optional enhancements. The current Tier 1 smoke suite (19 tests) provi
 
 ### Remaining cleanup backlog (from docs/cleanup-backlog.md)
 
-**All P1 and P2 items complete.** Remaining work is P3 (nice-to-have) polish only.
+**All P1 and P2 items complete. All actionable P3 items complete.**
 
-**P3 (nice-to-have):**
-- Item 11 — Deferred: only worth doing as a broader shared nullable-trimmed-string helper across weekly plans, meals, and pantry
-- Item 12 — Replace `window.confirm`/`window.prompt` with testable alternatives if frontend tests expand beyond the current smoke suite
+**P3 (deferred):**
+- Item 11 — Share `notesSchema` if notes fields proliferate across modules (intentionally deferred; currently only used in weekly-plans, minimal value to extract)
 
-**Next actionable cleanup item:** Item 12, if improving frontend testability is worth the extra UI work now.
+**Cleanup backlog is effectively complete.** Item 11 remains as a low-priority optimization that can be revisited if the need arises.
 
 No blocking issues. The app is fully functional and tested:
 - 48 passing backend tests (Vitest + Supertest)
