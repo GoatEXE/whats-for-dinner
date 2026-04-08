@@ -196,3 +196,113 @@ test.describe("new weekly plan via dialog", () => {
     );
   });
 });
+
+test.describe("meal creation via form", () => {
+  test("creates a new meal with name and ingredient, appears in the library", async ({
+    page,
+    testServer,
+  }) => {
+    await gotoApp(page, testServer);
+    await openTab(page, "meals");
+
+    // Verify starting count
+    await expect(page.locator("#meals-list article")).toHaveCount(3);
+
+    // Fill in the meal form
+    const editorSection = page.locator('section[aria-label="Meal editor"]');
+    await editorSection.getByLabel("Meal name").fill("Grilled Salmon");
+    await editorSection.getByLabel("Prep minutes").fill("25");
+    await editorSection
+      .getByLabel("Notes")
+      .fill("Season with lemon and dill");
+    await editorSection.getByLabel("Tags").fill("healthy, quick");
+
+    // Fill in the first ingredient row
+    const ingredientRow = editorSection.locator(".ingredient-row").first();
+    await ingredientRow.getByPlaceholder("Ingredient").fill("Salmon fillet");
+    await ingredientRow.getByPlaceholder("e.g. 1 lb").fill("2 fillets");
+
+    // Submit the form
+    await editorSection.getByRole("button", { name: "Save meal" }).click();
+
+    // Status banner confirms
+    await expect(page.locator("#status-banner")).toContainText("Meal created");
+
+    // The meal library now has 4 meals
+    await expect(page.locator("#meals-list article")).toHaveCount(4);
+
+    // The new meal card is visible with the right content
+    const newCard = page.locator("#meals-list article").filter({
+      has: page.getByRole("heading", { name: "Grilled Salmon" }),
+    });
+    await expect(newCard).toBeVisible();
+    await expect(newCard).toContainText("25 min");
+    await expect(newCard).toContainText("Season with lemon and dill");
+    await expect(newCard).toContainText("Salmon fillet");
+    await expect(newCard).toContainText("healthy");
+
+    // The form resets to "Add meal" after saving
+    await expect(editorSection.getByRole("heading").first()).toContainText(
+      "Add meal",
+    );
+  });
+});
+
+test.describe("plan to shopping list flow", () => {
+  test("generates a shopping list from a weekly plan and switches to Shop tab", async ({
+    page,
+    request,
+    testServer,
+  }) => {
+    // Create a plan with two meals assigned via API
+    await request.post(`${testServer.baseURL}/api/weekly-plans`, {
+      data: { weekStart: "2030-01-07" },
+    });
+    // Spaghetti Tacos (id 1) needs taco shells (not in pantry)
+    await request.patch(
+      `${testServer.baseURL}/api/weekly-plans/current/slots/0`,
+      { data: { mealId: 1 } },
+    );
+    // Chicken Stir-Fry (id 2) needs chicken breast + frozen veggies (not in pantry)
+    await request.patch(
+      `${testServer.baseURL}/api/weekly-plans/current/slots/2`,
+      { data: { mealId: 2 } },
+    );
+
+    await gotoApp(page, testServer);
+
+    // Plan tab is active; verify assigned meals visible
+    const planPanel = page.locator("#weekly-plan-panel");
+    await expect(planPanel).toContainText("2/7 meals planned");
+
+    // Click "Generate shopping list"
+    await planPanel
+      .getByRole("button", { name: "Generate shopping list" })
+      .click();
+
+    // Should switch to the Shop tab
+    await expect(page.locator("#tab-shop")).toBeVisible();
+    await expect(page.locator("#tab-plan")).toBeHidden();
+
+    // Status banner confirms
+    await expect(page.locator("#status-banner")).toContainText(
+      "Shopping list generated from plan",
+    );
+
+    // Shopping list result should be visible with items
+    const shopResult = page.locator("#shopping-list-result");
+    await expect(shopResult).toContainText("Need to buy");
+
+    // Should show items that aren't in pantry (e.g., taco shells, chicken breast)
+    await expect(shopResult).toContainText("Taco shells");
+    await expect(shopResult).toContainText("Chicken breast");
+
+    // Summary stats should reflect 2 meals
+    await expect(shopResult).toContainText("2 meals");
+
+    // Selected meal chips should be visible
+    const chips = page.locator("#shopping-selected-meals");
+    await expect(chips).toContainText("Spaghetti Tacos");
+    await expect(chips).toContainText("Chicken Stir-Fry");
+  });
+});
