@@ -198,3 +198,42 @@ export function handlePantryActions(event, loadData) {
 
   removePantryItem(Number(button.dataset.id), loadData);
 }
+
+export function exportMeals() {
+  window.open("/api/meals/export");
+}
+
+export async function importMeals(event, loadData) {
+  const file = event.target.files[0];
+  if (!file) {
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const result = await apiFetch("/api/meals/import", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+
+    const parts = [];
+    if (result.imported > 0) {
+      parts.push(`${result.imported} imported`);
+    }
+    if (result.skipped > 0) {
+      parts.push(`${result.skipped} skipped`);
+    }
+    if (result.failed > 0) {
+      parts.push(`${result.failed} failed`);
+    }
+
+    const type = result.failed > 0 ? "warning" : "success";
+    showStatus(parts.join(", ") || "No meals to import", type);
+    await loadData();
+  } catch (error) {
+    showStatus(error.message, "error");
+  }
+
+  event.target.value = "";
+}

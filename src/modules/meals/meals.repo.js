@@ -30,6 +30,9 @@ function createMealsRepo(db, catalogRepo) {
   const archiveMealStatement = db.prepare(
     "UPDATE meals SET is_archived = 1 WHERE id = ?",
   );
+  const findMealByNormalizedNameStatement = db.prepare(
+    "SELECT id, name FROM meals WHERE normalized_name = ?",
+  );
 
   function buildMeals(baseRows) {
     if (baseRows.length === 0) {
@@ -170,6 +173,10 @@ function createMealsRepo(db, catalogRepo) {
     return getMealsByIds([id])[0] ?? null;
   }
 
+  function findByNormalizedName(normalizedName) {
+    return findMealByNormalizedNameStatement.get(normalizedName) ?? null;
+  }
+
   function replaceMealRelationships(mealId, ingredients, tags) {
     deleteMealIngredientsStatement.run(mealId);
     deleteMealTagsStatement.run(mealId);
@@ -251,6 +258,7 @@ function createMealsRepo(db, catalogRepo) {
   return {
     listMeals,
     getMealById,
+    findByNormalizedName,
     createMeal,
     updateMeal,
     setFavorite,

@@ -36,6 +36,8 @@ import {
   archiveMeal,
   addHistory,
   handlePantryActions,
+  exportMeals,
+  importMeals,
 } from "./meals.js";
 import {
   togglePlanDetail,
@@ -257,6 +259,13 @@ async function init() {
       btn.textContent = open ? "Options \u25b8" : "Options \u25be";
     });
   elements.mealSearchInput.addEventListener("input", renderMeals);
+  elements.exportMealsButton.addEventListener("click", exportMeals);
+  elements.importMealsButton.addEventListener("click", () => {
+    elements.importMealsFile.click();
+  });
+  elements.importMealsFile.addEventListener("change", (e) =>
+    importMeals(e, loadData),
+  );
   elements.shoppingListForm.addEventListener("submit", generateShoppingList);
   elements.clearShoppingSelection.addEventListener(
     "click",

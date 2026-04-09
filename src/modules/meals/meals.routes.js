@@ -5,6 +5,7 @@ const {
   mealPatchSchema,
   mealIdParamSchema,
   mealListQuerySchema,
+  importBodySchema,
   favoriteBodySchema,
 } = require("./meals.schemas");
 
@@ -16,9 +17,26 @@ function createMealsRouter(mealsService) {
     res.json({ data: meals });
   });
 
+  router.get("/export", (_req, res) => {
+    const mealExport = mealsService.exportMeals();
+    const exportDate = mealExport.exportedAt.slice(0, 10);
+
+    res.set(
+      "Content-Disposition",
+      `attachment; filename="recipes-${exportDate}.json"`,
+    );
+    res.json(mealExport);
+  });
+
   router.post("/", validate(mealWriteSchema, "body"), (req, res) => {
     const meal = mealsService.createMeal(req.body);
     res.status(201).json({ data: meal });
+  });
+
+  // Recipe import endpoint.
+  router.post("/import", validate(importBodySchema, "body"), (req, res) => {
+    const result = mealsService.importMeals(req.body);
+    res.json(result);
   });
 
   router.get("/:id", validate(mealIdParamSchema, "params"), (req, res) => {

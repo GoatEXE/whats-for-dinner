@@ -57,6 +57,13 @@ const mealListQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
 });
 
+const importBodySchema = z.object({
+  format: z.literal("whats-for-dinner-recipes"),
+  version: z.literal(1),
+  exportedAt: z.string().optional(),
+  meals: z.array(z.unknown()),
+});
+
 const favoriteBodySchema = z.object({
   isFavorite: booleanish().optional(),
 });
@@ -66,5 +73,6 @@ module.exports = {
   mealPatchSchema,
   mealIdParamSchema,
   mealListQuerySchema,
+  importBodySchema,
   favoriteBodySchema,
 };

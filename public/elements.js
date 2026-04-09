@@ -26,4 +26,7 @@ export const elements = {
   newWeekPlanButton: document.querySelector("#new-week-plan-button"),
   planHistory: document.querySelector("#plan-history"),
   tabBar: document.querySelector(".tab-bar"),
+  exportMealsButton: document.querySelector("#export-meals-button"),
+  importMealsButton: document.querySelector("#import-meals-button"),
+  importMealsFile: document.querySelector("#import-meals-file"),
 };
