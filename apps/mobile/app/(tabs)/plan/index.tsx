@@ -6,7 +6,7 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useMeals } from '@/hooks/useMeals';
@@ -23,16 +23,27 @@ const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 export default function PlanScreen() {
   const router = useRouter();
-  const { meals } = useMeals();
-  const { items: pantryItems } = usePantry();
-  const { entries: historyEntries } = useHistory();
+  const { meals, refresh: refreshMeals } = useMeals();
+  const { items: pantryItems, refresh: refreshPantry } = usePantry();
+  const { entries: historyEntries, refresh: refreshHistory } = useHistory();
   const {
     plan,
     assignSlot,
     clearSlot,
     autofill,
     getPlannedMealIds,
+    refresh: refreshPlan,
   } = useWeeklyPlan();
+
+  // Refresh all relevant data when tab gains focus
+  useFocusEffect(
+    useCallback(() => {
+      refreshMeals();
+      refreshPantry();
+      refreshHistory();
+      refreshPlan();
+    }, [refreshMeals, refreshPantry, refreshHistory, refreshPlan]),
+  );
 
   const [pickerDay, setPickerDay] = useState<number | null>(null);
   const [showRandomPicker, setShowRandomPicker] = useState(false);

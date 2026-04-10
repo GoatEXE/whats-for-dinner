@@ -1,4 +1,5 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View,
   Text,
@@ -31,10 +32,18 @@ export default function HistoryScreen() {
   const router = useRouter();
   const { db } = useDatabase();
 
-  const archivedPlans = useMemo(() => {
-    if (!db) return [];
-    return plansRepo.listArchived(db, 50);
-  }, [db]);
+  const [archivedPlans, setArchivedPlans] = useState<WeeklyPlanWithSlots[]>([]);
+
+  // Load archived plans whenever screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!db) {
+        setArchivedPlans([]);
+        return;
+      }
+      setArchivedPlans(plansRepo.listArchived(db, 50));
+    }, [db]),
+  );
 
   const handleCopy = useCallback(async (plan: WeeklyPlanWithSlots) => {
     await Clipboard.setStringAsync(formatPlanText(plan));

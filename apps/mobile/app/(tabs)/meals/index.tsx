@@ -6,7 +6,7 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMeals } from '@/hooks/useMeals';
 import { SearchBar } from '@/ui/SearchBar';
@@ -22,6 +22,13 @@ type FilterMode = 'all' | 'favorites' | 'archived';
 export default function MealsScreen() {
   const router = useRouter();
   const { meals, loading, error, refresh } = useMeals();
+
+  // Refresh when tab gains focus (e.g. after import or reset)
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh]),
+  );
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterMode>('all');
   const [errorDismissed, setErrorDismissed] = useState(false);

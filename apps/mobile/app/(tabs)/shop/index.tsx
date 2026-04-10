@@ -7,7 +7,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useMeals } from '@/hooks/useMeals';
@@ -19,9 +19,18 @@ import { colors, spacing, radii, fontSizes } from '@/ui/theme';
 
 export default function ShopScreen() {
   const router = useRouter();
-  const { meals } = useMeals();
-  const { items: pantryItems, addItem, removeItem } = usePantry();
-  const { getPlannedMealIds } = useWeeklyPlan();
+  const { meals, refresh: refreshMeals } = useMeals();
+  const { items: pantryItems, addItem, removeItem, refresh: refreshPantry } = usePantry();
+  const { getPlannedMealIds, refresh: refreshPlan } = useWeeklyPlan();
+
+  // Refresh data when tab gains focus
+  useFocusEffect(
+    useCallback(() => {
+      refreshMeals();
+      refreshPantry();
+      refreshPlan();
+    }, [refreshMeals, refreshPantry, refreshPlan]),
+  );
 
   // Pantry quick-add state
   const [newIngredient, setNewIngredient] = useState('');
