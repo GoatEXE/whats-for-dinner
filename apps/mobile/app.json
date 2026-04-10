@@ -7,10 +7,19 @@
     "scheme": "whats-for-dinner",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "platforms": ["ios", "android", "web"],
+    "primaryColor": "#F97316",
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      "expo-document-picker"
+      "expo-document-picker",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F97316",
+          "resizeMode": "contain"
+        }
+      ]
     ],
     "ios": {
       "bundleIdentifier": "com.whatsfordinner.app",
@@ -19,8 +28,17 @@
     "android": {
       "package": "com.whatsfordinner.app",
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#F97316"
       }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.svg",
+      "name": "What's for Dinner?",
+      "shortName": "Dinner",
+      "themeColor": "#F97316",
+      "backgroundColor": "#FFFFFF"
     }
   }
 }

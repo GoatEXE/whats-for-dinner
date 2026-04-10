@@ -1,22 +1,74 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, fontSizes } from './theme';
+import { colors, spacing, fontSizes, radii } from './theme';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+interface EmptyStateAction {
+  label: string;
+  onPress: () => void;
+  icon?: IoniconsName;
+  variant?: 'primary' | 'secondary';
+  accessibilityLabel?: string;
+}
 
 interface EmptyStateProps {
   icon?: IoniconsName;
   title: string;
   subtitle?: string;
+  actions?: EmptyStateAction[];
 }
 
-export function EmptyState({ icon = 'file-tray-outline', title, subtitle }: EmptyStateProps) {
+export function EmptyState({
+  icon = 'file-tray-outline',
+  title,
+  subtitle,
+  actions,
+}: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Ionicons name={icon} size={48} color={colors.textMuted} />
+      <View style={styles.iconWrap}>
+        <Ionicons name={icon} size={44} color={colors.accent} />
+      </View>
       <Text style={styles.title}>{title}</Text>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+      {actions && actions.length > 0 && (
+        <View style={styles.actions}>
+          {actions.map((action, i) => {
+            const isPrimary = (action.variant ?? 'primary') === 'primary';
+            return (
+              <Pressable
+                key={i}
+                onPress={action.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={action.accessibilityLabel ?? action.label}
+                style={({ pressed }) => [
+                  styles.actionBtn,
+                  isPrimary ? styles.primaryBtn : styles.secondaryBtn,
+                  pressed && styles.pressed,
+                ]}
+              >
+                {action.icon && (
+                  <Ionicons
+                    name={action.icon}
+                    size={18}
+                    color={isPrimary ? colors.white : colors.accent}
+                  />
+                )}
+                <Text
+                  style={[
+                    styles.actionText,
+                    isPrimary ? styles.primaryText : styles.secondaryText,
+                  ]}
+                >
+                  {action.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -29,17 +81,64 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxl,
     paddingVertical: spacing.xxxl,
   },
+  iconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.accentLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
   title: {
     fontSize: fontSizes.lg,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginTop: spacing.lg,
+    fontWeight: '700',
+    color: colors.text,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: fontSizes.sm,
-    color: colors.textMuted,
+    color: colors.textSecondary,
     marginTop: spacing.sm,
     textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 320,
+  },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radii.full,
+    minHeight: 44,
+  },
+  primaryBtn: {
+    backgroundColor: colors.accent,
+  },
+  secondaryBtn: {
+    backgroundColor: colors.accentLight,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  pressed: {
+    opacity: 0.85,
+  },
+  actionText: {
+    fontSize: fontSizes.md,
+    fontWeight: '600',
+  },
+  primaryText: {
+    color: colors.white,
+  },
+  secondaryText: {
+    color: colors.accent,
   },
 });

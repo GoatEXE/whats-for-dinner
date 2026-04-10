@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,23 +6,30 @@ import {
   Pressable,
   ActivityIndicator,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { useFileImport } from '@/features/import/useFileImport';
+import { ErrorBanner } from '@/ui/ErrorBanner';
 import { colors, spacing, radii, fontSizes } from '@/ui/theme';
 
 export default function ImportScreen() {
   const router = useRouter();
   const { importing, result, error, importFromJson, reset } = useFileImport();
   const [fileName, setFileName] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  // Clear the local read-error banner whenever a new import starts or completes.
+  useEffect(() => {
+    if (importing || result) setLocalError(null);
+  }, [importing, result]);
 
   const handlePickFile = useCallback(async () => {
     try {
       reset();
+      setLocalError(null);
       const pickerResult = await DocumentPicker.getDocumentAsync({
         type: 'application/json',
         copyToCacheDirectory: true,
@@ -40,7 +47,11 @@ export default function ImportScreen() {
 
       importFromJson(content);
     } catch (err) {
-      Alert.alert('Error', 'Failed to read the selected file.');
+      setLocalError(
+        err instanceof Error
+          ? err.message
+          : "We couldn’t read that file. Make sure it’s a JSON export from the web app.",
+      );
     }
   }, [importFromJson, reset]);
 
@@ -53,11 +64,13 @@ export default function ImportScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Instruction card */}
         <View style={styles.infoCard}>
-          <Ionicons name="cloud-download-outline" size={40} color={colors.accent} />
-          <Text style={styles.infoTitle}>Import Recipes</Text>
+          <View style={styles.infoIconWrap}>
+            <Ionicons name="cloud-download-outline" size={36} color={colors.accent} />
+          </View>
+          <Text style={styles.infoTitle}>Import recipes</Text>
           <Text style={styles.infoSubtitle}>
-            Select a JSON file exported from the web app to import your meals,
-            ingredients, and tags into this device.
+            Pick a JSON file exported from the web app and we’ll bring every meal,
+            ingredient, and tag onto this device. Duplicates are skipped automatically.
           </Text>
         </View>
 
@@ -85,14 +98,25 @@ export default function ImportScreen() {
           </Pressable>
         )}
 
-        {/* Error */}
+        {/* File read error */}
+        {localError && (
+          <View style={styles.bannerWrap}>
+            <ErrorBanner
+              title="Couldn’t read file"
+              message={localError}
+              onDismiss={() => setLocalError(null)}
+            />
+          </View>
+        )}
+
+        {/* Import parse/validation error */}
         {error && (
-          <View style={styles.errorCard}>
-            <Ionicons name="alert-circle" size={24} color={colors.error} />
-            <View style={styles.errorContent}>
-              <Text style={styles.errorTitle}>Import Failed</Text>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
+          <View style={styles.bannerWrap}>
+            <ErrorBanner
+              title="Import failed"
+              message={error}
+              onDismiss={reset}
+            />
           </View>
         )}
 
@@ -108,7 +132,18 @@ export default function ImportScreen() {
 
             {/* Summary */}
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Import Complete</Text>
+              <Ionicons
+                name="checkmark-circle"
+                size={36}
+                color={colors.success}
+                style={styles.successIcon}
+              />
+              <Text style={styles.summaryTitle}>Import complete</Text>
+              <Text style={styles.summarySubtitle}>
+                {result.summary.importedCount > 0
+                  ? `${result.summary.importedCount} meal${result.summary.importedCount === 1 ? '' : 's'} added to your library.`
+                  : 'Nothing new was imported — everything was already here.'}
+              </Text>
               <View style={styles.summaryRow}>
                 <StatBadge
                   label="Imported"
@@ -203,11 +238,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
+  infoIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.accentLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  bannerWrap: {
+    marginTop: spacing.lg,
+  },
+  successIcon: {
+    marginBottom: spacing.sm,
+  },
+  summarySubtitle: {
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: -spacing.sm,
+    marginBottom: spacing.lg,
+    lineHeight: 18,
+    maxWidth: 280,
+  },
   infoTitle: {
     fontSize: fontSizes.xl,
     fontWeight: '700',
     color: colors.text,
-    marginTop: spacing.md,
   },
   infoSubtitle: {
     fontSize: fontSizes.md,
@@ -236,30 +294,6 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.lg,
     fontWeight: '700',
     color: colors.white,
-  },
-  errorCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    backgroundColor: colors.error + '10',
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    marginTop: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.error + '30',
-  },
-  errorContent: {
-    flex: 1,
-  },
-  errorTitle: {
-    fontSize: fontSizes.md,
-    fontWeight: '600',
-    color: colors.error,
-  },
-  errorText: {
-    fontSize: fontSizes.sm,
-    color: colors.error,
-    marginTop: spacing.xs,
   },
   resultsSection: {
     marginTop: spacing.sm,

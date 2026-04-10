@@ -52,5 +52,3 @@ export function initializeDatabase() {
 export function getDatabase() {
   return initializeDatabase();
 }
-
-export const database = initializeDatabase();

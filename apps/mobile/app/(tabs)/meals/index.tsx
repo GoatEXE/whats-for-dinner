@@ -12,18 +12,19 @@ import { useMeals } from '@/hooks/useMeals';
 import { SearchBar } from '@/ui/SearchBar';
 import { MealCard } from '@/ui/MealCard';
 import { EmptyState } from '@/ui/EmptyState';
+import { ErrorBanner } from '@/ui/ErrorBanner';
 import { FAB } from '@/ui/FAB';
 import { colors, spacing, fontSizes, radii } from '@/ui/theme';
 import { normalizeName } from '@whats-for-dinner/domain';
-import type { MealRecord } from '@/db/types';
 
 type FilterMode = 'all' | 'favorites' | 'archived';
 
 export default function MealsScreen() {
   const router = useRouter();
-  const { meals, loading, refresh } = useMeals();
+  const { meals, loading, error, refresh } = useMeals();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterMode>('all');
+  const [errorDismissed, setErrorDismissed] = useState(false);
 
   const filteredMeals = useMemo(() => {
     let list = meals;
@@ -62,6 +63,10 @@ export default function MealsScreen() {
 
   const handleAddMeal = useCallback(() => {
     router.push('/(tabs)/meals/edit');
+  }, [router]);
+
+  const handleImport = useCallback(() => {
+    router.push('/(tabs)/meals/import');
   }, [router]);
 
   return (
@@ -119,11 +124,79 @@ export default function MealsScreen() {
           />
         )}
         ListEmptyComponent={
-          <EmptyState
-            icon="restaurant-outline"
-            title={search ? 'No meals found' : 'No meals yet'}
-            subtitle={search ? 'Try a different search' : 'Tap + to add your first meal'}
-          />
+          loading ? null : search ? (
+            <EmptyState
+              icon="search-outline"
+              title="No matches"
+              subtitle={`Nothing found for “${search}”. Try a different search, or clear it to see every meal.`}
+              actions={[
+                {
+                  label: 'Clear search',
+                  icon: 'close-outline',
+                  variant: 'secondary',
+                  onPress: () => setSearch(''),
+                },
+              ]}
+            />
+          ) : filter === 'favorites' ? (
+            <EmptyState
+              icon="star-outline"
+              title="No favorites yet"
+              subtitle="Tap the star on any meal to mark it as a favorite and it’ll show up here."
+              actions={[
+                {
+                  label: 'Show all meals',
+                  variant: 'secondary',
+                  onPress: () => setFilter('all'),
+                },
+              ]}
+            />
+          ) : filter === 'archived' ? (
+            <EmptyState
+              icon="archive-outline"
+              title="Nothing archived"
+              subtitle="Meals you archive will live here so your main list stays tidy."
+              actions={[
+                {
+                  label: 'Show all meals',
+                  variant: 'secondary',
+                  onPress: () => setFilter('all'),
+                },
+              ]}
+            />
+          ) : (
+            <EmptyState
+              icon="restaurant-outline"
+              title="No meals yet"
+              subtitle="Add your first recipe with the + button, or import a JSON file exported from the web app."
+              actions={[
+                {
+                  label: 'Add a meal',
+                  icon: 'add',
+                  onPress: handleAddMeal,
+                  accessibilityLabel: 'Add your first meal',
+                },
+                {
+                  label: 'Import JSON',
+                  icon: 'cloud-download-outline',
+                  variant: 'secondary',
+                  onPress: handleImport,
+                  accessibilityLabel: 'Import meals from a JSON file',
+                },
+              ]}
+            />
+          )
+        }
+        ListHeaderComponent={
+          error && !errorDismissed ? (
+            <View style={styles.bannerWrap}>
+              <ErrorBanner
+                title="Couldn’t load meals"
+                message={error.message}
+                onDismiss={() => setErrorDismissed(true)}
+              />
+            </View>
+          ) : null
         }
       />
 
@@ -178,5 +251,9 @@ const styles = StyleSheet.create({
   list: {
     padding: spacing.lg,
     paddingBottom: 80, // space for FAB
+    flexGrow: 1,
+  },
+  bannerWrap: {
+    marginBottom: spacing.md,
   },
 });

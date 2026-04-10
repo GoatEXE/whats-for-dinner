@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -27,6 +28,7 @@ function formatPlanText(plan: WeeklyPlanWithSlots): string {
 }
 
 export default function HistoryScreen() {
+  const router = useRouter();
   const { db } = useDatabase();
 
   const archivedPlans = useMemo(() => {
@@ -42,8 +44,17 @@ export default function HistoryScreen() {
     return (
       <EmptyState
         icon="archive-outline"
-        title="No archived plans"
-        subtitle="Past weekly plans will appear here when archived."
+        title="No past plans yet"
+        subtitle="When you roll a weekly plan over, the previous week lands here so you can copy it or review what you cooked."
+        actions={[
+          {
+            label: 'Back to this week',
+            icon: 'calendar-outline',
+            variant: 'secondary',
+            onPress: () => router.back(),
+            accessibilityLabel: 'Go back to current week plan',
+          },
+        ]}
       />
     );
   }

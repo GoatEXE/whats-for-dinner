@@ -92,9 +92,13 @@ export default function ShopScreen() {
 
         {/* Pantry list */}
         {pantryItems.length === 0 ? (
-          <Text style={styles.emptyHint}>
-            No pantry items yet. Add ingredients you have on hand.
-          </Text>
+          <View style={styles.inlineEmpty}>
+            <Ionicons name="basket-outline" size={20} color={colors.textMuted} />
+            <Text style={styles.emptyHint}>
+              Your pantry is empty. Add what you already have on hand so it can be
+              skipped when the shopping list is built.
+            </Text>
+          </View>
         ) : (
           pantryItems.map((item) => (
             <View key={item.ingredientId} style={styles.pantryItem}>
@@ -125,7 +129,15 @@ export default function ShopScreen() {
           <EmptyState
             icon="receipt-outline"
             title="No shopping list yet"
-            subtitle="Assign meals to your weekly plan, then the shopping list will appear here."
+            subtitle="Assign meals to your weekly plan and this list will group every ingredient you still need to buy."
+            actions={[
+              {
+                label: 'Plan meals',
+                icon: 'calendar-outline',
+                onPress: () => router.push('/(tabs)/plan'),
+                accessibilityLabel: 'Go to weekly plan',
+              },
+            ]}
           />
         ) : (
           <View>
@@ -278,11 +290,20 @@ const styles = StyleSheet.create({
   addBtnDisabled: {
     backgroundColor: colors.textMuted,
   },
-  emptyHint: {
-    fontSize: fontSizes.sm,
-    color: colors.textMuted,
-    fontStyle: 'italic',
+  inlineEmpty: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
     paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+  },
+  emptyHint: {
+    flex: 1,
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
   pantryItem: {
     flexDirection: 'row',

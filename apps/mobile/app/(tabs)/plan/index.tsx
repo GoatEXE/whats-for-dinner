@@ -119,11 +119,13 @@ export default function PlanScreen() {
     return (
       <EmptyState
         icon="calendar-outline"
-        title="No weekly plan"
-        subtitle="A plan will be created automatically."
+        title="Setting up this week…"
+        subtitle="A fresh weekly plan is being created for you. Hang tight — this only takes a moment."
       />
     );
   }
+
+  const hasMeals = meals.length > 0;
 
   return (
     <View style={styles.container}>
@@ -141,6 +143,31 @@ export default function PlanScreen() {
             <Text style={styles.autofillText}>Autofill</Text>
           </Pressable>
         </View>
+
+        {/* First-run hint when there are no meals yet */}
+        {!hasMeals && (
+          <View style={styles.firstRunCard}>
+            <Ionicons name="restaurant-outline" size={22} color={colors.accent} />
+            <View style={styles.firstRunTextWrap}>
+              <Text style={styles.firstRunTitle}>Start by adding meals</Text>
+              <Text style={styles.firstRunBody}>
+                You need recipes before you can plan a week. Add meals on the Meals
+                tab, then come back here to drop them into days.
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => router.push('/(tabs)/meals')}
+              accessibilityRole="button"
+              accessibilityLabel="Open meals tab to add recipes"
+              style={({ pressed }) => [
+                styles.firstRunBtn,
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              <Text style={styles.firstRunBtnText}>Meals</Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Day slots */}
         {plan.slots.map((slot) => {
@@ -394,5 +421,44 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.sm,
     color: colors.textSecondary,
     fontWeight: '500',
+  },
+  firstRunCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    backgroundColor: colors.accentLight,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.accent + '30',
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  firstRunTextWrap: {
+    flex: 1,
+  },
+  firstRunTitle: {
+    fontSize: fontSizes.md,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  firstRunBody: {
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  firstRunBtn: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.full,
+    alignSelf: 'flex-start',
+    minHeight: 36,
+    justifyContent: 'center',
+  },
+  firstRunBtnText: {
+    color: colors.white,
+    fontSize: fontSizes.sm,
+    fontWeight: '700',
   },
 });
