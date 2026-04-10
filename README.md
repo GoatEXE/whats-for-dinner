@@ -175,3 +175,34 @@ When the same ingredient appears in multiple selected meals, the response keeps 
 - Archived meals are hidden from normal meal lists and suggestion flows, but remain in past weekly plans where they were originally assigned.
 - Weekly plan autofill and per-slot random fill respect the same filters as the standalone random picker (favorites, pantry-ready, avoid recent history).
 - When reusing a past plan, meal assignments and notes are copied; served status is not.
+
+## Mobile App
+
+An offline-first React Native mobile app built with Expo and local SQLite. The mobile app reaches feature parity with the web app and runs entirely offline without a backend server.
+
+### Quick start
+
+```bash
+cd apps/mobile
+npm install
+npm run web
+```
+
+This starts the app in a browser at http://localhost:8081. For mobile device testing, run `npm start` and scan the QR code with Expo Go.
+
+### First launch
+
+The app automatically seeds realistic sample data on first launch:
+
+- 12 complete meals with ingredients and tags
+- Pantry stocked with common staples
+- Current weekly plan with 4 meals assigned
+- Recent meal history for testing the random picker
+
+All sample data is fully editable and can be cleared or replaced.
+
+### Platform notes
+
+- Expo web support is enabled for browser-based demos and testing.
+- The expo-sqlite library has limited web support and gracefully falls back to in-memory storage in browsers. For full persistence testing, use a mobile device or emulator.
+- See `docs/DEMO.md` for a complete demo walkthrough and `docs/migration-plan.md` for the mobile architecture overview.

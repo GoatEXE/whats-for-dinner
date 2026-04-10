@@ -32,6 +32,8 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Plan text copy/share
   - Shopping list from active plan
 
+**Demo-ready milestone reached:** The mobile app now includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos, and all core workflows tested and working offline. See `docs/DEMO.md` for the full walkthrough. No branding assets (custom icons/splash) yet, but UX is ready for hands-on evaluation.
+
 - **Phase 4 — Firebase auth, Firestore sync, and production data safety** — 🔲 Not started
   - Google sign-in -> Firebase Auth
   - Firestore collections and security rules

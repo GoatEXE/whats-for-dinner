@@ -481,3 +481,12 @@ Indexes:
 - No Firebase sync or cloud features implemented yet.
 - No recipe URL import or share-intent integration yet.
 - App is fully functional offline and ready for Phase 4 sync layer.
+
+### Demo-ready state
+- Auto-seeding on first launch with 12 realistic meals, pantry staples, a pre-filled weekly plan, and recent meal history.
+- Expo web support enabled for browser-based demos at `npm run web`.
+- All core workflows tested and verified: meal library, pantry, suggestions, shopping list, weekly planning, history, import/export.
+- UX polish complete: natural tab navigation, copy/share integration, search/filter, and inline editing.
+- Test coverage: 106 tests passing across root and mobile repos, TypeScript strict mode clean.
+- Known limitations: no custom app icon or splash screen yet, expo-sqlite has limited web persistence (in-memory fallback in browsers), no cloud sync or recipe URL import.
+- See `docs/DEMO.md` for a complete demo walkthrough.
