@@ -2,10 +2,12 @@ import { useCallback } from 'react';
 
 import {
   autofillEmptySlots,
+  pickRandomMeal,
   type AutofillFilters,
+  type AvailableIngredient,
+  type RandomPickerFilters,
+  type SuggestionMeal,
 } from '@whats-for-dinner/domain';
-import { pickRandomMeal, type RandomPickerFilters } from '@whats-for-dinner/domain';
-import { findMatches } from '@whats-for-dinner/domain';
 
 import * as plansRepo from '../../db/repos/weekly-plans-repo';
 import type { DatabaseHandle } from '../../db/types';
@@ -19,6 +21,41 @@ interface AutofillDeps {
   recentMealIds: string[];
 }
 
+function createNumericIdMap(ids: string[]) {
+  const map = new Map<string, number>();
+  let nextId = 1;
+
+  for (const id of ids) {
+    if (!map.has(id)) {
+      map.set(id, nextId);
+      nextId += 1;
+    }
+  }
+
+  return map;
+}
+
+function toSuggestionMeal(
+  meal: Meal,
+  mealIdMap: Map<string, number>,
+  ingredientIdMap: Map<string, number>,
+): SuggestionMeal {
+  return {
+    id: mealIdMap.get(meal.id) ?? 0,
+    name: meal.name,
+    notes: meal.notes,
+    prepMinutes: meal.prepMinutes,
+    isFavorite: meal.isFavorite,
+    tags: meal.tags,
+    ingredients: meal.ingredients.map((ingredient) => ({
+      ingredientId: ingredientIdMap.get(ingredient.id) ?? 0,
+      name: ingredient.name,
+      quantityText: ingredient.quantityText,
+      isOptional: ingredient.isOptional,
+    })),
+  };
+}
+
 /**
  * Provides an autofill callback that wraps the shared domain autofill logic
  * with the mobile repo layer, similar to how useShoppingList wraps
@@ -28,49 +65,84 @@ export function useAutofill(deps: AutofillDeps) {
   const { db, planId, meals, pantryIngredientIds, recentMealIds } = deps;
 
   const autofill = useCallback(
-    (filters: AutofillFilters = { favoritesOnly: false, fullMatchOnly: false, excludeServedWithinDays: 0 }) => {
+    (
+      filters: AutofillFilters = {
+        favoritesOnly: false,
+        fullMatchOnly: false,
+        excludeServedWithinDays: 0,
+      },
+    ) => {
       if (!db || !planId) return null;
 
       const plan = plansRepo.getById(db, planId);
       if (!plan) return null;
 
-      // Build the domain-compatible plan shape
+      const mealIdMap = createNumericIdMap([
+        ...meals.map((meal) => meal.id),
+        ...plan.slots.flatMap((slot) => (slot.mealId ? [slot.mealId] : [])),
+        ...recentMealIds,
+      ]);
+      const mealNumberToId = new Map(
+        [...mealIdMap.entries()].map(([id, numericId]) => [numericId, id]),
+      );
+
+      const ingredientNameById = new Map<string, string>();
+      meals.forEach((meal) => {
+        meal.ingredients.forEach((ingredient) => {
+          if (!ingredientNameById.has(ingredient.id)) {
+            ingredientNameById.set(ingredient.id, ingredient.name);
+          }
+        });
+      });
+
+      const ingredientIdMap = createNumericIdMap([
+        ...ingredientNameById.keys(),
+        ...pantryIngredientIds,
+      ]);
+
+      const domainMeals: SuggestionMeal[] = meals
+        .filter((meal) => !meal.isArchived)
+        .map((meal) => toSuggestionMeal(meal, mealIdMap, ingredientIdMap));
+
+      const availableIngredients: AvailableIngredient[] = [...new Set(pantryIngredientIds)]
+        .map((ingredientId) => {
+          const numericId = ingredientIdMap.get(ingredientId);
+          if (numericId == null) return null;
+
+          return {
+            ingredientId: numericId,
+            name: ingredientNameById.get(ingredientId) ?? '',
+          };
+        })
+        .filter((ingredient): ingredient is AvailableIngredient => ingredient != null);
+
       const domainPlan = {
-        id: 0, // domain expects numeric but only uses it as passthrough
+        id: 0,
         weekStart: plan.weekStart,
         slots: plan.slots.map((slot) => ({
           day: slot.day,
           date: '',
           label: '',
           meal: slot.mealId
-            ? { id: 0, name: slot.mealName ?? undefined } // domain placeholder
+            ? {
+                id: mealIdMap.get(slot.mealId) ?? 0,
+                name: slot.mealName ?? undefined,
+              }
             : null,
           notes: slot.notes,
           served: slot.servedAt !== null,
         })),
       };
 
-      // Build the domain-compatible meals list for the random picker
-      const domainMeals = meals
-        .filter((m) => !m.isArchived)
-        .map((m) => ({
-          id: m.id as unknown as number,
-          name: m.name,
-          isFavorite: m.isFavorite,
-          isArchived: m.isArchived,
-          ingredientIds: m.ingredients.map((i) => i.id as unknown as number),
-        }));
-
       const pickRandom = (pickerFilters: RandomPickerFilters) => {
-        const result = pickRandomMeal({
+        return pickRandomMeal({
           meals: domainMeals,
-          pantryIngredientIds: pantryIngredientIds as unknown as number[],
-          recentMealIds: recentMealIds as unknown as number[],
+          recentMealIds: recentMealIds
+            .map((mealId) => mealIdMap.get(mealId))
+            .filter((mealId): mealId is number => mealId != null),
+          availableIngredients,
           filters: pickerFilters,
-          findMatches: (candidateMeals, pantryIds) =>
-            findMatches(candidateMeals, pantryIds),
         });
-        return result;
       };
 
       const result = autofillEmptySlots({
@@ -79,12 +151,17 @@ export function useAutofill(deps: AutofillDeps) {
         pickRandomMeal: pickRandom,
       });
 
-      // Write filled slots back to DB
       for (const slot of result.plan.slots) {
-        if (slot.meal) {
-          const mealId = String(slot.meal.id);
-          plansRepo.assignSlot(db, planId, slot.day, mealId);
+        if (!slot.meal) {
+          continue;
         }
+
+        const mealId = mealNumberToId.get(slot.meal.id);
+        if (!mealId) {
+          continue;
+        }
+
+        plansRepo.assignSlot(db, planId, slot.day, mealId);
       }
 
       return result.autofillResult;
