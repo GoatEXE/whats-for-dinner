@@ -4,6 +4,53 @@
 
 Build the mobile app **next to** the current web app, not by mutating the current Express app into a mobile backend. The safest path is:
 
+---
+
+## Progress tracker
+
+- **Phase 1 — Foundations and app shell** — ✅ Complete
+  - Mobile app scaffold with Expo Router + 3-tab layout
+  - Shared packages: `domain` (business logic) and `contracts` (Zod schemas)
+  - Local SQLite DB with migration system and sync-ready schema
+  - File import for existing meal export format
+
+- **Phase 2 — Offline meal library, pantry, suggestions, and shopping parity** — ✅ Complete
+  - Meal CRUD with archive/favorite support
+  - Pantry management and ingredient catalog
+  - Suggestion matching with current scoring/sort
+  - Random meal picker with lookback exclusion
+  - Shopping list generation with on-hand/to-buy split
+  - Recipe JSON import/export within the app
+  - Search/filter in meal library
+
+- **Phase 3 — Weekly plans, history, and plan-sharing parity** — ✅ Complete
+  - Weekly plan create/archive/reuse
+  - Per-slot assign/random/clear/serve
+  - Autofill empty slots with cumulative exclusion
+  - Archived plans list/detail
+  - Recent meal history
+  - Plan text copy/share
+  - Shopping list from active plan
+
+- **Phase 4 — Firebase auth, Firestore sync, and production data safety** — 🔲 Not started
+  - Google sign-in -> Firebase Auth
+  - Firestore collections and security rules
+  - Sync queue and pull/push engine
+  - Manual sync status UI and error recovery
+
+- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🔲 Not started
+  - Android share-intent receiver
+  - "Import from URL" flow
+  - Firebase Cloud Function recipe parser
+  - Migration runbook for legacy data
+  - Web app retirement
+
+---
+
+## Executive summary (continued)
+
+Build the mobile app **next to** the current web app, not by mutating the current Express app into a mobile backend. The safest path is:
+
 - keep the current app as the behavior oracle until parity is proven;
 - move the core business rules into shared pure TypeScript domain code;
 - use **Expo + React Native** for UI;

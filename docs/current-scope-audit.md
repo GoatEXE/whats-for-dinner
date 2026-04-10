@@ -439,3 +439,45 @@ Indexes:
 - The current app is a single-page, server-served web UI with three tabs and many inline workflows.
 - The backend API surface is already fairly clean and can likely be reused as-is by a mobile client.
 - The heaviest migration areas are the weekly-plan workflow, shopping-list copy/export, import/export, and all modal/prompt/clipboard interactions.
+
+---
+
+## 8) Mobile app status (React Native / Expo)
+
+### Architecture
+- App scaffold with Expo Router + 3-tab layout (Plan, Shop, Meals).
+- Shared packages:
+  - `packages/domain` — ported business logic for suggestions, shopping list, random picker, weekly plans, normalization, and import/export
+  - `packages/contracts` — Zod schemas for validation and type contracts
+- Local SQLite DB with all repositories implemented:
+  - `meals-repo`, `ingredients-repo`, `tags-repo`, `pantry-repo`, `history-repo`, `weekly-plans-repo`
+- All repos support soft deletes and sync-ready metadata (`deleted_at`, `updated_at`).
+
+### Feature hooks
+- `useMeals` — meal CRUD, search, archive, favorite
+- `usePantry` — pantry add/remove/bulk-set
+- `useHistory` — meal history recording and recent meal tracking
+- `useWeeklyPlan` — DB-backed weekly plan state management
+- `useMealForm` — ingredient/tag editing, validation, payload conversion
+- `useRandomPicker` — random meal selection with lookback exclusion
+- `useShoppingList` — shopping list generation with on-hand/to-buy split
+- `useSuggestions` — ingredient matching with current scoring/sort
+- `useFileImport` — recipe JSON import/export within app
+- `usePlanAutofill` — autofill empty plan slots with cumulative exclusion
+
+### Screens implemented
+- **Meals tab**: list with search/filter, detail view, edit/create form, archive/favorite actions, file import/export
+- **Plan tab**: current week view with slot assignment, random fill, clear, serve, autofill, copy/share plan text, archived plans list, plan history detail, reuse/copy actions
+- **Shop tab**: pantry editor, suggestion matches, shopping list from meals or from plan, copy shopping list text
+
+### Test infrastructure
+- Mobile repo tests use `better-sqlite3` adapter for Node-based Vitest testing.
+- Vitest config with path aliases for `@domain`, `@contracts`, and mobile internal imports.
+- Test counts: 91 root tests + 15 mobile repo tests = 106 total, all passing.
+- Mobile `tsc --noEmit` passes cleanly.
+
+### Current scope
+- Phases 1-3 complete: local-first offline parity with the current web app.
+- No Firebase sync or cloud features implemented yet.
+- No recipe URL import or share-intent integration yet.
+- App is fully functional offline and ready for Phase 4 sync layer.
