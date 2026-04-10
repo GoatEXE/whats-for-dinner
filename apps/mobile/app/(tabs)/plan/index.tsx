@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { useMeals } from '@/hooks/useMeals';
 import { usePantry } from '@/hooks/usePantry';
 import { useHistory } from '@/hooks/useHistory';
@@ -98,6 +99,20 @@ export default function PlanScreen() {
 
   const handleGenerateShoppingList = useCallback(() => {
     router.push('/(tabs)/shop');
+  }, [router]);
+
+  const handleCopyPlan = useCallback(async () => {
+    if (!plan) return;
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const lines = [`Week of ${plan.weekStart}`, ''];
+    for (const slot of plan.slots) {
+      lines.push(`${dayLabels[slot.day]}: ${slot.mealName ?? '—'}`);
+    }
+    await Clipboard.setStringAsync(lines.join('\n'));
+  }, [plan]);
+
+  const handleViewHistory = useCallback(() => {
+    router.push('/(tabs)/plan/history');
   }, [router]);
 
   if (!plan) {
@@ -191,6 +206,27 @@ export default function PlanScreen() {
             <Ionicons name="cart-outline" size={20} color={colors.accent} />
             <Text style={styles.shoppingBtnText}>Generate Shopping List</Text>
           </Pressable>
+
+          <View style={styles.secondaryActions}>
+            <Pressable
+              style={styles.secondaryBtn}
+              onPress={handleCopyPlan}
+              accessibilityRole="button"
+              accessibilityLabel="Copy plan text"
+            >
+              <Ionicons name="copy-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.secondaryBtnText}>Copy Plan</Text>
+            </Pressable>
+            <Pressable
+              style={styles.secondaryBtn}
+              onPress={handleViewHistory}
+              accessibilityRole="button"
+              accessibilityLabel="View plan history"
+            >
+              <Ionicons name="archive-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.secondaryBtnText}>History</Text>
+            </Pressable>
+          </View>
         </View>
       </ScrollView>
 
@@ -342,5 +378,21 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.md,
     fontWeight: '600',
     color: colors.accent,
+  },
+  secondaryActions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.xl,
+  },
+  secondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+  },
+  secondaryBtnText: {
+    fontSize: fontSizes.sm,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
 });
