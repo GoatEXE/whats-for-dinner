@@ -1,20 +1,29 @@
-import { Pressable } from 'react-native';
+import { View, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@/ui/theme';
+import { colors, spacing } from '@/ui/theme';
 
-function ImportHeaderButton() {
+function MealsHeaderActions() {
   const router = useRouter();
   return (
-    <Pressable
-      onPress={() => router.push('/(tabs)/meals/import')}
-      hitSlop={8}
-      accessibilityLabel="Import recipes"
-      accessibilityRole="button"
-      style={{ marginRight: 4 }}
-    >
-      <Ionicons name="cloud-download-outline" size={24} color={colors.accent} />
-    </Pressable>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginRight: 4 }}>
+      <Pressable
+        onPress={() => router.push('/(tabs)/meals/import')}
+        hitSlop={8}
+        accessibilityLabel="Import recipes"
+        accessibilityRole="button"
+      >
+        <Ionicons name="cloud-download-outline" size={24} color={colors.accent} />
+      </Pressable>
+      <Pressable
+        onPress={() => router.push('/(tabs)/meals/settings')}
+        hitSlop={8}
+        accessibilityLabel="Meals settings"
+        accessibilityRole="button"
+      >
+        <Ionicons name="settings-outline" size={24} color={colors.accent} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -31,7 +40,7 @@ export default function MealsLayout() {
         name="index"
         options={{
           title: 'Meals',
-          headerRight: () => <ImportHeaderButton />,
+          headerRight: () => <MealsHeaderActions />,
         }}
       />
       <Stack.Screen
@@ -45,6 +54,10 @@ export default function MealsLayout() {
       <Stack.Screen
         name="import"
         options={{ title: 'Import Recipes', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="settings"
+        options={{ title: 'Meals Settings', presentation: 'modal' }}
       />
     </Stack>
   );
