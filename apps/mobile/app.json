@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "What's for Dinner?",
+    "slug": "whats-for-dinner",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "whats-for-dinner",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-document-picker"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.whatsfordinner.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.whatsfordinner.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    }
+  }
+}

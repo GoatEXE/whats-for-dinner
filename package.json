@@ -2,6 +2,10 @@
   "name": "whats-for-dinner",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "apps/mobile",
+    "packages/*"
+  ],
   "description": "Docker-friendly meal planning and dinner selection app built with Node, Express, and SQLite.",
   "main": "src/server.js",
   "scripts": {
