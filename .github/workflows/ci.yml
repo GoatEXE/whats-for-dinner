@@ -34,6 +34,16 @@ jobs:
       - name: Run backend tests
         run: npm test
 
+      # Temporary: keep mobile checks non-blocking until root npm ci/package-lock.json
+      # is refreshed to include newly added apps/mobile dependencies.
+      - name: Run mobile repo tests
+        continue-on-error: true
+        run: cd apps/mobile && npx vitest run
+
+      - name: Mobile typecheck
+        continue-on-error: true
+        run: cd apps/mobile && npx tsc --noEmit
+
       - name: Run UI tests
         run: npm run test:ui
 
