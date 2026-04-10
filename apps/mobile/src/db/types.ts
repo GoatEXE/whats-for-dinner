@@ -106,3 +106,26 @@ export interface HistoryRecord {
   createdAt: string;
   isFavorite: boolean;
 }
+
+export interface WeeklyPlanRecord {
+  id: string;
+  weekStart: string;
+  isArchived: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
+export interface WeeklyPlanSlotRecord {
+  planId: string;
+  day: number;
+  mealId: string | null;
+  mealName: string | null;
+  customName: string | null;
+  notes: string | null;
+  servedAt: string | null;
+}
+
+export interface WeeklyPlanWithSlots extends WeeklyPlanRecord {
+  slots: WeeklyPlanSlotRecord[];
+}
