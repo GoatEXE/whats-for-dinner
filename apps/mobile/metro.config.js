@@ -29,6 +29,7 @@ config.resolver.nodeModulesPaths = [
 // SQLite init throws synchronously inside the DatabaseProvider.
 // ---------------------------------------------------------------------------
 const baseEnhanceMiddleware = config.server?.enhanceMiddleware;
+let headerLogCount = 0;
 
 config.server = {
   ...config.server,
@@ -39,10 +40,22 @@ config.server = {
 
     return (req, res, next) => {
       res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-      res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
-      // Keep the default resource policy permissive for same-origin assets
-      // so the dev server's own bundles and source maps still load.
+      // `credentialless` is a more permissive alternative to `require-corp`
+      // that does not require CORP headers on every subresource. It is
+      // supported in Chrome 96+ and Firefox 110+, which covers all modern
+      // development environments.
+      res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+
+      // Log the first few requests so we can confirm the middleware is
+      // actually wired into the Metro server (helps debug web SQLite
+      // cross-origin isolation issues).
+      if (headerLogCount < 5) {
+        headerLogCount += 1;
+        // eslint-disable-next-line no-console
+        console.log(`[web-coop-coep] ${req.method} ${req.url}`);
+      }
+
       return wrappedBase(req, res, next);
     };
   },
