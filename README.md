@@ -180,7 +180,11 @@ When the same ingredient appears in multiple selected meals, the response keeps 
 
 An offline-first React Native mobile app built with Expo and local SQLite. The mobile app reaches feature parity with the web app and runs entirely offline without a backend server.
 
+**Branch:** `mobile-app` (Phases 1-3 complete, demo-ready)
+
 ### Quick start
+
+#### Browser preview (fastest)
 
 ```bash
 cd apps/mobile
@@ -188,21 +192,44 @@ npm install
 npm run web
 ```
 
-This starts the app in a browser at http://localhost:8081. For mobile device testing, run `npm start` and scan the QR code with Expo Go.
+Opens at http://localhost:8081. Good for quick feature walkthroughs. **Note:** Browser preview uses sql.js with an in-memory database, so all data resets on page refresh.
+
+#### Android device (persistent storage)
+
+```bash
+cd apps/mobile
+npx expo start --go --clear
+```
+
+Open Expo Go on Android first, then scan the QR code from inside Expo Go. This provides full SQLite persistence and the real mobile experience. If LAN networking is flaky, retry with `npx expo start --go --tunnel --clear`.
 
 ### First launch
 
 The app automatically seeds realistic sample data on first launch:
 
-- 12 complete meals with ingredients and tags
+- 12 complete meals with ingredients and tags (Taco Tuesday, Spaghetti Bolognese, Chicken Curry, etc.)
 - Pantry stocked with common staples
 - Current weekly plan with 4 meals assigned
 - Recent meal history for testing the random picker
 
-All sample data is fully editable and can be cleared or replaced.
+All sample data is fully editable. To reset demo data, tap the settings icon in the Meals tab header.
 
-### Platform notes
+### Current scope
 
-- Expo web support is enabled for browser-based demos and testing.
-- The expo-sqlite library has limited web support and gracefully falls back to in-memory storage in browsers. For full persistence testing, use a mobile device or emulator.
-- See `docs/DEMO.md` for a complete demo walkthrough and `docs/migration-plan.md` for the mobile architecture overview.
+- ✅ Full offline feature parity with the web app
+- ✅ Local SQLite persistence (Android/iOS)
+- ✅ Browser preview via sql.js in-memory database
+- ✅ Recipe JSON import/export
+- ✅ Shopping list copy/share
+- ✅ Weekly plan autofill and copy
+- ⏸️ Phase 4 (Firebase auth + cloud sync) deferred
+- 🔲 Recipe URL import and Android share-intent not yet implemented
+
+### Testing
+
+- Root tests: 91 passing
+- Mobile repo tests: 20 passing
+- Total: 111 tests passing
+- TypeScript strict mode: clean
+
+See `docs/DEMO.md` for a complete demo walkthrough and `docs/migration-plan.md` for the mobile architecture overview.

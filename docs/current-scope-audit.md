@@ -444,6 +444,8 @@ Indexes:
 
 ## 8) Mobile app status (React Native / Expo)
 
+**Branch:** `mobile-app`
+
 ### Architecture
 - App scaffold with Expo Router + 3-tab layout (Plan, Shop, Meals).
 - Shared packages:
@@ -466,27 +468,46 @@ Indexes:
 - `usePlanAutofill` — autofill empty plan slots with cumulative exclusion
 
 ### Screens implemented
-- **Meals tab**: list with search/filter, detail view, edit/create form, archive/favorite actions, file import/export
+- **Meals tab**: list with search/filter, detail view, edit/create form, archive/favorite actions, file import/export, reset demo data button (gear icon in header)
 - **Plan tab**: current week view with slot assignment, random fill, clear, serve, autofill, copy/share plan text, archived plans list, plan history detail, reuse/copy actions
 - **Shop tab**: pantry editor, suggestion matches, shopping list from meals or from plan, copy shopping list text
 
 ### Test infrastructure
 - Mobile repo tests use `better-sqlite3` adapter for Node-based Vitest testing.
 - Vitest config with path aliases for `@domain`, `@contracts`, and mobile internal imports.
-- Test counts: 91 root tests + 15 mobile repo tests = 106 total, all passing.
+- Test counts: 91 root tests + 20 mobile repo tests = 111 total, all passing.
 - Mobile `tsc --noEmit` passes cleanly.
 
 ### Current scope
 - Phases 1-3 complete: local-first offline parity with the current web app.
-- No Firebase sync or cloud features implemented yet.
+- Phase 4 (Firebase auth + Firestore sync) deferred per user decision.
 - No recipe URL import or share-intent integration yet.
-- App is fully functional offline and ready for Phase 4 sync layer.
+- App is fully functional offline and ready for demo.
+
+### Demo paths
+
+#### Browser preview
+- Command: `cd apps/mobile && npm run web`
+- Opens at http://localhost:8081
+- Uses sql.js with in-memory database
+- Data resets on page refresh
+- Good for quick UI demos and feature walkthroughs
+
+#### Android Expo Go
+- Command: `cd apps/mobile && npx expo start --go --clear`
+- Open Expo Go first, then scan the QR code from inside the app
+- Full SQLite persistence across app restarts
+- Real mobile experience
+- Successfully tested after recent dependency/runtime/router fixes
+- Fallback for network issues: `cd apps/mobile && npx expo start --go --tunnel --clear`
 
 ### Demo-ready state
 - Auto-seeding on first launch with 12 realistic meals, pantry staples, a pre-filled weekly plan, and recent meal history.
-- Expo web support enabled for browser-based demos at `npm run web`.
+- Expo web support enabled for browser-based demos.
+- Android Expo Go path functional and tested.
+- Reset demo data UI available via Meals tab settings icon.
 - All core workflows tested and verified: meal library, pantry, suggestions, shopping list, weekly planning, history, import/export.
 - UX polish complete: natural tab navigation, copy/share integration, search/filter, and inline editing.
-- Test coverage: 106 tests passing across root and mobile repos, TypeScript strict mode clean.
-- Known limitations: no custom app icon or splash screen yet, expo-sqlite has limited web persistence (in-memory fallback in browsers), no cloud sync or recipe URL import.
+- Test coverage: 111 tests passing across root and mobile repos, TypeScript strict mode clean.
+- Known limitations: no custom app icon or splash screen yet, browser preview uses in-memory database (ephemeral), no cloud sync or recipe URL import.
 - See `docs/DEMO.md` for a complete demo walkthrough.

@@ -32,13 +32,14 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Plan text copy/share
   - Shopping list from active plan
 
-**Demo-ready milestone reached:** The mobile app now includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos, and all core workflows tested and working offline. See `docs/DEMO.md` for the full walkthrough. No branding assets (custom icons/splash) yet, but UX is ready for hands-on evaluation.
+**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI in Meals tab, and all core workflows tested and working offline. Test coverage: 91 root tests + 20 mobile tests = 111 passing. See `docs/DEMO.md` for the full walkthrough.
 
-- **Phase 4 — Firebase auth, Firestore sync, and production data safety** — 🔲 Not started
+- **Phase 4 — Firebase auth, Firestore sync, and production data safety** — ⏸️ **Deferred**
   - Google sign-in -> Firebase Auth
   - Firestore collections and security rules
   - Sync queue and pull/push engine
   - Manual sync status UI and error recovery
+  - **Status:** Not started. Deferred per user decision to focus on presentability and local-first functionality.
 
 - **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🔲 Not started
   - Android share-intent receiver

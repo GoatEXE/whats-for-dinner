@@ -2,6 +2,8 @@
 
 A focused walkthrough for demonstrating the offline-first mobile app built with Expo and React Native.
 
+**Branch:** `mobile-app`
+
 ## Setup (one-time)
 
 Install dependencies in the mobile app directory:
@@ -13,32 +15,42 @@ npm install
 
 ## Running the app
 
-### Browser demo (fastest)
+### Browser preview (fastest, ephemeral)
 
 ```bash
 npm run web
 ```
 
-Opens at http://localhost:8081. Good for quick feature walkthroughs. Note that expo-sqlite has limited web support and uses in-memory storage in browsers, so data resets on page refresh.
+Opens at http://localhost:8081. Good for quick feature walkthroughs and UI demos.
 
-### Mobile device demo (recommended)
+**Limitation:** Browser preview uses sql.js with an in-memory database. All data resets when you refresh the page. Sample data auto-loads on each page load.
+
+### Android device (persistent, recommended)
 
 ```bash
-npm start
+npx expo start --go --clear
 ```
 
-Scan the QR code with Expo Go on your phone. Full SQLite persistence works on real devices.
+Open Expo Go on your Android phone first, then scan the QR code from inside Expo Go. Full SQLite persistence works, so your data survives app restarts and device reboots.
+
+If LAN networking is flaky, retry with:
+
+```bash
+npx expo start --go --tunnel --clear
+```
 
 ## First launch
 
 The app auto-seeds on first launch with:
 
-- 12 complete meals (including Taco Tuesday, Spaghetti Bolognese, Chicken Curry, Pepperoni Pizza)
+- 12 complete meals (Taco Tuesday, Spaghetti Bolognese, Chicken Curry, Pepperoni Pizza, and more)
 - Pantry stocked with staples (salt, pepper, olive oil, rice, pasta, eggs, butter, flour, onion, garlic)
 - Current weekly plan with 4 meals already assigned (Monday, Tuesday, Thursday, Saturday)
 - Recent meal history spanning the last 10 days (for testing random picker exclusions)
 
 All sample data is real and editable.
+
+**Note for browser preview:** Sample data reloads automatically on each page refresh since the in-memory database doesn't persist.
 
 ## Demo flow (2-3 minutes)
 
@@ -81,29 +93,35 @@ All sample data is real and editable.
 
 ## Reset for next demo
 
-The app includes a reset helper at `apps/mobile/src/db/reset.ts` that clears the database and re-seeds sample data. Currently not wired to a UI button, but you can trigger it manually or restart with a fresh install:
+### On Android/iOS (Expo Go or native)
 
-1. Uninstall the app or clear app data (device settings)
-2. Relaunch
-3. Sample data loads automatically
+Tap the settings icon (gear) in the Meals tab header. A confirmation dialog appears. Confirm to reset all data back to the original demo state.
 
-Alternatively, for quick resets during development:
+### In browser preview
+
+Just refresh the page. The in-memory database resets automatically and sample data reloads.
+
+### Manual fallback
 
 ```bash
-# In apps/mobile/
-# Remove the SQLite file and restart the app
-rm -f .expo/SQLite/*.db
-npm run web
+# Remove the SQLite file and restart
+rm -f apps/mobile/.expo/SQLite/*.db
+cd apps/mobile && npm run web
 ```
 
 ## What the app is NOT yet
 
 This demo shows local-first offline functionality only. Not yet implemented:
 
-- Cloud sync or backup (Firebase integration planned for Phase 4)
-- Recipe URL import or web scraping (planned for Phase 5)
-- Android share-intent receiver (planned for Phase 5)
+- Cloud sync or backup (Phase 4 deferred)
+- Recipe URL import or web scraping (Phase 5)
+- Android share-intent receiver (Phase 5)
 - Custom app icon or splash screen (placeholder assets only)
-- Push notifications or background sync
 
 The current scope is full offline feature parity with the web app plus a demo-ready sample data experience.
+
+## Known limitations
+
+- **Browser preview:** Uses sql.js in-memory database. Data resets on page refresh. Use Android/iOS for persistent storage testing.
+- **Expo Go Android:** Fully functional after recent dependency and router fixes. Data persists across app restarts.
+- **iOS:** Not yet tested extensively, but should work identically to Android.
