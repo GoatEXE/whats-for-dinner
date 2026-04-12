@@ -88,12 +88,6 @@ const COMMON_UNITS = new Set([
   "pieces",
   "fillet",
   "fillets",
-  "breast",
-  "breasts",
-  "thigh",
-  "thighs",
-  "leg",
-  "legs",
 ]);
 const FRACTION_CHARACTERS = "¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞";
 
@@ -193,7 +187,7 @@ export function parseIngredientLine(
 
   const quantityMatch = cleaned.match(
     new RegExp(
-      `^(?<quantity>(?:about|approximately)?\\s*(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[.,]\\d+)?|[${FRACTION_CHARACTERS}])(?:\\s*(?:to|-|–)\\s*(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[.,]\\d+)?|[${FRACTION_CHARACTERS}]))?(?:\\s*\\([^)]*\\))?(?:\\s+[A-Za-z]+\\.?)?)\\s+(?<rest>.+)$`,
+      `^(?<quantity>(?:about|approximately)?\\s*(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[.,]\\d+)?|[${FRACTION_CHARACTERS}])(?:\\s*(?:to|-|–)\\s*(?:\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|\\d+(?:[.,]\\d+)?|[${FRACTION_CHARACTERS}]))?(?:\\s*\\([^)]*\\))?)\\s+(?<rest>.+)$`,
       "i",
     ),
   );
@@ -396,14 +390,19 @@ function collectInstructionTexts(value: unknown): string[] {
 
   if (value && typeof value === "object") {
     const record = value as JsonRecord;
+
+    if (record.itemListElement) {
+      const nestedTexts = collectInstructionTexts(record.itemListElement);
+
+      if (nestedTexts.length > 0) {
+        return nestedTexts;
+      }
+    }
+
     const directText = getPrimaryText(record.text) ?? getPrimaryText(record.name);
 
     if (directText) {
       return [directText];
-    }
-
-    if (record.itemListElement) {
-      return collectInstructionTexts(record.itemListElement);
     }
   }
 
@@ -485,12 +484,19 @@ function extractImageUrl(value: unknown, sourceUrl: string): string | null {
 
   if (value && typeof value === "object") {
     const record = value as JsonRecord;
-    const directUrl =
-      getPrimaryText(record.url) ??
-      getPrimaryText(record.contentUrl) ??
-      getPrimaryText(record["@id"]);
+    const directUrlCandidates = [
+      getPrimaryText(record.url),
+      getPrimaryText(record.contentUrl),
+      getPrimaryText(record["@id"]),
+    ];
 
-    return directUrl ? resolveUrl(directUrl, sourceUrl) : null;
+    for (const candidate of directUrlCandidates) {
+      if (!candidate || isFragmentOnlyReference(candidate)) {
+        continue;
+      }
+
+      return resolveUrl(candidate, sourceUrl);
+    }
   }
 
   return null;
@@ -562,6 +568,10 @@ function decodeHtmlEntities(value: string): string {
 
 function isUnitToken(token: string): boolean {
   return COMMON_UNITS.has(token.toLowerCase().replace(/\.$/, ""));
+}
+
+function isFragmentOnlyReference(value: string): boolean {
+  return value.trim().startsWith("#");
 }
 
 function normalizeUrl(candidate: string): string | null {

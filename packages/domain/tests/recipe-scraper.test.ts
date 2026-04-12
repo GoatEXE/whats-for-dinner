@@ -32,6 +32,8 @@ describe("parseIngredientLine", () => {
     ["salt", { name: "salt", quantityText: null }],
     ["3 (14 oz) cans tomatoes", { name: "tomatoes", quantityText: "3 (14 oz) cans" }],
     ["• 2 tbsp olive oil;", { name: "olive oil", quantityText: "2 tbsp" }],
+    ["8 lasagna noodles", { name: "lasagna noodles", quantityText: "8" }],
+    ["3 skinless chicken thighs", { name: "skinless chicken thighs", quantityText: "3" }],
   ])("splits %s", (raw, expected) => {
     expect(parseIngredientLine(raw)).toEqual(expected);
   });
@@ -106,6 +108,11 @@ describe("extractRecipeFromHtml", () => {
       tags: ["Dinner", "Pasta", "weeknight", "one-pan", "family favorite"],
     });
     expect(extracted?.ingredients).toHaveLength(4);
+    expect(extracted?.ingredients[2]).toEqual({
+      raw: "8 lasagna noodles",
+      name: "lasagna noodles",
+      quantityText: "8",
+    });
     expect(extracted?.notes).toContain("Brown the beef in a large skillet.");
   });
 
@@ -147,7 +154,41 @@ describe("extractRecipeFromHtml", () => {
     });
   });
 
-  it("falls back to og:image when recipe image is missing", () => {
+  it("uses nested HowToSection steps instead of section titles", () => {
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@type": "Recipe",
+          "name": "Layered Enchiladas",
+          "recipeIngredient": ["8 tortillas"],
+          "recipeInstructions": [
+            {
+              "@type": "HowToSection",
+              "name": "Make the filling",
+              "itemListElement": [
+                { "@type": "HowToStep", "text": "Cook the onions." },
+                { "@type": "HowToStep", "text": "Stir in the beans." }
+              ]
+            },
+            {
+              "@type": "HowToSection",
+              "name": "Bake",
+              "itemListElement": [
+                { "@type": "HowToStep", "text": "Layer everything in a dish." },
+                { "@type": "HowToStep", "text": "Bake until bubbling." }
+              ]
+            }
+          ]
+        }
+      </script>
+    `;
+
+    expect(extractRecipeFromHtml(html, "https://example.com/enchiladas")?.notes).toBe(
+      "Cook the onions.\nStir in the beans.\nLayer everything in a dish.\nBake until bubbling.",
+    );
+  });
+
+  it("falls back to og:image when recipe image is missing or only a fragment @id", () => {
     const html = `
       <html>
         <head>
@@ -156,6 +197,10 @@ describe("extractRecipeFromHtml", () => {
             {
               "@type": "Recipe",
               "name": "Baked Potatoes",
+              "image": {
+                "@type": "ImageObject",
+                "@id": "#img1"
+              },
               "recipeIngredient": ["4 potatoes"]
             }
           </script>
@@ -212,6 +257,25 @@ describe("extractRecipeFromHtml", () => {
     expect(extractRecipeFromHtml(html, "https://example.com/fruit-salad")).toMatchObject({
       name: "Fruit Salad",
       notes: "Mix everything together and chill.",
+    });
+  });
+
+  it("keeps recipes with empty ingredients as editable best-effort drafts", () => {
+    const html = `
+      <script type="application/ld+json">
+        {
+          "@type": "Recipe",
+          "name": "Mystery Sauce",
+          "description": "Add your ingredients later.",
+          "recipeIngredient": []
+        }
+      </script>
+    `;
+
+    expect(extractRecipeFromHtml(html, "https://example.com/mystery-sauce")).toMatchObject({
+      name: "Mystery Sauce",
+      ingredients: [],
+      notes: "Add your ingredients later.",
     });
   });
 });
