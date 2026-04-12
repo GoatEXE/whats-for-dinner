@@ -1,6 +1,16 @@
-import type { SQLiteDatabase } from "expo-sqlite";
-
-export type DatabaseHandle = SQLiteDatabase;
+/**
+ * Minimal synchronous SQLite surface that both the native `expo-sqlite`
+ * adapter and the web `sql.js` wrapper implement. Keeping this as a
+ * structural interface (rather than aliasing `SQLiteDatabase` directly)
+ * is what lets the mobile app swap its backing store per-platform.
+ */
+export interface DatabaseHandle {
+  getFirstSync<T = unknown>(sql: string, ...params: unknown[]): T | null;
+  getAllSync<T = unknown>(sql: string, ...params: unknown[]): T[];
+  runSync(sql: string, ...params: unknown[]): { changes: number };
+  execSync(sql: string): void;
+  withTransactionSync<T>(callback: () => T): T;
+}
 
 export interface IngredientRecord {
   id: string;

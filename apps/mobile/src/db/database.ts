@@ -1,6 +1,7 @@
 import { openDatabaseSync, type SQLiteDatabase } from "expo-sqlite";
 
 import { initialMigration } from "./migrations/001-initial";
+import type { DatabaseHandle } from "./types";
 
 const DATABASE_NAME = "whats-for-dinner.db";
 const migrations = [initialMigration];
@@ -35,7 +36,13 @@ function runMigrations(database: SQLiteDatabase) {
   });
 }
 
-export function initializeDatabase() {
+/**
+ * Initialize the native expo-sqlite database. Returns a Promise for API
+ * symmetry with the web backend (which must load a WASM module
+ * asynchronously). Native init is actually synchronous, so this resolves
+ * immediately on the first microtask.
+ */
+export async function initializeDatabase(): Promise<DatabaseHandle> {
   if (!databaseInstance) {
     databaseInstance = openDatabaseSync(DATABASE_NAME);
     applyConnectionPragmas(databaseInstance);
@@ -46,9 +53,9 @@ export function initializeDatabase() {
     isInitialized = true;
   }
 
-  return databaseInstance;
+  return databaseInstance as DatabaseHandle;
 }
 
-export function getDatabase() {
+export async function getDatabase(): Promise<DatabaseHandle> {
   return initializeDatabase();
 }

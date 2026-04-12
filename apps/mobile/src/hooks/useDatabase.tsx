@@ -20,26 +20,40 @@ export function DatabaseProvider({ children }: PropsWithChildren) {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const database = initializeDatabase();
+    let cancelled = false;
 
-      // Auto-seed sample data on first launch so the app is demo-ready.
-      if (isDatabaseEmpty(database)) {
-        try {
-          seedSampleData(database);
-        } catch (seedError) {
-          // Seeding is best-effort. Log but do not block app startup.
-          // eslint-disable-next-line no-console
-          console.warn("Sample data seed failed:", seedError);
+    (async () => {
+      try {
+        const database = await initializeDatabase();
+        if (cancelled) return;
+
+        // Auto-seed sample data on first launch so the app is demo-ready.
+        if (isDatabaseEmpty(database)) {
+          try {
+            seedSampleData(database);
+          } catch (seedError) {
+            // Seeding is best-effort. Log but do not block app startup.
+            // eslint-disable-next-line no-console
+            console.warn("Sample data seed failed:", seedError);
+          }
         }
-      }
 
-      setDb(database);
-      setIsReady(true);
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError : new Error(String(caughtError)));
-      setIsReady(false);
-    }
+        setDb(database);
+        setIsReady(true);
+      } catch (caughtError) {
+        if (cancelled) return;
+        setError(
+          caughtError instanceof Error
+            ? caughtError
+            : new Error(String(caughtError)),
+        );
+        setIsReady(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const value = useMemo(
