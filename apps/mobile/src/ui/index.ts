@@ -2,6 +2,7 @@ export { SearchBar } from './SearchBar';
 export { TagChip } from './TagChip';
 export { IngredientRow } from './IngredientRow';
 export { MealCard } from './MealCard';
+export { MealFormFields, mealFormStyles } from './MealFormFields';
 export { EmptyState } from './EmptyState';
 export { ErrorBanner } from './ErrorBanner';
 export { FAB } from './FAB';

@@ -86,10 +86,23 @@ All sample data is real and editable.
 
 ### 4. Import demo (optional)
 
+#### File import
+
 - From Meals tab, tap Import
 - Select a recipe JSON file (you can export one first if needed)
 - Show the import review screen
 - Confirm import and see new meals appear in the library
+
+#### URL import (native only)
+
+- From Meals tab, tap the URL import option
+- Paste a recipe URL (try AllRecipes, Food Network, Budget Bytes)
+- Wait for extraction (fetches and parses the page)
+- Review extracted name, ingredients, prep time, tags
+- Edit if needed, then save
+- New meal appears with source URL stored
+
+**Note:** URL import works on Android/iOS only. Browser preview is blocked by CORS; use file import instead on web.
 
 ## Reset for next demo
 
@@ -114,8 +127,7 @@ cd apps/mobile && npm run web
 This demo shows local-first offline functionality only. Not yet implemented:
 
 - Cloud sync or backup (Phase 4 deferred)
-- Recipe URL import or web scraping (Phase 5)
-- Android share-intent receiver (Phase 5)
+- Android share-intent receiver for recipe URLs (Phase 5, deferred)
 - Custom app icon or splash screen (placeholder assets only)
 
 The current scope is full offline feature parity with the web app plus a demo-ready sample data experience.

@@ -29,7 +29,7 @@ Fetching a URL and parsing the HTML on-device is the simplest offline approach. 
 
 ## Work Packages
 
-### WP1: Domain-layer recipe extractor (Commit 1)
+### WP1: Domain-layer recipe extractor (Commit 1) — ✅ COMPLETE
 
 **Scope:** Pure TypeScript module in `packages/domain` — no UI, no React, no platform deps. Fully testable with Vitest.
 
@@ -86,7 +86,7 @@ function parseIngredientLine(raw: string): { name: string; quantityText: string 
 
 ---
 
-### WP2: Mobile URL-import screen + fetch hook (Commit 2)
+### WP2: Mobile URL-import screen + fetch hook (Commit 2) — ✅ COMPLETE
 
 **Scope:** New screen and feature hook that let users paste a URL, fetch + extract, review the result, and save to SQLite.
 
@@ -129,7 +129,7 @@ interface UseUrlImportReturn {
 
 ---
 
-### WP3: UI polish + detail screen source link + docs (Commit 3)
+### WP3: UI polish + detail screen source link + docs (Commit 3) — 🔲 DEFERRED
 
 **Scope:** Small polish pass to surface the `sourceUrl` on the meal detail screen, update docs, and handle edge cases.
 
@@ -169,13 +169,26 @@ All three are sequential. WP1 must land first since WP2 imports from it. Each is
 | Ingredient parsing heuristic misses edge cases | Medium | Low | User reviews and edits before saving. Heuristic only needs to be "good enough" to save typing. |
 | HTML string parsing fragile vs DOM parser | Low | Medium | JSON-LD is just JSON inside a predictable script tag; regex extraction of the script block is robust. We're not parsing arbitrary HTML structure. |
 
-## What's NOT in This Plan
+## Status Update (2026-04-12)
 
-- **Android share-intent** — Requires custom dev build (not Expo Go). Deferred to Phase 5b after these 3 commits land and we validate the extraction logic works well.
-- **Microdata/RDFa fallback** — JSON-LD covers 90%+ of recipe sites. Can add microdata parser later if users report gaps.
-- **Image download/caching** — `imageUrl` is stored but not displayed yet. Displaying remote images is a future enhancement.
-- **Native branding assets (PNG icons)** — Listed as optional in follow-ups. Can be a separate 1-commit task anytime. Not high user value.
-- **Batch URL import** — One URL at a time is sufficient for v1.
+**Completed:**
+- WP1: Domain extractor (`packages/domain/src/recipe-scraper.ts`) with unit tests
+- WP2: Mobile URL import screen (`apps/mobile/app/(tabs)/meals/url-import.tsx`) with review/edit workflow
+- Source metadata storage in meals table (no migration needed; schema already had columns)
+- URL import works on native mobile (Android/iOS) via React Native fetch
+
+**Known limitations:**
+- Browser preview: CORS blocks most recipe sites. This is expected; web is a secondary demo target. File import remains the web fallback.
+- Share-intent: Deferred to Phase 5b (requires custom dev build, not Expo Go compatible).
+- Source link display on detail screen: Not yet implemented (WP3 polish step).
+
+**Deferred to Phase 5b (future work):**
+- Android share-intent receiver (requires custom dev build)
+- Meal detail screen source link display and `Linking.openURL` integration
+- Microdata/RDFa fallback parsing (JSON-LD covers 90%+ of sites)
+- Image display for `imageUrl` field
+- Native branding assets (PNG icons)
+- Batch URL import
 
 ## Recommended First Commit
 

@@ -426,6 +426,16 @@ Indexes:
   - skips duplicates by normalized meal name
   - reports validation failures per meal
 
+### Recipe URL import (mobile app only)
+- **Mobile URL import screen:** paste recipe URL → fetch HTML → extract JSON-LD structured data → review/edit → save
+- Extraction logic in `packages/domain/src/recipe-scraper.ts` (pure function, portable)
+- Parses schema.org Recipe JSON-LD from most recipe sites (AllRecipes, Food Network, NYT Cooking, Budget Bytes, etc.)
+- Extracts meal name, ingredients with quantities, prep time, tags, source URL/host
+- User reviews and edits extracted data before saving
+- Stored in local SQLite with `source_url` and `source_host` metadata
+- Works on native mobile (iOS/Android) via React Native fetch; CORS blocks browser preview
+- Manual fallback: if extraction fails, pre-fills source URL and lets user enter manually
+
 ### Copy/export text features
 - Weekly plan text export/copy from the Plan tab.
 - Archived plan copy from plan history detail.
@@ -475,13 +485,14 @@ Indexes:
 ### Test infrastructure
 - Mobile repo tests use `better-sqlite3` adapter for Node-based Vitest testing.
 - Vitest config with path aliases for `@domain`, `@contracts`, and mobile internal imports.
-- Test counts: 91 root tests + 20 mobile repo tests = 111 total, all passing.
+- Test counts: 121 root tests + 23 mobile repo tests = 144 total, all passing.
 - Mobile `tsc --noEmit` passes cleanly.
 
 ### Current scope
 - Phases 1-3 complete: local-first offline parity with the current web app.
 - Phase 4 (Firebase auth + Firestore sync) deferred per user decision.
-- No recipe URL import or share-intent integration yet.
+- Phase 5 (URL import): WP1+WP2 complete; URL import works on native mobile only (CORS blocks web).
+- Android share-intent: not implemented (requires custom dev build, deferred to Phase 5b).
 - App is fully functional offline and ready for demo.
 
 ### Demo paths
@@ -506,8 +517,9 @@ Indexes:
 - Expo web support enabled for browser-based demos.
 - Android Expo Go path functional and tested.
 - Reset demo data UI available via Meals tab settings icon.
-- All core workflows tested and verified: meal library, pantry, suggestions, shopping list, weekly planning, history, import/export.
+- All core workflows tested and verified: meal library, pantry, suggestions, shopping list, weekly planning, history, import/export, URL import.
 - UX polish complete: natural tab navigation, copy/share integration, search/filter, and inline editing.
-- Test coverage: 111 tests passing across root and mobile repos, TypeScript strict mode clean.
-- Known limitations: no custom app icon or splash screen yet, browser preview uses in-memory database (ephemeral), no cloud sync or recipe URL import.
+- Test coverage: 139 tests passing across root and mobile repos, TypeScript strict mode clean.
+- URL import: works on native mobile (Android/iOS); browser preview blocked by CORS.
+- Known limitations: no custom app icon or splash screen yet, browser preview uses in-memory database (ephemeral), no cloud sync, no Android share-intent.
 - See `docs/DEMO.md` for a complete demo walkthrough.

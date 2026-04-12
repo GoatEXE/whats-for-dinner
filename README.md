@@ -220,16 +220,17 @@ All sample data is fully editable. To reset demo data, tap the settings icon in 
 - ✅ Local SQLite persistence (Android/iOS)
 - ✅ Browser preview via sql.js in-memory database
 - ✅ Recipe JSON import/export
+- ✅ Recipe URL import (native mobile only; CORS blocks browser preview)
 - ✅ Shopping list copy/share
 - ✅ Weekly plan autofill and copy
 - ⏸️ Phase 4 (Firebase auth + cloud sync) deferred
-- 🔲 Recipe URL import and Android share-intent not yet implemented
+- 🔲 Android share-intent receiver not yet implemented
 
 ### Testing
 
-- Root tests: 91 passing
-- Mobile repo tests: 20 passing
-- Total: 111 tests passing
+- Root tests: 121 passing
+- Mobile repo tests: 23 passing
+- Total: 144 tests passing
 - TypeScript strict mode: clean
 
 See `docs/DEMO.md` for a complete demo walkthrough and `docs/migration-plan.md` for the mobile architecture overview.

@@ -213,6 +213,50 @@ describe("extractRecipeFromHtml", () => {
     );
   });
 
+  it("falls back to og:image when image is a bare fragment string", () => {
+    const html = `
+      <html>
+        <head>
+          <meta property="og:image" content="/hero.jpg" />
+          <script type="application/ld+json">
+            {
+              "@type": "Recipe",
+              "name": "Simple Toast",
+              "image": "#hero",
+              "recipeIngredient": ["2 slices bread"]
+            }
+          </script>
+        </head>
+      </html>
+    `;
+
+    expect(extractRecipeFromHtml(html, "https://example.com/toast")?.imageUrl).toBe(
+      "https://example.com/hero.jpg",
+    );
+  });
+
+  it("falls back to og:image when image array contains only fragment entries", () => {
+    const html = `
+      <html>
+        <head>
+          <meta property="og:image" content="/photo.jpg" />
+          <script type="application/ld+json">
+            {
+              "@type": "Recipe",
+              "name": "Scrambled Eggs",
+              "image": ["#photo1", "#photo2"],
+              "recipeIngredient": ["3 eggs"]
+            }
+          </script>
+        </head>
+      </html>
+    `;
+
+    expect(extractRecipeFromHtml(html, "https://example.com/eggs")?.imageUrl).toBe(
+      "https://example.com/photo.jpg",
+    );
+  });
+
   it("returns null when there is no JSON-LD recipe", () => {
     const html = "<html><head></head><body><h1>Just a blog post</h1></body></html>";
 

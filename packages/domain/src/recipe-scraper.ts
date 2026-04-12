@@ -467,6 +467,10 @@ function collectTagTexts(
 
 function extractImageUrl(value: unknown, sourceUrl: string): string | null {
   if (typeof value === "string") {
+    if (isFragmentOnlyReference(value)) {
+      return null;
+    }
+
     return resolveUrl(value, sourceUrl);
   }
 

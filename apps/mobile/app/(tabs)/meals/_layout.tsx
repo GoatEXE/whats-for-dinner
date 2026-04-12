@@ -8,9 +8,17 @@ function MealsHeaderActions() {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginRight: 4 }}>
       <Pressable
+        onPress={() => router.push('/(tabs)/meals/url-import')}
+        hitSlop={8}
+        accessibilityLabel="Import recipe from URL"
+        accessibilityRole="button"
+      >
+        <Ionicons name="link-outline" size={24} color={colors.accent} />
+      </Pressable>
+      <Pressable
         onPress={() => router.push('/(tabs)/meals/import')}
         hitSlop={8}
-        accessibilityLabel="Import recipes"
+        accessibilityLabel="Import recipes from file"
         accessibilityRole="button"
       >
         <Ionicons name="cloud-download-outline" size={24} color={colors.accent} />
@@ -50,6 +58,10 @@ export default function MealsLayout() {
       <Stack.Screen
         name="edit"
         options={{ title: 'Edit Meal', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="url-import"
+        options={{ title: 'Import from URL', presentation: 'modal' }}
       />
       <Stack.Screen
         name="import"

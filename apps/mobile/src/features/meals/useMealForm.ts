@@ -51,6 +51,41 @@ export interface MealFormPayload {
   tags: string[];
 }
 
+export function buildMealIngredientPayload(
+  ingredients: IngredientDraft[],
+): MealIngredientInput[] {
+  const seen = new Map<string, MealIngredientInput>();
+  const deduped: MealIngredientInput[] = [];
+
+  for (const ingredient of ingredients) {
+    const trimmedName = ingredient.name.trim();
+    if (!trimmedName) continue;
+
+    const key = normalizeName(trimmedName);
+    const qty = ingredient.quantityText.trim() || null;
+    const existing = seen.get(key);
+
+    if (existing) {
+      if (qty) {
+        existing.quantityText = existing.quantityText
+          ? `${existing.quantityText} + ${qty}`
+          : qty;
+      }
+      existing.isOptional = existing.isOptional && ingredient.isOptional;
+    } else {
+      const entry: MealIngredientInput = {
+        name: trimmedName,
+        quantityText: qty,
+        isOptional: ingredient.isOptional,
+      };
+      seen.set(key, entry);
+      deduped.push(entry);
+    }
+  }
+
+  return deduped;
+}
+
 export interface UseMealFormReturn {
   form: MealFormState;
   setField: <K extends keyof MealFormState>(key: K, value: MealFormState[K]) => void;
@@ -61,6 +96,8 @@ export interface UseMealFormReturn {
   addTag: (tag: string) => void;
   removeTag: (tag: string) => void;
   reset: (meal?: Meal) => void;
+  /** Replace the entire form state from a pre-built draft (e.g. scraped recipe). */
+  seedFromDraft: (draft: MealFormState) => void;
   validate: (existingNames: string[], editingId?: string) => string[];
   toPayload: () => MealFormPayload;
 }
@@ -132,6 +169,10 @@ export function useMealForm(initial?: Meal): UseMealFormReturn {
     setForm(meal ? mealToForm(meal) : emptyForm);
   }, []);
 
+  const seedFromDraft = useCallback((draft: MealFormState) => {
+    setForm(draft);
+  }, []);
+
   const validate = useCallback(
     (existingNames: string[], editingId?: string) => {
       const errors: string[] = [];
@@ -168,13 +209,7 @@ export function useMealForm(initial?: Meal): UseMealFormReturn {
       notes: form.notes.trim() || null,
       prepMinutes: form.prepMinutes ? Number(form.prepMinutes) : null,
       isFavorite: form.isFavorite,
-      ingredients: form.ingredients
-        .filter((i) => i.name.trim())
-        .map((i) => ({
-          name: i.name.trim(),
-          quantityText: i.quantityText.trim() || null,
-          isOptional: i.isOptional,
-        })),
+      ingredients: buildMealIngredientPayload(form.ingredients),
       tags: form.tags,
     };
   }, [form]);
@@ -189,6 +224,7 @@ export function useMealForm(initial?: Meal): UseMealFormReturn {
     addTag,
     removeTag,
     reset,
+    seedFromDraft,
     validate,
     toPayload,
   };

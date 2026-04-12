@@ -32,7 +32,7 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Plan text copy/share
   - Shopping list from active plan
 
-**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI in Meals tab, and all core workflows tested and working offline. Test coverage: 91 root tests + 20 mobile tests = 111 passing. See `docs/DEMO.md` for the full walkthrough.
+**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI in Meals tab, and all core workflows tested and working offline. Test coverage: 121 root tests + 23 mobile tests = 144 passing. See `docs/DEMO.md` for the full walkthrough.
 
 - **Phase 4 — Firebase auth, Firestore sync, and production data safety** — ⏸️ **Deferred**
   - Google sign-in -> Firebase Auth
@@ -41,12 +41,15 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Manual sync status UI and error recovery
   - **Status:** Not started. Deferred per user decision to focus on presentability and local-first functionality.
 
-- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🔲 Not started
-  - Android share-intent receiver
-  - "Import from URL" flow
-  - Firebase Cloud Function recipe parser
-  - Migration runbook for legacy data
-  - Web app retirement
+- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🟡 Partial (WP1+WP2 complete)
+  - ✅ Domain-layer recipe extractor (schema.org JSON-LD parser)
+  - ✅ Mobile URL import screen with fetch + review/edit workflow
+  - ✅ Source metadata storage (`source_url`, `source_host`)
+  - ⏸️ Android share-intent receiver (deferred to Phase 5b; requires custom dev build)
+  - ✅ Local on-device recipe parser (current no-cloud implementation)
+  - 🔲 Migration runbook for legacy data
+  - 🔲 Web app retirement
+  - **Limitation:** URL import works on native mobile only; browser preview blocked by CORS (acceptable trade-off for local-first approach).
 
 ---
 
@@ -58,10 +61,12 @@ Build the mobile app **next to** the current web app, not by mutating the curren
 - move the core business rules into shared pure TypeScript domain code;
 - use **Expo + React Native** for UI;
 - use **local SQLite on-device as the source of truth** for offline/local-first behavior;
-- use **Firebase Auth + Firestore** as the cloud sync/backup layer;
-- use **Firebase Cloud Functions** only where mobile should not do the work itself, especially **recipe URL scraping/parsing**.
+- use **Firebase Auth + Firestore** as the cloud sync/backup layer (deferred in Phase 4);
+- use **Firebase Cloud Functions** sparingly for migration helpers or future cloud-only needs.
 
-That gives you offline reliability, preserves the current relational logic, keeps Firebase serverless, and avoids rebuilding the current API surface as a thin remote wrapper around logic that really belongs on-device.
+**Note on recipe parsing:** The original plan recommended Cloud Functions for recipe URL scraping. Phase 5 implementation (WP1+WP2) used local on-device parsing of schema.org JSON-LD instead, keeping the feature fully offline and avoiding cloud dependencies. This proved sufficient for most recipe sites and aligns with the local-first constraint.
+
+That gives you offline reliability, preserves the current relational logic, and avoids rebuilding the current API surface as a thin remote wrapper around logic that really belongs on-device.
 
 ---
 
@@ -118,9 +123,9 @@ apps/
 packages/
   domain/                   # pure TS ports of current business logic
   contracts/                # zod schemas, import/export envelope, shared types
-functions/
+functions/                  # (Phase 4 deferred; not yet created)
   src/
-    recipeImport/           # Firebase callable/HTTP function for recipe parsing
+    # Future: migration helpers or cloud-only features if needed
 src/                        # current Express app remains intact during migration
 public/                     # current web UI remains intact during migration
 docs/
@@ -138,7 +143,7 @@ docs/
 - **Sync triggers:** NetInfo + app foreground events + manual refresh
 - **Clipboard/share/files:** `expo-clipboard`, `expo-sharing`, `expo-file-system`, `expo-document-picker`
 - **Testing:** Vitest/Jest for domain + repo tests, React Native Testing Library for components, Firebase Emulator Suite for sync/functions, Maestro for device E2E
-- **Build/distribution:** EAS Build + custom dev client
+- **Build/distribution:** Expo Go for current development; EAS Build + custom dev client only when native-only integrations (for example share-intent) resume
 
 ### 1.4 Why SQLite on-device instead of Firestore-only offline persistence
 
@@ -240,9 +245,12 @@ app/
 
 #### Cloud Functions
 
-Use Cloud Functions only for:
+**Original plan:** Use Cloud Functions for recipe URL parsing/scraping, migration helpers, and conflict tooling.
 
-- recipe URL parsing/scraping,
+**Current reality:** Phase 5 implemented local on-device recipe parsing instead (schema.org JSON-LD extraction in `packages/domain`). No Cloud Functions deployed yet. Firebase remains deferred to Phase 4.
+
+If Cloud Functions are added later, use them only for:
+
 - optional future migration helpers,
 - optional future remote conflict tooling.
 
@@ -318,13 +326,15 @@ Stand up the Expo app, local DB, and shared business-logic package while keeping
 ### Build
 
 - Create `apps/mobile` with Expo Router + TypeScript.
-- Decide early that development uses a **custom dev client**, not Expo Go, because share-intent/native integrations will be needed.
+- Start with Expo Go for development (QR code workflow, fast iteration).
 - Add SQLite wrapper and migration system.
 - Define the new local schema with stable text IDs and sync metadata.
 - Create `packages/domain` and `packages/contracts`.
 - Port normalization and import/export envelope logic first.
 - Build the base 3-tab shell with placeholder screens.
 - Add file import of the existing meal export envelope as the first real end-to-end data path.
+
+**Note:** Custom dev client is only needed for Android share-intent (Phase 5b, deferred). URL import and all current features work in Expo Go.
 
 ### Dependencies
 
@@ -465,7 +475,7 @@ Finish the mobile-native import experience and create a safe cutover path away f
 
 - Android share-intent receiver for shared URLs/text
 - “Import from URL” flow inside the app
-- Firebase Cloud Function recipe parser
+- local on-device recipe parser (schema.org JSON-LD extraction)
 - import review/edit screen before save
 - manual fallback entry when parsing is weak or fails
 - migration runbook for legacy data
@@ -637,18 +647,22 @@ The easiest way to preserve behavior is to port the current service logic nearly
 
 ## 4. Recipe import architecture
 
-### 4.1 Why recipe parsing should be server-side
+### 4.1 Original plan vs current implementation
 
-The requested scraping libraries (`metascraper`, `recipe-data-scraper`, `@julianpoemp/html-recipe-parser`) are much better suited to **Node/serverless** than to React Native.
+**Original plan (pre-Phase 5):** Use Firebase Cloud Functions for recipe URL parsing because scraping libraries like `metascraper`, `recipe-data-scraper`, and `@julianpoemp/html-recipe-parser` are Node-oriented and server-side parsing handles redirects/Pinterest resolution better.
 
-Reasons:
+**Current implementation (Phase 5 WP1+WP2):** Local on-device parsing using native `fetch()` and lightweight schema.org JSON-LD extraction in `packages/domain/src/recipe-scraper.ts`. No cloud dependencies.
 
-- HTML parsing dependencies are Node-oriented.
-- Some recipe sites behave differently for mobile/browser requests.
-- Redirect handling and Pinterest resolution are more reliable server-side.
-- You avoid shipping scraping complexity and brittle parsing code into the mobile bundle.
+**Why the change:**
 
-**Recommendation:** recipe parsing lives in a Firebase Cloud Function, not in the device app.
+- No-cloud constraint (Phase 4 deferred)
+- Schema.org JSON-LD coverage is excellent across major recipe sites
+- React Native `fetch()` bypasses CORS (native context)
+- Keeps the feature fully offline
+- Lightweight parser (~200 LOC) vs heavy scraping library dependencies
+- Manual fallback handles edge cases gracefully
+
+**Trade-off:** Some sites (NYT Cooking, auth-required sites) may block or require login. Users can still add recipes manually with source URL pre-filled. This is acceptable for the local-first approach.
 
 ### 4.2 Entry points
 
@@ -664,44 +678,37 @@ Support two entry points:
 
 ### 4.3 Import flow
 
+**Current implementation (local parsing):**
+
 ```text
-URL arrives (paste or share intent)
--> app normalizes obvious whitespace/text noise
--> app calls Cloud Function `parseRecipeUrl`
--> function resolves redirects/canonical URL
--> function fetches HTML
--> function extracts schema.org JSON-LD Recipe data
--> function applies parser fallbacks if needed
--> function returns normalized recipe draft + confidence + source metadata
+URL arrives (paste; share-intent deferred)
+-> app normalizes URL/whitespace
+-> app fetches HTML via native fetch (no CORS)
+-> domain extractor parses JSON-LD script tags
+-> extractor returns ScrapedRecipe or null
 -> app shows editable review screen
 -> user edits/fixes
--> save creates local meal + local ingredients + sync job
+-> save creates local meal + ingredients in SQLite
 ```
 
 ### 4.4 Pinterest and redirect handling
 
-Pinterest URLs often do not directly contain the canonical recipe payload you want.
+**Original plan:** Cloud Function resolves Pinterest redirects and follows canonical URLs.
 
-The parser function should:
+**Current implementation:** Native `fetch()` follows redirects automatically. Pinterest outbound links resolve to the final destination page. If Pinterest blocks or redirects fail, user sees an error and can paste the destination URL directly.
 
-- follow redirects;
-- attempt to resolve Pinterest outbound destination when possible;
-- fall back to parsing the final reachable HTML page;
-- return both `submittedUrl` and `resolvedUrl` for transparency/debugging.
+### 4.5 Parser pipeline (current local implementation)
 
-### 4.5 Parser pipeline
+Actual implementation in `packages/domain/src/recipe-scraper.ts`:
 
-Suggested order inside the Cloud Function:
+1. **Fetch HTML** via React Native fetch (or web fetch on browser preview, subject to CORS)
+2. **Extract `<script type="application/ld+json">` tags** via regex
+3. **Parse JSON and find Recipe objects** (handle both single object and `@graph` array)
+4. **Extract fields:** `name`, `recipeIngredient[]`, `prepTime`/`totalTime`, `recipeCategory`/`keywords` → tags, `image`
+5. **Parse ingredient lines** into `{ name, quantityText }` using simple heuristic
+6. **Return ScrapedRecipe or null**
 
-1. **Fetch page + follow redirects**
-2. **Extract schema.org JSON-LD** directly when present
-3. **Run parser libraries in order**
-   - `recipe-data-scraper`
-   - `metascraper` with recipe/json-ld rules
-   - `@julianpoemp/html-recipe-parser`
-4. **Normalize to app draft format**
-5. **Score confidence**
-6. **Return warnings if fields are missing**
+No external scraping libraries. No confidence scoring (user always reviews). No heavy HTML parsing.
 
 ### 4.6 Normalized recipe draft shape
 
@@ -728,30 +735,25 @@ Recommended function response:
 }
 ```
 
-### 4.7 App-side review screen
+### 4.7 App-side review screen (implemented in WP2)
 
-Never auto-save scraped recipes silently.
+Never auto-save scraped recipes silently. The mobile URL import screen:
 
-The review screen should allow the user to:
+- Shows extracted data as editable form (reuses `useMealForm`)
+- User can edit title, ingredients, quantities, tags, notes, prep time
+- User can delete bad ingredients or add missing ones
+- Confirm saves to SQLite; cancel discards
 
-- edit title
-- delete bad ingredients
-- fix ingredient names/quantities
-- mark optional ingredients
-- add tags
-- confirm or cancel
+### 4.8 Fallback behavior (implemented in WP2)
 
-### 4.8 Fallback behavior
+If parsing fails:
 
-If parsing fails or confidence is low:
+- Show friendly error message
+- Offer "Add manually" option
+- Pre-fill source URL in manual form
+- User completes entry by hand
 
-- show a manual meal form prefilled with whatever was recovered:
-  - page title
-  - source URL
-  - maybe image URL
-- let the user finish by hand
-
-This keeps the feature useful even when scraping is messy.
+This keeps the feature useful even when extraction fails.
 
 ---
 
@@ -788,7 +790,7 @@ Do not break import of the existing envelope.
 Recommended policy:
 
 - **importer supports v1 immediately**
-- future mobile export can introduce **v2** with optional metadata such as `sourceUrl`, `imageUrl`, etc.
+- mobile export already includes optional `sourceUrl`/`sourceHost` in v1 envelope (backward-compatible; importers ignore unknown fields)
 - v1 imports map missing fields to `null`
 
 ### 5.3 Migration sequence for meals
@@ -892,9 +894,10 @@ Use Firebase Emulator Suite for:
 - Firestore security rules
 - push/pull sync behavior
 - conflict handling
-- recipe parser Cloud Function contracts
 
 **Goal:** validate cloud behavior without touching production Firebase.
+
+**Note:** Recipe parsing is local (no Cloud Functions), so no emulator tests needed for that.
 
 ### 4. Component tests
 
@@ -917,8 +920,9 @@ Use **Maestro** for Android-first flows:
 - meal CRUD
 - pantry/suggestion/shopping flows
 - weekly plan flows
-- offline -> reconnect sync flow
-- share-intent recipe import
+- offline -> reconnect sync flow (when Phase 4 lands)
+- URL import flow
+- share-intent recipe import (when Phase 5b lands)
 
 **Goal:** replace Playwright E2E with device-realistic mobile coverage.
 
@@ -929,7 +933,7 @@ Use **Maestro** for Android-first flows:
 | Vitest unit tests for services/libs | shared domain unit tests                        |
 | Supertest API integration tests     | SQLite repository/use-case integration tests    |
 | Playwright UI tests                 | React Native Testing Library + Maestro          |
-| Import/export integration tests     | importer tests + emulator contract tests        |
+| Import/export integration tests     | importer tests (no emulator for local-first)    |
 | Weekly plan integration tests       | local DB integration tests + Maestro plan flows |
 
 ### 6.3 Parity strategy during migration
@@ -952,8 +956,9 @@ Also include:
 - SQLite migration tests across schema versions
 - cold-start tests with larger data sets
 - offline/airplane-mode manual checks
-- Android share-intent manual tests on real device
-- EAS build validation for Android from the first native integration onward
+- URL import manual tests on real device (Android/iOS)
+- Android share-intent manual tests on real device (when Phase 5b lands)
+- EAS build validation for Android if/when custom dev client is needed
 
 ---
 
@@ -963,11 +968,11 @@ Also include:
 | ----------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Sync bugs corrupt or duplicate data             | Local-first + cloud sync is the hardest new capability           | Keep SQLite authoritative, use stable IDs, add sync queue, test heavily with Firebase Emulator, and start with single-user last-write-wins |
 | Trying to use Firestore as the only local store | Complex relational logic becomes harder and more brittle         | Use SQLite for app behavior; use Firestore only for sync/backup                                                                            |
-| Expo/native integration surprises               | Share intent, auth, and some integrations need native config     | Commit early to custom dev client + EAS; do not assume Expo Go is sufficient                                                               |
-| Recipe scraping is brittle                      | Recipe sites vary wildly and Pinterest often redirects           | Put parsing in Cloud Functions, use multiple parser fallbacks, always require user review, keep manual entry fallback                      |
-| Firestore lacks strong uniqueness constraints   | Duplicate ingredients/tags/meals could appear across devices     | Use deterministic IDs for ingredients/tags; keep meal dedupe local by normalized name; surface rare conflicts instead of overbuilding now  |
-| Current export format only migrates meals       | Final cutover could otherwise lose pantry/history/plans          | Add a one-time full-backup export or SQLite migration script before retiring the web app                                                   |
-| Overbuilding serverless endpoints               | Recreating the REST API wastes time and weakens offline behavior | Keep domain logic local; use Functions only for recipe parsing and migration helpers                                                       |
+| Expo/native integration surprises               | Share intent, auth, and some integrations need native config     | Use Expo Go for the current demo scope, then switch to custom dev client + EAS only when native-only integrations resume                  |
+| Recipe scraping is brittle                      | Recipe sites vary wildly and some require auth                   | Use local JSON-LD parsing (current), always require user review, keep manual entry fallback. Cloud parsing is optional future enhancement. |
+| Firestore lacks strong uniqueness constraints   | Duplicate ingredients/tags/meals could appear across devices     | Use deterministic IDs for ingredients/tags; keep meal dedupe local by normalized name; surface rare conflicts instead of overbuilding now |
+| Current export format only migrates meals       | Final cutover could otherwise lose pantry/history/plans          | Add a one-time full-backup export or SQLite migration script before retiring the web app                                                  |
+| Overbuilding serverless endpoints               | Recreating the REST API wastes time and weakens offline behavior | Keep domain logic local; defer cloud features until user need is proven                                                                    |
 | Cutover happens before parity is proven         | Family workflow gets interrupted                                 | Do not decommission the web app until mobile has full offline parity, migration rehearsal, and data spot-check sign-off                    |
 
 ---
