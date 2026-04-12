@@ -1,21 +1,35 @@
 import { useCallback, useState } from 'react';
 
-import { exportMealsEnvelope } from '@whats-for-dinner/domain';
-
 import * as mealsRepo from '../../db/repos/meals-repo';
+import type { MealRecord } from '../../db/types';
 import { useDatabase } from '../../hooks/useDatabase';
+import {
+  buildExportFilename,
+  buildExportJson,
+  buildExportSummary,
+} from './export-helpers';
+
+export interface ExportResult {
+  json: string;
+  filename: string;
+  summary: string;
+  mealCount: number;
+}
 
 export interface UseExportReturn {
   exporting: boolean;
   error: string | null;
-  /** Returns the JSON string of the export envelope, ready to share/save. */
-  exportMeals: (options?: { includeArchived?: boolean }) => string | null;
+  /**
+   * Build the export JSON and metadata.
+   * Returns the payload ready to share/save, or null on error.
+   */
+  exportMeals: (options?: { includeArchived?: boolean }) => ExportResult | null;
 }
 
 /**
  * Feature hook that builds the recipe export envelope from local SQLite
- * and returns it as a JSON string. The caller can share it via Expo Sharing,
- * write to file, or copy to clipboard.
+ * and returns it along with a filename and human-readable summary.
+ * The caller can share it via Expo Sharing, write to file, or copy to clipboard.
  */
 export function useExport(): UseExportReturn {
   const { db } = useDatabase();
@@ -23,7 +37,7 @@ export function useExport(): UseExportReturn {
   const [error, setError] = useState<string | null>(null);
 
   const exportMeals = useCallback(
-    (options: { includeArchived?: boolean } = {}): string | null => {
+    (options: { includeArchived?: boolean } = {}): ExportResult | null => {
       if (!db) {
         setError('Database is not ready');
         return null;
@@ -33,27 +47,23 @@ export function useExport(): UseExportReturn {
       setError(null);
 
       try {
-        const allMeals = mealsRepo.getAll(db, {
-          archived: options.includeArchived ? undefined : false,
-          includeDeleted: false,
-        });
+        let records: MealRecord[];
 
-        const envelope = exportMealsEnvelope(
-          allMeals.map((m) => ({
-            name: m.name,
-            notes: m.notes,
-            prepMinutes: m.prepMinutes,
-            isFavorite: m.isFavorite,
-            tags: m.tags,
-            ingredients: m.ingredients.map((i) => ({
-              name: i.name,
-              quantityText: i.quantityText,
-              isOptional: i.isOptional,
-            })),
-          })),
-        );
+        if (options.includeArchived) {
+          // getAll(archived: undefined) defaults to non-archived only,
+          // so we fetch both buckets and merge to include everything.
+          const active = mealsRepo.getAll(db, { archived: false, includeDeleted: false });
+          const archived = mealsRepo.getAll(db, { archived: true, includeDeleted: false });
+          records = [...active, ...archived];
+        } else {
+          records = mealsRepo.getAll(db, { archived: false, includeDeleted: false });
+        }
 
-        return JSON.stringify(envelope, null, 2);
+        const json = buildExportJson(records);
+        const filename = buildExportFilename();
+        const summary = buildExportSummary(records.length, !!options.includeArchived);
+
+        return { json, filename, summary, mealCount: records.length };
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         setError(message);

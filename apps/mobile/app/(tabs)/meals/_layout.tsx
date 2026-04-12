@@ -24,6 +24,14 @@ function MealsHeaderActions() {
         <Ionicons name="cloud-download-outline" size={24} color={colors.accent} />
       </Pressable>
       <Pressable
+        onPress={() => router.push('/(tabs)/meals/export')}
+        hitSlop={8}
+        accessibilityLabel="Export cookbook"
+        accessibilityRole="button"
+      >
+        <Ionicons name="share-outline" size={24} color={colors.accent} />
+      </Pressable>
+      <Pressable
         onPress={() => router.push('/(tabs)/meals/settings')}
         hitSlop={8}
         accessibilityLabel="Meals settings"
@@ -66,6 +74,10 @@ export default function MealsLayout() {
       <Stack.Screen
         name="import"
         options={{ title: 'Import Recipes', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="export"
+        options={{ title: 'Export Cookbook', presentation: 'modal' }}
       />
       <Stack.Screen
         name="settings"

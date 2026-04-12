@@ -72,7 +72,7 @@ All sample data is real and editable.
 - Tap a meal card to view details
 - Show ingredients, prep time, tags, notes
 - Go back and toggle favorite on a meal
-- Show the Import/Export buttons (no need to actually import unless you want to demo the flow)
+- Show the import, export, and settings actions in the header
 
 ### 3. Shop tab
 
@@ -84,7 +84,14 @@ All sample data is real and editable.
 - Add or remove a pantry item
 - Regenerate the list and watch the on-hand section update
 
-### 4. Import demo (optional)
+### 4. Import/export demo (optional)
+
+#### Cookbook export
+
+- From Meals tab, tap Export
+- Leave archived meals off for a clean cookbook export, or toggle them on if you want the full library
+- On Android/iOS, open the system share sheet and send the JSON file somewhere convenient
+- On browser preview, use the clipboard fallback and paste the JSON into a file manually
 
 #### File import
 
@@ -102,7 +109,9 @@ All sample data is real and editable.
 - Edit if needed, then save
 - New meal appears with source URL stored
 
-**Note:** URL import works on Android/iOS only. Browser preview is blocked by CORS; use file import instead on web.
+**Notes:**
+- Cookbook export JSON is compatible with the Import Recipes screen.
+- URL import works on Android/iOS only. Browser preview is blocked by CORS; use file import or clipboard export instead on web.
 
 ## Reset for next demo
 

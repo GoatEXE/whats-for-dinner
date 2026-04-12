@@ -182,9 +182,12 @@ All three are sequential. WP1 must land first since WP2 imports from it. Each is
 - Share-intent: Deferred to Phase 5b (requires custom dev build, not Expo Go compatible).
 - Source link display on detail screen: Not yet implemented (WP3 polish step).
 
-**Deferred to Phase 5b (future work):**
+**Shipped (Phase 5c):**
+- ✅ Cookbook export/sharing: export full meal library as shareable JSON via native share sheet (mobile only). Uses existing recipe envelope format, compatible with file import flow.
+
+**Deferred to Phase 5b+ (future work):**
 - Android share-intent receiver (requires custom dev build)
-- Cookbook export/sharing: export full meal library (or filtered subset) as shareable JSON file for distributing recipe collections to other users/devices. Extends current recipe import/export envelope to multi-user sharing workflows. Possible scope: include favorites, tags, optionally pantry state.
+- Enhanced cookbook export: add filters (favorites-only, by tag), optionally include pantry state or archived meals
 - Meal detail screen source link display and `Linking.openURL` integration
 - Microdata/RDFa fallback parsing (JSON-LD covers 90%+ of sites)
 - Image display for `imageUrl` field

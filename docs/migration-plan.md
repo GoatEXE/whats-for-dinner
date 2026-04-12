@@ -45,15 +45,15 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - ✅ Domain-layer recipe extractor (schema.org JSON-LD parser)
   - ✅ Mobile URL import screen with fetch + review/edit workflow
   - ✅ Source metadata storage (`source_url`, `source_host`)
+  - ✅ Cookbook export/share flow: export full meal library via native share sheet (mobile only)
   - ⏸️ Android share-intent receiver (deferred to Phase 5b; requires custom dev build)
   - ✅ Local on-device recipe parser (current no-cloud implementation)
-  - 🔲 Cookbook export/share flow for sharing a recipe library with another person or device
   - 🔲 Migration runbook for legacy data
   - 🔲 Web app retirement
-  - **Limitation:** URL import works on native mobile only; browser preview blocked by CORS (acceptable trade-off for local-first approach).
+  - **Limitation:** URL import and cookbook export work on native mobile only; browser preview blocked by CORS/native APIs (acceptable trade-off for local-first approach).
 
 **Planned follow-up work (post-Phase 5):**
-- Cookbook export/sharing: export full meal library (or filtered subset) as shareable JSON for distributing recipe collections to other users/devices. Extends current recipe import/export to multi-user sharing workflows. Possible scope: include favorites, tags, optionally pantry state.
+- Enhanced cookbook export: add filters (favorites-only, by tag), optionally include pantry state or archived meals
 
 ---
 
