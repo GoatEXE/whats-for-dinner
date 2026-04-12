@@ -225,6 +225,7 @@ All sample data is fully editable. To reset demo data, tap the settings icon in 
 - ✅ Weekly plan autofill and copy
 - ⏸️ Phase 4 (Firebase auth + cloud sync) deferred
 - 🔲 Android share-intent receiver not yet implemented
+- 🔲 Cookbook export/sharing (planned: export full meal library for sharing with other users)
 
 ### Testing
 

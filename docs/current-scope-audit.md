@@ -436,6 +436,12 @@ Indexes:
 - Works on native mobile (iOS/Android) via React Native fetch; CORS blocks browser preview
 - Manual fallback: if extraction fails, pre-fills source URL and lets user enter manually
 
+### Planned: Cookbook export/sharing
+- **Not yet implemented.** Future feature to export full meal library (or filtered subset) as shareable JSON file for distributing recipe collections to other users/devices.
+- Extends current single-file recipe import/export envelope to full-library sharing workflows.
+- Possible scope: include favorites, tags, optionally pantry state.
+- Receive via file import (current) or share-intent (when Phase 5b lands).
+
 ### Copy/export text features
 - Weekly plan text export/copy from the Plan tab.
 - Archived plan copy from plan history detail.
@@ -493,6 +499,7 @@ Indexes:
 - Phase 4 (Firebase auth + Firestore sync) deferred per user decision.
 - Phase 5 (URL import): WP1+WP2 complete; URL import works on native mobile only (CORS blocks web).
 - Android share-intent: not implemented (requires custom dev build, deferred to Phase 5b).
+- Planned follow-up: mobile cookbook export/share so one person can share a recipe library with another.
 - App is fully functional offline and ready for demo.
 
 ### Demo paths
