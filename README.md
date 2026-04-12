@@ -230,8 +230,8 @@ All sample data is fully editable. To reset demo data, tap the settings icon in 
 ### Testing
 
 - Root tests: 121 passing
-- Mobile tests: 23 passing
-- Total: 144 tests passing
+- Mobile tests: 35 passing
+- Total: 156 tests passing
 - TypeScript strict mode: clean
 
 See `docs/DEMO.md` for a complete demo walkthrough and `docs/migration-plan.md` for the mobile architecture overview.

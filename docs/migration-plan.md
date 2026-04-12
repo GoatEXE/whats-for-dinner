@@ -32,7 +32,7 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Plan text copy/share
   - Shopping list from active plan
 
-**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI in Meals tab, and all core workflows tested and working offline. Test coverage: 121 root tests + 23 mobile tests = 144 passing. See `docs/DEMO.md` for the full walkthrough.
+**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI in Meals tab, and all core workflows tested and working offline. Test coverage: 121 root tests + 35 mobile tests = 156 passing. See `docs/DEMO.md` for the full walkthrough.
 
 - **Phase 4 — Firebase auth, Firestore sync, and production data safety** — ⏸️ **Deferred**
   - Google sign-in -> Firebase Auth
@@ -41,16 +41,16 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Manual sync status UI and error recovery
   - **Status:** Not started. Deferred per user decision to focus on presentability and local-first functionality.
 
-- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🟡 Partial (WP1+WP2 complete)
+- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🟡 Partial (URL import and cookbook export shipped, share-intent still pending)
   - ✅ Domain-layer recipe extractor (schema.org JSON-LD parser)
   - ✅ Mobile URL import screen with fetch + review/edit workflow
   - ✅ Source metadata storage (`source_url`, `source_host`)
-  - ✅ Cookbook export/share flow: export full meal library via native share sheet (mobile only)
+  - ✅ Cookbook export/share flow: export full meal library via native share sheet on mobile, with clipboard fallback on web
   - ⏸️ Android share-intent receiver (deferred to Phase 5b; requires custom dev build)
   - ✅ Local on-device recipe parser (current no-cloud implementation)
   - 🔲 Migration runbook for legacy data
   - 🔲 Web app retirement
-  - **Limitation:** URL import and cookbook export work on native mobile only; browser preview blocked by CORS/native APIs (acceptable trade-off for local-first approach).
+  - **Limitation:** URL import is native-only because browser preview is blocked by CORS. Cookbook export uses native sharing on mobile and clipboard fallback on web.
 
 **Planned follow-up work (post-Phase 5):**
 - Enhanced cookbook export: add filters (favorites-only, by tag), optionally include pantry state or archived meals

@@ -495,13 +495,13 @@ Indexes:
 ### Test infrastructure
 - Mobile repo tests use `better-sqlite3` adapter for Node-based Vitest testing.
 - Vitest config with path aliases for `@domain`, `@contracts`, and mobile internal imports.
-- Test counts: 121 root tests + 23 mobile tests = 144 total, all passing.
+- Test counts: 121 root tests + 35 mobile tests = 156 total, all passing.
 - Mobile `tsc --noEmit` passes cleanly.
 
 ### Current scope
 - Phases 1-3 complete: local-first offline parity with the current web app.
 - Phase 4 (Firebase auth + Firestore sync) deferred per user decision.
-- Phase 5 (URL import + cookbook export): WP1+WP2 complete; URL import and cookbook export work on native mobile only (CORS/native APIs block web).
+- Phase 5: URL import is shipped on native mobile only (CORS blocks web), and cookbook export/share is shipped with native sharing on mobile plus clipboard fallback on web.
 - Android share-intent: not implemented (requires custom dev build, deferred to Phase 5b).
 - App is fully functional offline and ready for demo.
 

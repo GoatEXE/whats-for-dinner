@@ -183,7 +183,7 @@ All three are sequential. WP1 must land first since WP2 imports from it. Each is
 - Source link display on detail screen: Not yet implemented (WP3 polish step).
 
 **Shipped (Phase 5c):**
-- ✅ Cookbook export/sharing: export full meal library as shareable JSON via native share sheet (mobile only). Uses existing recipe envelope format, compatible with file import flow.
+- ✅ Cookbook export/sharing: export full meal library as shareable JSON via native share sheet on mobile, with clipboard fallback on web. Uses existing recipe envelope format, compatible with file import flow.
 
 **Deferred to Phase 5b+ (future work):**
 - Android share-intent receiver (requires custom dev build)
