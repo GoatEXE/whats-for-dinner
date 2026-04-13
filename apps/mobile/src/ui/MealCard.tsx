@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radii, fontSizes } from './theme';
+import { useColors } from '../hooks/useTheme';
+import { spacing, radii, fontSizes } from './theme';
 import { TagChip } from './TagChip';
 
 interface MealCardProps {
@@ -21,25 +22,30 @@ export function MealCard({
   prepMinutes,
   onPress,
 }: MealCardProps) {
+  const c = useColors();
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: c.surface, borderColor: c.surfaceBorder },
+        pressed && { backgroundColor: c.background },
+      ]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${name}${isFavorite ? ', favorite' : ''}`}
     >
       <View style={styles.header}>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
           {name}
         </Text>
         {isFavorite && (
-          <Ionicons name="star" size={16} color={colors.star} />
+          <Ionicons name="star" size={16} color={c.star} />
         )}
       </View>
       <View style={styles.meta}>
-        <Text style={styles.metaText}>{ingredientCount} ingredients</Text>
+        <Text style={[styles.metaText, { color: c.textSecondary }]}>{ingredientCount} ingredients</Text>
         {prepMinutes != null && (
-          <Text style={styles.metaText}> · {prepMinutes} min</Text>
+          <Text style={[styles.metaText, { color: c.textSecondary }]}> · {prepMinutes} min</Text>
         )}
       </View>
       {tags.length > 0 && (
@@ -55,15 +61,10 @@ export function MealCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     padding: spacing.lg,
     marginBottom: spacing.md,
-  },
-  cardPressed: {
-    backgroundColor: colors.surface,
   },
   header: {
     flexDirection: 'row',
@@ -73,7 +74,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: fontSizes.lg,
     fontWeight: '600',
-    color: colors.text,
     flex: 1,
     marginRight: spacing.sm,
   },
@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
   },
   tags: {
     flexDirection: 'row',

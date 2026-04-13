@@ -32,7 +32,7 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Plan text copy/share
   - Shopping list from active plan
 
-**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI in Meals tab, and all core workflows tested and working offline. Test coverage: 121 root tests + 35 mobile tests = 156 passing. See `docs/DEMO.md` for the full walkthrough.
+**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI plus an appearance setting (System/Light/Dark) in Meals settings, this week / next week plan switching, repeat-window random planning controls, and all core workflows tested and working offline. Test coverage: 121 root tests + 70 mobile tests = 191 passing. See `docs/DEMO.md` for the full walkthrough.
 
 - **Phase 4 — Firebase auth, Firestore sync, and production data safety** — ⏸️ **Deferred**
   - Google sign-in -> Firebase Auth
@@ -41,16 +41,20 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Manual sync status UI and error recovery
   - **Status:** Not started. Deferred per user decision to focus on presentability and local-first functionality.
 
-- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🟡 Partial (URL import and cookbook export shipped, share-intent still pending)
+- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🟡 Partial (URL import, cookbook export, and share-intent routing shipped; migration cutover pending)
   - ✅ Domain-layer recipe extractor (schema.org JSON-LD parser)
   - ✅ Mobile URL import screen with fetch + review/edit workflow
   - ✅ Source metadata storage (`source_url`, `source_host`)
   - ✅ Cookbook export/share flow: export full meal library via native share sheet on mobile, with clipboard fallback on web
-  - ⏸️ Android share-intent receiver (deferred to Phase 5b; requires custom dev build)
+  - ✅ Meal detail source link: tappable link opens original recipe page for URL-imported meals
+  - ✅ Meals header overflow menu: import/export/reset actions in overflow menu (⋮)
+  - ✅ Android share-intent receiver (first slice): routes shared URLs to url-import, requires custom dev build
+  - ✅ Weekly planning polish: this week / next week switching, repeat-window random fill, per-day dice actions, and viewed-week shopping-list handoff
+  - ✅ Shopping list polish: interactive checkboxes for `Need to buy` and names-only clipboard copy
   - ✅ Local on-device recipe parser (current no-cloud implementation)
   - 🔲 Migration runbook for legacy data
   - 🔲 Web app retirement
-  - **Limitation:** URL import is native-only because browser preview is blocked by CORS. Cookbook export uses native sharing on mobile and clipboard fallback on web.
+  - **Limitation:** URL import, cookbook export, and share-intent work on native mobile only; browser preview blocked by CORS/native APIs. Share-intent requires custom dev build (not Expo Go).
 
 **Planned follow-up work (post-Phase 5):**
 - Enhanced cookbook export: add filters (favorites-only, by tag), optionally include pantry state or archived meals
@@ -147,7 +151,7 @@ docs/
 - **Sync triggers:** NetInfo + app foreground events + manual refresh
 - **Clipboard/share/files:** `expo-clipboard`, `expo-sharing`, `expo-file-system`, `expo-document-picker`
 - **Testing:** Vitest/Jest for domain + repo tests, React Native Testing Library for components, Firebase Emulator Suite for sync/functions, Maestro for device E2E
-- **Build/distribution:** Expo Go for current development; EAS Build + custom dev client only when native-only integrations (for example share-intent) resume
+- **Build/distribution:** Expo Go remains the default demo path; custom dev client/dev build is now additionally required for Android share-intent testing
 
 ### 1.4 Why SQLite on-device instead of Firestore-only offline persistence
 
@@ -338,7 +342,7 @@ Stand up the Expo app, local DB, and shared business-logic package while keeping
 - Build the base 3-tab shell with placeholder screens.
 - Add file import of the existing meal export envelope as the first real end-to-end data path.
 
-**Note:** Custom dev client is only needed for Android share-intent (Phase 5b, deferred). URL import and all current features work in Expo Go.
+**Note:** Expo Go remains sufficient for the main demo path. Android share-intent is now wired as a separate custom-dev-build-only path and is not available in Expo Go.
 
 ### Dependencies
 
@@ -686,7 +690,7 @@ Support two entry points:
 **Current implementation (local parsing):**
 
 ```text
-URL arrives (paste; share-intent deferred)
+URL arrives (paste or Android share-intent)
 -> app normalizes URL/whitespace
 -> app fetches HTML via native fetch (no CORS)
 -> domain extractor parses JSON-LD script tags
@@ -927,7 +931,7 @@ Use **Maestro** for Android-first flows:
 - weekly plan flows
 - offline -> reconnect sync flow (when Phase 4 lands)
 - URL import flow
-- share-intent recipe import (when Phase 5b lands)
+- share-intent recipe import (custom dev build path; real device verification still pending)
 
 **Goal:** replace Playwright E2E with device-realistic mobile coverage.
 
@@ -962,7 +966,7 @@ Also include:
 - cold-start tests with larger data sets
 - offline/airplane-mode manual checks
 - URL import manual tests on real device (Android/iOS)
-- Android share-intent manual tests on real device (when Phase 5b lands)
+- Android share-intent manual tests on real device (current next validation step for the custom dev build path)
 - EAS build validation for Android if/when custom dev client is needed
 
 ---
@@ -973,7 +977,7 @@ Also include:
 | ----------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Sync bugs corrupt or duplicate data             | Local-first + cloud sync is the hardest new capability           | Keep SQLite authoritative, use stable IDs, add sync queue, test heavily with Firebase Emulator, and start with single-user last-write-wins |
 | Trying to use Firestore as the only local store | Complex relational logic becomes harder and more brittle         | Use SQLite for app behavior; use Firestore only for sync/backup                                                                            |
-| Expo/native integration surprises               | Share intent, auth, and some integrations need native config     | Use Expo Go for the current demo scope, then switch to custom dev client + EAS only when native-only integrations resume                  |
+| Expo/native integration surprises               | Share intent, auth, and some integrations need native config     | Keep Expo Go as the main demo path, and use a custom dev client/dev build only for native-only integrations such as Android share-intent |
 | Recipe scraping is brittle                      | Recipe sites vary wildly and some require auth                   | Use local JSON-LD parsing (current), always require user review, keep manual entry fallback. Cloud parsing is optional future enhancement. |
 | Firestore lacks strong uniqueness constraints   | Duplicate ingredients/tags/meals could appear across devices     | Use deterministic IDs for ingredients/tags; keep meal dedupe local by normalized name; surface rare conflicts instead of overbuilding now |
 | Current export format only migrates meals       | Final cutover could otherwise lose pantry/history/plans          | Add a one-time full-backup export or SQLite migration script before retiring the web app                                                  |

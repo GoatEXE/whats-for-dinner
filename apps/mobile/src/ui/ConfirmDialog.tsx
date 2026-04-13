@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
-import { colors, spacing, radii, fontSizes } from './theme';
+import { useColors } from '../hooks/useTheme';
+import { spacing, radii, fontSizes } from './theme';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -23,6 +24,7 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const c = useColors();
   return (
     <Modal
       visible={visible}
@@ -30,22 +32,22 @@ export function ConfirmDialog({
       animationType="fade"
       onRequestClose={onCancel}
     >
-      <Pressable style={styles.overlay} onPress={onCancel}>
-        <Pressable style={styles.dialog} onPress={() => {}}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+      <Pressable style={[styles.overlay, { backgroundColor: c.overlay }]} onPress={onCancel}>
+        <Pressable style={[styles.dialog, { backgroundColor: c.surface }]} onPress={() => {}}>
+          <Text style={[styles.title, { color: c.text }]}>{title}</Text>
+          <Text style={[styles.message, { color: c.textSecondary }]}>{message}</Text>
           <View style={styles.actions}>
             <Pressable
-              style={[styles.button, styles.cancelButton]}
+              style={[styles.button, { backgroundColor: c.background }]}
               onPress={onCancel}
               accessibilityRole="button"
             >
-              <Text style={styles.cancelText}>{cancelLabel}</Text>
+              <Text style={[styles.cancelText, { color: c.textSecondary }]}>{cancelLabel}</Text>
             </Pressable>
             <Pressable
               style={[
                 styles.button,
-                destructive ? styles.destructiveButton : styles.confirmButton,
+                { backgroundColor: destructive ? c.danger : c.accent },
               ]}
               onPress={onConfirm}
               accessibilityRole="button"
@@ -62,13 +64,11 @@ export function ConfirmDialog({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xxl,
   },
   dialog: {
-    backgroundColor: colors.white,
     borderRadius: radii.xl,
     padding: spacing.xxl,
     width: '100%',
@@ -77,12 +77,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   message: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     marginBottom: spacing.xl,
     lineHeight: 22,
   },
@@ -98,23 +96,13 @@ const styles = StyleSheet.create({
     minWidth: 80,
     alignItems: 'center',
   },
-  cancelButton: {
-    backgroundColor: colors.surface,
-  },
-  confirmButton: {
-    backgroundColor: colors.accent,
-  },
-  destructiveButton: {
-    backgroundColor: colors.danger,
-  },
   cancelText: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   confirmText: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.white,
+    color: '#FFFFFF',
   },
 });

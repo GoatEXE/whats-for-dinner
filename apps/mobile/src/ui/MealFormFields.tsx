@@ -9,35 +9,21 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { UseMealFormReturn } from '../features/meals/useMealForm';
+import { useColors } from '../hooks/useTheme';
 import { TagChip } from './TagChip';
-import { colors, spacing, radii, fontSizes } from './theme';
+import { colors as staticColors, spacing, radii, fontSizes } from './theme';
 
 export interface MealFormFieldsProps {
-  /** The meal form hook return — drives all field state and actions. */
   formHook: Pick<
     UseMealFormReturn,
     'form' | 'setField' | 'addIngredient' | 'removeIngredient' | 'updateIngredient' | 'addTag' | 'removeTag'
   >;
-
-  /** Auto-focus the name field (typically true for new meals). */
   autoFocusName?: boolean;
-
-  /** Label override for the notes field. */
   notesLabel?: string;
-
-  /** Validation errors to display at the top. */
   errors?: string[];
-
-  /** Optional content to render above the form fields (e.g. source badge). */
   headerContent?: React.ReactNode;
 }
 
-/**
- * Shared meal form fields used by both the edit screen and URL-import review.
- * Renders name, notes, prep time, favorite toggle, tags, and ingredients.
- * Does NOT include ScrollView, KeyboardAvoidingView, or footer buttons —
- * the parent screen owns those.
- */
 export function MealFormFields({
   formHook,
   autoFocusName = false,
@@ -45,6 +31,7 @@ export function MealFormFields({
   errors,
   headerContent,
 }: MealFormFieldsProps) {
+  const c = useColors();
   const {
     form,
     setField,
@@ -66,88 +53,81 @@ export function MealFormFields({
 
   return (
     <>
-      {/* Optional header content (e.g. source badge) */}
       {headerContent}
 
-      {/* Errors */}
       {errors != null && errors.length > 0 && (
-        <View style={styles.errorBox}>
+        <View style={[styles.errorBox, { backgroundColor: c.dangerLight }]}>
           {errors.map((e, i) => (
-            <Text key={i} style={styles.errorText}>
+            <Text key={i} style={[styles.errorText, { color: c.danger }]}>
               • {e}
             </Text>
           ))}
         </View>
       )}
 
-      {/* Meal Name */}
-      <Text style={styles.label}>Meal name *</Text>
+      <Text style={[styles.label, { color: c.text }]}>Meal name *</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: c.surfaceBorder, color: c.text, backgroundColor: c.surface }]}
         value={form.name}
         onChangeText={(text) => setField('name', text)}
         placeholder="e.g. Chicken Stir-Fry"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={c.textMuted}
         autoFocus={autoFocusName}
         accessibilityLabel="Meal name"
       />
 
-      {/* Notes */}
-      <Text style={styles.label}>{notesLabel}</Text>
+      <Text style={[styles.label, { color: c.text }]}>{notesLabel}</Text>
       <TextInput
-        style={[styles.input, styles.multiline]}
+        style={[styles.input, styles.multiline, { borderColor: c.surfaceBorder, color: c.text, backgroundColor: c.surface }]}
         value={form.notes}
         onChangeText={(text) => setField('notes', text)}
         placeholder="Optional notes"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={c.textMuted}
         multiline
         numberOfLines={3}
         accessibilityLabel="Notes"
       />
 
-      {/* Prep Time */}
-      <Text style={styles.label}>Prep time (minutes)</Text>
+      <Text style={[styles.label, { color: c.text }]}>Prep time (minutes)</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: c.surfaceBorder, color: c.text, backgroundColor: c.surface }]}
         value={form.prepMinutes}
         onChangeText={(text) => setField('prepMinutes', text)}
         placeholder="e.g. 30"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={c.textMuted}
         keyboardType="numeric"
         accessibilityLabel="Prep time in minutes"
       />
 
-      {/* Favorite */}
       <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Favorite</Text>
+        <Text style={[styles.switchLabel, { color: c.text }]}>Favorite</Text>
         <Switch
           value={form.isFavorite}
           onValueChange={(val) => setField('isFavorite', val)}
-          trackColor={{ true: colors.accent, false: colors.surfaceBorder }}
-          thumbColor={colors.white}
+          trackColor={{ true: c.accent, false: c.surfaceBorder }}
+          thumbColor={c.white}
         />
       </View>
 
-      {/* Tags */}
-      <Text style={styles.label}>Tags</Text>
+      <Text style={[styles.label, { color: c.text }]}>Tags</Text>
       <View style={styles.tagInputRow}>
         <TextInput
-          style={[styles.input, styles.tagInput]}
+          style={[styles.input, styles.tagInput, { borderColor: c.surfaceBorder, color: c.text, backgroundColor: c.surface }]}
           value={tagInput}
           onChangeText={setTagInput}
           placeholder="Add a tag"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={c.textMuted}
           onSubmitEditing={handleAddTag}
           returnKeyType="done"
           accessibilityLabel="Add tag"
         />
         <Pressable
-          style={styles.tagAddBtn}
+          style={[styles.tagAddBtn, { backgroundColor: c.accent }]}
           onPress={handleAddTag}
           accessibilityLabel="Add tag"
           accessibilityRole="button"
         >
-          <Ionicons name="add" size={20} color={colors.white} />
+          <Ionicons name="add" size={20} color="#FFFFFF" />
         </Pressable>
       </View>
       {form.tags.length > 0 && (
@@ -158,36 +138,39 @@ export function MealFormFields({
         </View>
       )}
 
-      {/* Ingredients */}
-      <Text style={styles.label}>Ingredients *</Text>
+      <Text style={[styles.label, { color: c.text }]}>Ingredients *</Text>
       {form.ingredients.map((ing, idx) => (
         <View key={idx} style={styles.ingredientRow}>
           <View style={styles.ingredientInputs}>
             <TextInput
-              style={[styles.input, styles.ingredientName]}
+              style={[styles.input, styles.ingredientName, { borderColor: c.surfaceBorder, color: c.text, backgroundColor: c.surface }]}
               value={ing.name}
               onChangeText={(text) => updateIngredient(idx, 'name', text)}
               placeholder="Ingredient name"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
               accessibilityLabel={`Ingredient ${idx + 1} name`}
             />
             <TextInput
-              style={[styles.input, styles.ingredientQty]}
+              style={[styles.input, styles.ingredientQty, { borderColor: c.surfaceBorder, color: c.text, backgroundColor: c.surface }]}
               value={ing.quantityText}
               onChangeText={(text) => updateIngredient(idx, 'quantityText', text)}
               placeholder="Qty"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={c.textMuted}
               accessibilityLabel={`Ingredient ${idx + 1} quantity`}
             />
           </View>
           <View style={styles.ingredientActions}>
             <Pressable
               onPress={() => updateIngredient(idx, 'isOptional', !ing.isOptional)}
-              style={[styles.optionalBtn, ing.isOptional && styles.optionalBtnActive]}
+              style={[
+                styles.optionalBtn,
+                { borderColor: c.surfaceBorder },
+                ing.isOptional && { backgroundColor: c.accentLight, borderColor: c.accent },
+              ]}
               accessibilityLabel={`Mark ingredient ${idx + 1} as ${ing.isOptional ? 'required' : 'optional'}`}
               accessibilityRole="button"
             >
-              <Text style={[styles.optionalText, ing.isOptional && styles.optionalTextActive]}>
+              <Text style={[styles.optionalText, { color: c.textMuted }, ing.isOptional && { color: c.accent, fontWeight: '600' }]}>
                 Opt
               </Text>
             </Pressable>
@@ -198,37 +181,25 @@ export function MealFormFields({
                 accessibilityLabel={`Remove ingredient ${idx + 1}`}
                 accessibilityRole="button"
               >
-                <Ionicons name="close-circle" size={22} color={colors.danger} />
+                <Ionicons name="close-circle" size={22} color={c.danger} />
               </Pressable>
             )}
           </View>
         </View>
       ))}
       <Pressable style={styles.addIngredientBtn} onPress={addIngredient} accessibilityRole="button">
-        <Ionicons name="add-circle-outline" size={20} color={colors.accent} />
-        <Text style={styles.addIngredientText}>Add ingredient</Text>
+        <Ionicons name="add-circle-outline" size={20} color={c.accent} />
+        <Text style={[styles.addIngredientText, { color: c.accent }]}>Add ingredient</Text>
       </Pressable>
     </>
   );
 }
 
+
 export const mealFormStyles = StyleSheet.create({
-  errorBox: {
-    backgroundColor: colors.dangerLight,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  errorText: {
-    fontSize: fontSizes.sm,
-    color: colors.danger,
-    lineHeight: 20,
-  },
   footer: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: colors.surfaceBorder,
-    backgroundColor: colors.surface,
     padding: spacing.lg,
     gap: spacing.md,
   },
@@ -241,47 +212,45 @@ export const mealFormStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelBtn: {
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   cancelBtnText: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
-  saveBtn: {
-    backgroundColor: colors.accent,
-  },
+  saveBtn: {},
   saveBtnDisabled: {
     opacity: 0.6,
   },
   saveBtnText: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.white,
+    color: '#FFFFFF',
   },
 });
 
 const styles = StyleSheet.create({
-  errorBox: mealFormStyles.errorBox,
-  errorText: mealFormStyles.errorText,
+  errorBox: {
+    borderRadius: radii.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  errorText: {
+    fontSize: fontSizes.sm,
+    lineHeight: 20,
+  },
   label: {
     fontSize: fontSizes.sm,
     fontWeight: '600',
-    color: colors.text,
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: fontSizes.md,
-    color: colors.text,
-    backgroundColor: colors.white,
   },
   multiline: {
     minHeight: 80,
@@ -296,7 +265,6 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: fontSizes.md,
-    color: colors.text,
     fontWeight: '600',
   },
   tagInputRow: {
@@ -307,7 +275,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tagAddBtn: {
-    backgroundColor: colors.accent,
     borderRadius: radii.md,
     width: 44,
     justifyContent: 'center',
@@ -342,19 +309,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: radii.full,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  optionalBtnActive: {
-    backgroundColor: colors.accentLight,
-    borderColor: colors.accent,
   },
   optionalText: {
     fontSize: fontSizes.xs,
-    color: colors.textMuted,
-  },
-  optionalTextActive: {
-    color: colors.accent,
-    fontWeight: '600',
   },
   addIngredientBtn: {
     flexDirection: 'row',
@@ -364,7 +321,6 @@ const styles = StyleSheet.create({
   },
   addIngredientText: {
     fontSize: fontSizes.md,
-    color: colors.accent,
     fontWeight: '600',
   },
 });

@@ -6,12 +6,12 @@
 
 Adding meals manually (name, each ingredient, tags, notes) is the biggest friction point in the app. The #1 quality-of-life feature users would feel immediately is **pasting a recipe URL and having the app extract meal data automatically**. This eliminates the tedious per-field data entry that discourages building a real meal library.
 
-Phase 5 was originally scoped as "Recipe URL import + Android share-intent." With Firebase deferred, all work stays local/offline-first. The share-intent requires a custom dev build (not Expo Go compatible) so it's deferred to a later commit after the core extraction logic ships.
+Phase 5 was originally scoped as "Recipe URL import + Android share-intent." With Firebase deferred, all work stays local/offline-first. The core URL import flow shipped first, and the initial Android share-intent slice is now wired behind a custom dev build path (not Expo Go compatible).
 
 ## Constraints
 
 - **No cloud services** — all parsing happens on-device or uses publicly reachable URLs only.
-- **Expo Go compatible** — no native modules that require a dev build.
+- **Expo Go first** — keep the main demo path Expo Go compatible where possible, while allowing a separate custom dev build path for Android share-intent.
 - **Offline-first** — extracted data lands in local SQLite; no server round-trips.
 - **Incremental** — each commit is demoable and independently testable.
 - **Existing schema ready** — `meals` table already has `source_url TEXT` and `source_host TEXT` columns; `MealWriteInput` already accepts `sourceUrl`/`sourceHost` fields. No migration needed.
@@ -125,26 +125,25 @@ interface UseUrlImportReturn {
 
 **Verification:**
 - Manual test on Android Expo Go: paste an AllRecipes URL → see extracted meal → edit → save → appears in meals list with `sourceUrl` populated.
+- Manual test on Android custom dev build: share a recipe URL from another app → app opens on the URL import flow with the shared URL prefilled.
 - Verify fallback: paste a non-recipe URL → see "no recipe found" → option to add manually.
 
 ---
 
-### WP3: UI polish + detail screen source link + docs (Commit 3) — 🔲 DEFERRED
+### WP3: UI polish + detail screen source link + docs (Commit 3) — ✅ COMPLETE
 
-**Scope:** Small polish pass to surface the `sourceUrl` on the meal detail screen, update docs, and handle edge cases.
+**Shipped scope:** Surface `sourceUrl` on the meal detail screen, move crowded Meals header actions into an overflow menu, and update the key demo/status docs.
 
-**Files to modify:**
-- `apps/mobile/app/(tabs)/meals/[mealId].tsx` — Show source URL as a tappable link when present (using `Linking.openURL`). Display `sourceHost` as label (e.g., "From allrecipes.com").
-- `docs/phase5-plan.md` — Mark WPs as complete.
-- `docs/current-plan.md` — Update status.
-- `docs/DEMO.md` — Add URL import to demo walkthrough.
-
-**Files to create (optional):**
-- `apps/mobile/tests/repos/url-import.test.ts` — Integration test: mock HTML → extract → create meal in test DB → verify `sourceUrl`/`sourceHost` stored.
+**Files modified:**
+- `apps/mobile/app/(tabs)/meals/[mealId].tsx` — Shows a tappable source link when `sourceUrl`/`sourceHost` are present.
+- `apps/mobile/app/(tabs)/meals/_layout.tsx` — Replaces inline header icons with an overflow menu.
+- `apps/mobile/src/ui/ActionMenu.tsx` — New reusable overflow menu component.
+- `docs/phase5-plan.md`, `docs/current-scope-audit.md`, `docs/DEMO.md`, `docs/migration-plan.md`, `README.md` — Updated to reflect shipped polish and the current demo/share-intent reality.
 
 **Verification:**
-- All existing tests still pass (`npm test` at root + `cd apps/mobile && npx vitest run`)
+- All existing tests still pass (`npm test` at root + `cd apps/mobile && npm run test`)
 - Meal detail screen shows source link for URL-imported meals, no link for manually-created meals
+- Meals header actions are accessible via overflow menu
 - Demo guide updated
 
 ## Sequencing and Dependencies
@@ -154,10 +153,10 @@ WP1 (domain extractor) ──→ WP2 (mobile screen + hook) ──→ WP3 (polis
      no deps                    depends on WP1                depends on WP1+WP2
 ```
 
-All three are sequential. WP1 must land first since WP2 imports from it. Each is independently committable and demoable:
-- After WP1: domain tests prove extraction works; no UI yet.
-- After WP2: full user-facing feature on mobile.
-- After WP3: polished, documented, source links visible.
+All three were sequential. WP1 landed first, then WP2, then the WP3 polish/doc pass.
+- After WP1: domain tests proved extraction worked; no UI yet.
+- After WP2: full user-facing URL import shipped on mobile.
+- After WP3: polish landed, docs were updated, and source links became visible on meal detail screens.
 
 ## Risks
 
@@ -179,16 +178,22 @@ All three are sequential. WP1 must land first since WP2 imports from it. Each is
 
 **Known limitations:**
 - Browser preview: CORS blocks most recipe sites. This is expected; web is a secondary demo target. File import remains the web fallback.
-- Share-intent: Deferred to Phase 5b (requires custom dev build, not Expo Go compatible).
-- Source link display on detail screen: Not yet implemented (WP3 polish step).
 
 **Shipped (Phase 5c):**
 - ✅ Cookbook export/sharing: export full meal library as shareable JSON via native share sheet on mobile, with clipboard fallback on web. Uses existing recipe envelope format, compatible with file import flow.
+- ✅ Meal detail screen source link: tappable link for URL-imported meals, opens original recipe page via `Linking.openURL`.
+- ✅ Meals header overflow menu: import, export, and reset actions moved to overflow menu (⋮) instead of inline icons.
+
+**Shipped (Phase 5d - partial):**
+- ✅ Android share-intent receiver: first slice wired via `expo-share-intent`, routes shared URLs to `url-import` screen, fallback warning for shared text without URL. **Requires custom dev build (not Expo Go).** Needs real device testing.
+
+**Shipped (Phase 5e - local polish):**
+- ✅ Weekly planning polish: this week / next week switching, repeat-window chips for random picks, week random-fill with graceful partial-fill messaging, and per-day dice actions.
+- ✅ Viewed-week shopping handoff: Generate Shopping List now follows the week selected on the Plan tab.
+- ✅ Shopping list polish: checkable `Need to buy` rows plus names-only clipboard copy for quicker real-world shopping use.
 
 **Deferred to Phase 5b+ (future work):**
-- Android share-intent receiver (requires custom dev build)
 - Enhanced cookbook export: add filters (favorites-only, by tag), optionally include pantry state or archived meals
-- Meal detail screen source link display and `Linking.openURL` integration
 - Microdata/RDFa fallback parsing (JSON-LD covers 90%+ of sites)
 - Image display for `imageUrl` field
 - Native branding assets (PNG icons)

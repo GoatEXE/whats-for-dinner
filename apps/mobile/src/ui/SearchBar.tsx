@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, TextInput, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radii, fontSizes } from './theme';
+import { useColors } from '../hooks/useTheme';
+import { spacing, radii, fontSizes } from './theme';
 
 interface SearchBarProps {
   value: string;
@@ -10,15 +11,16 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ value, onChangeText, placeholder = 'Search…' }: SearchBarProps) {
+  const c = useColors();
   return (
-    <View style={styles.container}>
-      <Ionicons name="search" size={18} color={colors.textMuted} style={styles.icon} />
+    <View style={[styles.container, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
+      <Ionicons name="search" size={18} color={c.textMuted} style={styles.icon} />
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: c.text }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={c.textMuted}
         autoCapitalize="none"
         autoCorrect={false}
         returnKeyType="search"
@@ -32,7 +34,7 @@ export function SearchBar({ value, onChangeText, placeholder = 'Search…' }: Se
           accessibilityLabel="Clear search"
           accessibilityRole="button"
         >
-          <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          <Ionicons name="close-circle" size={18} color={c.textMuted} />
         </Pressable>
       )}
     </View>
@@ -43,10 +45,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     paddingHorizontal: spacing.md,
     height: 44,
   },
@@ -56,7 +56,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: fontSizes.md,
-    color: colors.text,
     paddingVertical: 0,
   },
   clearBtn: {

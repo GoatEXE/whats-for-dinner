@@ -22,6 +22,8 @@ function toUiMeal(record: MealRecord): Meal {
     prepMinutes: record.prepMinutes,
     isFavorite: record.isFavorite,
     isArchived: record.isArchived,
+    sourceUrl: record.sourceUrl,
+    sourceHost: record.sourceHost,
     tags: record.tags,
     ingredients: record.ingredients.map((ingredient) => ({
       id: ingredient.ingredientId,

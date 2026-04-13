@@ -1,36 +1,58 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ThemeProvider as NavigationThemeProvider } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useAndroidShareIntentRouter } from "@/features/share-intent/useAndroidShareIntentRouter";
 import { DatabaseProvider, useDatabase } from "@/hooks/useDatabase";
-import { colors, spacing, fontSizes, radii } from "@/ui/theme";
+import { ThemeProvider, useTheme, useColors } from "@/hooks/useTheme";
+import { buildNavigationTheme } from "@/ui/navigation-theme";
+import { spacing, fontSizes, radii } from "@/ui/theme";
+
+function AppNavigator() {
+  useAndroidShareIntentRouter();
+  const { scheme, colors: palette } = useTheme();
+  const navTheme = buildNavigationTheme(scheme, palette);
+
+  return (
+    <NavigationThemeProvider value={navTheme}>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </NavigationThemeProvider>
+  );
+}
 
 function DatabaseGate({ children }: { children: React.ReactNode }) {
   const { isReady, error } = useDatabase();
+  const c = useColors();
 
   if (error) {
     return (
-      <View style={styles.center}>
-        <View style={styles.errorIconWrap}>
-          <Ionicons name="warning-outline" size={36} color={colors.error} />
+      <View style={[styles.center, { backgroundColor: c.background }]}>
+        <View style={[styles.errorIconWrap, { backgroundColor: c.dangerLight }]}>
+          <Ionicons name="warning-outline" size={36} color={c.error} />
         </View>
-        <Text style={styles.title}>Storage unavailable</Text>
-        <Text style={styles.body}>
-          We couldn’t open the local recipe database on this device. If you’re
+        <Text style={[styles.title, { color: c.text }]}>Storage unavailable</Text>
+        <Text style={[styles.body, { color: c.textSecondary }]}>
+          We couldn't open the local recipe database on this device. If you're
           previewing in a browser, note that the web build currently needs
           additional setup for SQLite — try the native build for full features.
         </Text>
-        <Text style={styles.detail}>{error.message}</Text>
+        <Text style={[styles.detail, { color: c.textMuted, backgroundColor: c.surface }]}>
+          {error.message}
+        </Text>
       </View>
     );
   }
 
   if (!isReady) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.accent} />
-        <Text style={styles.loading}>Loading your kitchen…</Text>
+      <View style={[styles.center, { backgroundColor: c.background }]}>
+        <ActivityIndicator size="large" color={c.accent} />
+        <Text style={[styles.loading, { color: c.textSecondary }]}>Loading your kitchen…</Text>
       </View>
     );
   }
@@ -40,14 +62,13 @@ function DatabaseGate({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <DatabaseProvider>
-      <StatusBar style="auto" />
-      <DatabaseGate>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      </DatabaseGate>
-    </DatabaseProvider>
+    <ThemeProvider>
+      <DatabaseProvider>
+        <DatabaseGate>
+          <AppNavigator />
+        </DatabaseGate>
+      </DatabaseProvider>
+    </ThemeProvider>
   );
 }
 
@@ -57,13 +78,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: spacing.xxl,
-    backgroundColor: colors.background,
   },
   errorIconWrap: {
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: colors.dangerLight,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.lg,
@@ -71,13 +90,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSizes.xl,
     fontWeight: "700",
-    color: colors.text,
     marginBottom: spacing.sm,
     textAlign: "center",
   },
   body: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 22,
     maxWidth: 360,
@@ -85,18 +102,14 @@ const styles = StyleSheet.create({
   },
   detail: {
     fontSize: fontSizes.xs,
-    color: colors.textMuted,
     textAlign: "center",
     maxWidth: 360,
-    fontFamily: undefined,
-    backgroundColor: colors.surface,
     borderRadius: radii.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },
   loading: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     marginTop: spacing.md,
   },
 });

@@ -71,3 +71,27 @@ export function generateIngredientId(normalizedName: string) {
 export function generateTagId(normalizedName: string) {
   return `tag_${hashString(normalizedName)}`;
 }
+
+/**
+ * Convert a string ID (UUID, ingredient_hash, etc.) to a stable 32-bit
+ * positive integer suitable for the domain layer's number-typed ID fields.
+ * Uses FNV-1a hashing truncated to 32 bits so every distinct string maps
+ * to a consistent number, avoiding the charCodeAt(0) collapse bug where
+ * all UUIDs mapped to the same value.
+ */
+export function stringIdToNumber(id: string): number {
+  // Fast path: if the string is already a plain integer, use it directly.
+  const parsed = Number(id);
+  if (Number.isFinite(parsed) && parsed === Math.floor(parsed) && parsed > 0) {
+    return parsed;
+  }
+
+  // FNV-1a 32-bit hash
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) {
+    hash ^= id.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  // Ensure positive by masking to 31 bits (avoid sign bit)
+  return (hash >>> 1) || 1;
+}

@@ -58,6 +58,27 @@ describe("weekly-plans repo", () => {
     expect(existing.id).toBe(created.id);
   });
 
+  it("getCurrent stays on the current week even when a future week already exists", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-08T12:00:00.000Z"));
+
+    const currentPlan = weeklyPlansRepo.getOrCreateCurrent(context.db);
+    const nextWeekPlan = weeklyPlansRepo.getOrCreateByWeekStart(context.db, "2026-04-13");
+    const current = weeklyPlansRepo.getCurrent(context.db);
+
+    expect(nextWeekPlan.weekStart).toBe("2026-04-13");
+    expect(current?.id).toBe(currentPlan.id);
+    expect(current?.weekStart).toBe("2026-04-06");
+  });
+
+  it("getOrCreateByWeekStart reuses an existing active plan for that week", () => {
+    const created = weeklyPlansRepo.getOrCreateByWeekStart(context.db, "2026-04-13");
+    const existing = weeklyPlansRepo.getOrCreateByWeekStart(context.db, "2026-04-13");
+
+    expect(existing.id).toBe(created.id);
+    expect(existing.weekStart).toBe("2026-04-13");
+  });
+
   it("assignSlot stores the selected meal on the requested slot", () => {
     const meal = createMeal(context, "Taco Tuesday");
     const plan = weeklyPlansRepo.create(context.db, "2026-04-06");

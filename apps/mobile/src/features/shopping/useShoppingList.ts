@@ -5,14 +5,15 @@ import {
   type ShoppingListResult,
 } from '@whats-for-dinner/domain';
 import type { AvailableIngredient } from '@whats-for-dinner/domain';
+import { stringIdToNumber } from '../../db/ids';
 import type { Meal, PantryEntry } from '../../types';
 
 function mealToShoppingListMeal(meal: Meal): ShoppingListMeal {
   return {
-    id: Number(meal.id) || meal.id.charCodeAt(0), // domain uses number ids
+    id: stringIdToNumber(meal.id),
     name: meal.name,
     ingredients: meal.ingredients.map((i) => ({
-      ingredientId: Number(i.id) || i.id.charCodeAt(0),
+      ingredientId: stringIdToNumber(i.id),
       name: i.name,
       quantityText: i.quantityText,
       isOptional: i.isOptional,
@@ -22,7 +23,7 @@ function mealToShoppingListMeal(meal: Meal): ShoppingListMeal {
 
 function pantryToAvailable(items: PantryEntry[]): AvailableIngredient[] {
   return items.map((p) => ({
-    ingredientId: Number(p.ingredientId) || p.ingredientId.charCodeAt(0),
+    ingredientId: stringIdToNumber(p.ingredientId),
     name: p.name,
   }));
 }

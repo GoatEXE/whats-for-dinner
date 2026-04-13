@@ -203,6 +203,19 @@ npx expo start --go --clear
 
 Open Expo Go on Android first, then scan the QR code from inside Expo Go. This provides full SQLite persistence and the real mobile experience. If LAN networking is flaky, retry with `npx expo start --go --tunnel --clear`.
 
+#### Android share-intent dev build (required for Share → What's for Dinner?)
+
+The Android share-intent receiver is wired into the mobile app, but **it does not work in Expo Go**. To test sharing a recipe URL/text from Chrome or another Android app into What's for Dinner, install a custom dev client/dev build once:
+
+```bash
+cd apps/mobile
+npm install
+npx expo run:android
+npm run start:dev-client
+```
+
+After the native dev build is installed, open the dev client instead of Expo Go. Android should then offer **What's for Dinner?** in the system share sheet for URL/text shares, routing directly into the existing **Import from URL** flow.
+
 ### First launch
 
 The app automatically seeds realistic sample data on first launch:
@@ -222,16 +235,17 @@ All sample data is fully editable. To reset demo data, tap the settings icon in 
 - ✅ Recipe JSON import/export
 - ✅ Cookbook export/sharing from mobile app
 - ✅ Recipe URL import (native mobile only; CORS blocks browser preview)
-- ✅ Shopping list copy/share
-- ✅ Weekly plan autofill and copy
+- ✅ Shopping list clipboard copy with checkable buy-list items
+- ✅ Weekly plan switching for this week/next week, repeat-window random picks, random fill, and copy
+- ✅ Dark mode support (System/Light/Dark appearance setting, persists across sessions)
 - ⏸️ Phase 4 (Firebase auth + cloud sync) deferred
-- 🔲 Android share-intent receiver not yet implemented
+- ✅ Android share-intent URL/text routing (Android custom dev client/dev build only; not Expo Go)
 
 ### Testing
 
 - Root tests: 121 passing
-- Mobile tests: 35 passing
-- Total: 156 tests passing
+- Mobile tests: 70 passing
+- Total: 191 tests passing
 - TypeScript strict mode: clean
 
 See `docs/DEMO.md` for a complete demo walkthrough and `docs/migration-plan.md` for the mobile architecture overview.

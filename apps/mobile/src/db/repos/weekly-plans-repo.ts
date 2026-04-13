@@ -1,5 +1,5 @@
 import { generateHistoryId, generatePlanId } from "../ids";
-import { fromSqliteBoolean, toSqliteBoolean, todayIsoDate } from "../repo-helpers";
+import { fromSqliteBoolean, getWeekStartIsoDate, todayIsoDate } from "../repo-helpers";
 import type {
   DatabaseHandle,
   WeeklyPlanRecord,
@@ -84,16 +84,11 @@ function withSlots(db: DatabaseHandle, plan: WeeklyPlanRecord): WeeklyPlanWithSl
 // Queries
 // ---------------------------------------------------------------------------
 
-export function getCurrent(db: DatabaseHandle): WeeklyPlanWithSlots | null {
-  const row = db.getFirstSync<PlanRow>(
-    `SELECT id, week_start AS weekStart, is_archived AS isArchived,
-            created_at AS createdAt, updated_at AS updatedAt, deleted_at AS deletedAt
-     FROM weekly_plans
-     WHERE is_archived = 0 AND deleted_at IS NULL
-     ORDER BY week_start DESC
-     LIMIT 1`,
-  );
-  return row ? withSlots(db, mapPlanRow(row)) : null;
+export function getCurrent(
+  db: DatabaseHandle,
+  referenceDate = new Date(),
+): WeeklyPlanWithSlots | null {
+  return getByWeekStart(db, getWeekStartIsoDate(referenceDate));
 }
 
 export function getById(db: DatabaseHandle, planId: string): WeeklyPlanWithSlots | null {
@@ -103,6 +98,22 @@ export function getById(db: DatabaseHandle, planId: string): WeeklyPlanWithSlots
      FROM weekly_plans
      WHERE id = ? AND deleted_at IS NULL`,
     planId,
+  );
+  return row ? withSlots(db, mapPlanRow(row)) : null;
+}
+
+export function getByWeekStart(
+  db: DatabaseHandle,
+  weekStart: string,
+): WeeklyPlanWithSlots | null {
+  const row = db.getFirstSync<PlanRow>(
+    `SELECT id, week_start AS weekStart, is_archived AS isArchived,
+            created_at AS createdAt, updated_at AS updatedAt, deleted_at AS deletedAt
+     FROM weekly_plans
+     WHERE week_start = ? AND is_archived = 0 AND deleted_at IS NULL
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    weekStart,
   );
   return row ? withSlots(db, mapPlanRow(row)) : null;
 }
@@ -149,18 +160,23 @@ export function create(db: DatabaseHandle, weekStart: string): WeeklyPlanWithSlo
   return getById(db, id)!;
 }
 
-export function getOrCreateCurrent(db: DatabaseHandle): WeeklyPlanWithSlots {
-  const existing = getCurrent(db);
-  if (existing) return existing;
-
-  const now = new Date();
-  const day = now.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff);
-  const weekStart = monday.toISOString().slice(0, 10);
+export function getOrCreateByWeekStart(
+  db: DatabaseHandle,
+  weekStart: string,
+): WeeklyPlanWithSlots {
+  const existing = getByWeekStart(db, weekStart);
+  if (existing) {
+    return existing;
+  }
 
   return create(db, weekStart);
+}
+
+export function getOrCreateCurrent(
+  db: DatabaseHandle,
+  referenceDate = new Date(),
+): WeeklyPlanWithSlots {
+  return getOrCreateByWeekStart(db, getWeekStartIsoDate(referenceDate));
 }
 
 export function archive(db: DatabaseHandle, planId: string): WeeklyPlanWithSlots | null {

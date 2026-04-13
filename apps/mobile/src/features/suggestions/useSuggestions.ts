@@ -5,18 +5,19 @@ import {
   type SuggestionMeal,
 } from '@whats-for-dinner/domain';
 import type { AvailableIngredient } from '@whats-for-dinner/domain';
+import { stringIdToNumber } from '../../db/ids';
 import type { Meal, PantryEntry } from '../../types';
 
 function mealToSuggestionMeal(meal: Meal): SuggestionMeal {
   return {
-    id: Number(meal.id) || meal.id.charCodeAt(0),
+    id: stringIdToNumber(meal.id),
     name: meal.name,
     notes: meal.notes,
     prepMinutes: meal.prepMinutes,
     isFavorite: meal.isFavorite,
     tags: meal.tags,
     ingredients: meal.ingredients.map((i) => ({
-      ingredientId: Number(i.id) || i.id.charCodeAt(0),
+      ingredientId: stringIdToNumber(i.id),
       name: i.name,
       quantityText: i.quantityText,
       isOptional: i.isOptional,
@@ -26,7 +27,7 @@ function mealToSuggestionMeal(meal: Meal): SuggestionMeal {
 
 function pantryToAvailable(items: PantryEntry[]): AvailableIngredient[] {
   return items.map((p) => ({
-    ingredientId: Number(p.ingredientId) || p.ingredientId.charCodeAt(0),
+    ingredientId: stringIdToNumber(p.ingredientId),
     name: p.name,
   }));
 }

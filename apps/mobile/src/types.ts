@@ -18,6 +18,8 @@ export interface Meal {
   prepMinutes: number | null;
   isFavorite: boolean;
   isArchived: boolean;
+  sourceUrl: string | null;
+  sourceHost: string | null;
   tags: string[];
   ingredients: Ingredient[];
   createdAt: string;

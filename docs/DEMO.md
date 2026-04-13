@@ -56,13 +56,12 @@ All sample data is real and editable.
 
 ### 1. Plan tab (start here)
 
-- Show the current weekly plan with pre-filled slots
-- Tap an empty slot (Wednesday, Friday, or Sunday)
-- Use the random picker to fill it
-- Toggle filters: try favorites-only or full-match
-- Tap a filled slot to view meal details, then go back
-- Tap the Autofill button to fill all remaining empty slots
-- Show how autofill avoids reusing meals already in the plan
+- Show the This week / Next week switch at the top of the screen
+- Point out the repeat-window chips (`Off`, `3d`, `7d`, `14d`) that control random-pick history exclusion
+- Tap an empty slot (Wednesday, Friday, or Sunday) to assign manually, or use the day-row dice button to assign a random meal to that day
+- Open the standalone random picker with `What's for Dinner?` and toggle filters like favorites-only or pantry-ready-only
+- Tap `Random Fill` to fill all remaining empty slots for the visible week
+- If there are not enough eligible meals, show the partial-fill warning instead of a hard failure
 - Copy the weekly plan text (demonstrates share/clipboard)
 
 ### 2. Meals tab
@@ -71,15 +70,16 @@ All sample data is real and editable.
 - Search for a meal (try "taco" or "chicken")
 - Tap a meal card to view details
 - Show ingredients, prep time, tags, notes
+- For URL-imported meals, tap the source link to open the original recipe page
 - Go back and toggle favorite on a meal
-- Show the import, export, and settings actions in the header
+- Tap the overflow menu (⋮) in the header to see import, export, and reset options
 
 ### 3. Shop tab
 
-- Generate a shopping list from the current weekly plan
-- Toggle "Include pantry" to see the difference
+- Generate a shopping list from the week you were viewing on the Plan tab
 - Show the split between on-hand and to-buy ingredients
-- Copy the shopping list (demonstrates clipboard integration)
+- Tap `Need to buy` items to check them off as you shop
+- Copy the shopping list and show that the clipboard output is names only, one ingredient per line
 - Tap Pantry to view/edit pantry items
 - Add or remove a pantry item
 - Regenerate the list and watch the on-hand section update
@@ -102,22 +102,42 @@ All sample data is real and editable.
 
 #### URL import (native only)
 
-- From Meals tab, tap the URL import option
+- From Meals tab, tap the URL import option (overflow menu → Import from URL)
 - Paste a recipe URL (try AllRecipes, Food Network, Budget Bytes)
 - Wait for extraction (fetches and parses the page)
 - Review extracted name, ingredients, prep time, tags
 - Edit if needed, then save
 - New meal appears with source URL stored
+- View the meal detail to see the tappable source link
+
+#### Android share-intent (custom dev build only)
+
+- From Chrome or any Android app, tap Share on a recipe URL
+- Select "What's for Dinner?" from the share sheet
+- App opens directly to the URL import screen with the URL pre-filled
+- Proceed with extraction/review/save as above
+- Shared text without a URL shows a warning and prompts manual paste
+
+**Limitation:** Share-intent requires custom dev build (not Expo Go). See README.md for setup.
 
 **Notes:**
 - Cookbook export JSON is compatible with the Import Recipes screen.
 - URL import works on Android/iOS only. Browser preview is blocked by CORS; use file import or clipboard export instead on web.
 
+## Settings
+
+### Appearance (dark mode)
+
+- Tap the settings icon (gear) in the Meals tab header
+- Select Appearance
+- Choose System (default), Light, or Dark
+- Appearance preference persists across sessions and is not affected by demo data reset
+
 ## Reset for next demo
 
 ### On Android/iOS (Expo Go or native)
 
-Tap the settings icon (gear) in the Meals tab header. A confirmation dialog appears. Confirm to reset all data back to the original demo state.
+Tap the settings icon (gear) in the Meals tab header. Tap Reset Demo Data. A confirmation dialog appears. Confirm to reset all data back to the original demo state.
 
 ### In browser preview
 
@@ -136,7 +156,7 @@ cd apps/mobile && npm run web
 This demo shows local-first offline functionality only. Not yet implemented:
 
 - Cloud sync or backup (Phase 4 deferred)
-- Android share-intent receiver for recipe URLs (Phase 5, deferred)
+- Production-tested Android share-intent build flow (the first slice is wired, but still needs custom dev build + real device verification)
 - Custom app icon or splash screen (placeholder assets only)
 
 The current scope is full offline feature parity with the web app plus a demo-ready sample data experience.

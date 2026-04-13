@@ -7,21 +7,25 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useMeals } from '@/hooks/useMeals';
 import { usePantry } from '@/hooks/usePantry';
 import { useWeeklyPlan } from '@/hooks/useWeeklyPlan';
 import { useShoppingList } from '@/features/shopping/useShoppingList';
+import { useColors } from '@/hooks/useTheme';
 import { EmptyState } from '@/ui/EmptyState';
-import { colors, spacing, radii, fontSizes } from '@/ui/theme';
+import { spacing, radii, fontSizes } from '@/ui/theme';
 
 export default function ShopScreen() {
   const router = useRouter();
+  const { weekStart } = useLocalSearchParams<{ weekStart?: string | string[] }>();
+  const selectedWeekStart = typeof weekStart === 'string' ? weekStart : undefined;
+  const c = useColors();
   const { meals, refresh: refreshMeals } = useMeals();
   const { items: pantryItems, addItem, removeItem, refresh: refreshPantry } = usePantry();
-  const { getPlannedMealIds, refresh: refreshPlan } = useWeeklyPlan();
+  const { getPlannedMealIds, refresh: refreshPlan } = useWeeklyPlan(selectedWeekStart);
 
   // Refresh data when tab gains focus
   useFocusEffect(
@@ -35,6 +39,17 @@ export default function ShopScreen() {
   // Pantry quick-add state
   const [newIngredient, setNewIngredient] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Local checkbox state for "Need to buy" items
+  const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
+  const toggleChecked = useCallback((id: number) => {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   // Get planned meals for shopping list
   const plannedMealIds = getPlannedMealIds();
@@ -51,68 +66,77 @@ export default function ShopScreen() {
     setNewIngredient('');
   }, [newIngredient, addItem]);
 
-  const handleCopy = useCallback(async () => {
-    if (!shoppingList) return;
-    await Clipboard.setStringAsync(shoppingList.copyText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Keep clipboard copy short: item names only.
+  const copyText = useMemo(() => {
+    if (!shoppingList) return '';
+
+    return [...shoppingList.requiredToBuy, ...shoppingList.optionalToBuy]
+      .map((item) => item.name)
+      .join('\n');
   }, [shoppingList]);
 
+  const handleCopy = useCallback(async () => {
+    if (!copyText) return;
+    await Clipboard.setStringAsync(copyText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [copyText]);
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={[styles.container, { backgroundColor: c.background }]} contentContainerStyle={styles.contentContainer}>
       {/* ── Pantry Section ── */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Ionicons name="basket-outline" size={20} color={colors.accent} />
-          <Text style={styles.sectionTitle}>Pantry</Text>
+          <Ionicons name="basket-outline" size={20} color={c.accent} />
+          <Text style={[styles.sectionTitle, { color: c.text }]}>Pantry</Text>
           <Pressable
-            style={styles.suggestBtn}
+            style={[styles.suggestBtn, { backgroundColor: c.accentLight }]}
             onPress={() => router.push('/(tabs)/shop/suggestions')}
             accessibilityRole="button"
             accessibilityLabel="View suggestions"
           >
-            <Ionicons name="bulb-outline" size={16} color={colors.accent} />
-            <Text style={styles.suggestBtnText}>Suggestions</Text>
+            <Ionicons name="bulb-outline" size={16} color={c.accent} />
+            <Text style={[styles.suggestBtnText, { color: c.accent }]}>Suggestions</Text>
           </Pressable>
         </View>
 
         {/* Quick-add */}
         <View style={styles.addRow}>
           <TextInput
-            style={[styles.input, styles.addInput]}
+            style={[styles.input, styles.addInput, { borderColor: c.surfaceBorder, color: c.text, backgroundColor: c.surface }]}
             value={newIngredient}
             onChangeText={setNewIngredient}
             placeholder="Add ingredient…"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={c.textMuted}
             onSubmitEditing={handleAddPantryItem}
             returnKeyType="done"
             accessibilityLabel="Add pantry ingredient"
           />
           <Pressable
-            style={[styles.addBtn, !newIngredient.trim() && styles.addBtnDisabled]}
+            style={[styles.addBtn, { backgroundColor: c.accent }, !newIngredient.trim() && { backgroundColor: c.textMuted }]}
             onPress={handleAddPantryItem}
             disabled={!newIngredient.trim()}
             accessibilityRole="button"
             accessibilityLabel="Add to pantry"
           >
-            <Ionicons name="add" size={20} color={colors.white} />
+            <Ionicons name="add" size={20} color="#FFFFFF" />
           </Pressable>
         </View>
 
         {/* Pantry list */}
         {pantryItems.length === 0 ? (
-          <View style={styles.inlineEmpty}>
-            <Ionicons name="basket-outline" size={20} color={colors.textMuted} />
-            <Text style={styles.emptyHint}>
+          <View style={[styles.inlineEmpty, { backgroundColor: c.surface }]}>
+            <Ionicons name="basket-outline" size={20} color={c.textMuted} />
+            <Text style={[styles.emptyHint, { color: c.textSecondary }]}>
               Your pantry is empty. Add what you already have on hand so it can be
               skipped when the shopping list is built.
             </Text>
           </View>
         ) : (
           pantryItems.map((item) => (
-            <View key={item.ingredientId} style={styles.pantryItem}>
+            <View key={item.ingredientId} style={[styles.pantryItem, { borderBottomColor: c.surfaceBorder }]}>
               <View style={styles.pantryItemContent}>
-                <Text style={styles.pantryItemName}>{item.name}</Text>
+                <Text style={[styles.pantryItemName, { color: c.text }]}>{item.name}</Text>
               </View>
               <Pressable
                 onPress={() => removeItem(item.ingredientId)}
@@ -120,7 +144,7 @@ export default function ShopScreen() {
                 accessibilityLabel={`Remove ${item.name} from pantry`}
                 accessibilityRole="button"
               >
-                <Ionicons name="close-circle" size={20} color={colors.textMuted} />
+                <Ionicons name="close-circle" size={20} color={c.textMuted} />
               </Pressable>
             </View>
           ))
@@ -130,8 +154,8 @@ export default function ShopScreen() {
       {/* ── Shopping List Section ── */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Ionicons name="cart-outline" size={20} color={colors.accent} />
-          <Text style={styles.sectionTitle}>Shopping List</Text>
+          <Ionicons name="cart-outline" size={20} color={c.accent} />
+          <Text style={[styles.sectionTitle, { color: c.text }]}>Shopping List</Text>
         </View>
 
         {!shoppingList || plannedMeals.length === 0 ? (
@@ -151,14 +175,14 @@ export default function ShopScreen() {
         ) : (
           <View>
             {/* Summary */}
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryText}>
+            <View style={[styles.summaryRow, { borderBottomColor: c.surfaceBorder }]}>
+              <Text style={[styles.summaryText, { color: c.textSecondary }]}>
                 {shoppingList.summary.selectedMealCount} meal
                 {shoppingList.summary.selectedMealCount !== 1 ? 's' : ''} ·{' '}
                 {shoppingList.summary.requiredToBuyCount} to buy
               </Text>
               <Pressable
-                style={styles.copyBtn}
+                style={[styles.copyBtn, { backgroundColor: c.accentLight }]}
                 onPress={handleCopy}
                 accessibilityRole="button"
                 accessibilityLabel="Copy shopping list"
@@ -166,39 +190,61 @@ export default function ShopScreen() {
                 <Ionicons
                   name={copied ? 'checkmark' : 'copy-outline'}
                   size={16}
-                  color={colors.accent}
+                  color={c.accent}
                 />
-                <Text style={styles.copyBtnText}>{copied ? 'Copied!' : 'Copy'}</Text>
+                <Text style={[styles.copyBtnText, { color: c.accent }]}>{copied ? 'Copied!' : 'Copy'}</Text>
               </Pressable>
             </View>
 
             {/* Need to Buy */}
             {shoppingList.requiredToBuy.length > 0 && (
               <View style={styles.listGroup}>
-                <Text style={styles.listGroupTitle}>Need to buy</Text>
-                {shoppingList.requiredToBuy.map((item) => (
-                  <View key={item.ingredientId} style={styles.shoppingItem}>
-                    <Ionicons name="square-outline" size={18} color={colors.accent} />
-                    <View style={styles.shoppingItemContent}>
-                      <Text style={styles.shoppingItemName}>{item.name}</Text>
-                      <Text style={styles.shoppingItemHint}>
-                        {item.quantityHints.join('; ')}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
+                <Text style={[styles.listGroupTitle, { color: c.textSecondary }]}>Need to buy</Text>
+                {shoppingList.requiredToBuy.map((item) => {
+                  const checked = checkedIds.has(item.ingredientId);
+                  return (
+                    <Pressable
+                      key={item.ingredientId}
+                      style={styles.shoppingItem}
+                      onPress={() => toggleChecked(item.ingredientId)}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked }}
+                      accessibilityLabel={`${checked ? 'Uncheck' : 'Check'} ${item.name}`}
+                    >
+                      <Ionicons
+                        name={checked ? 'checkbox' : 'square-outline'}
+                        size={18}
+                        color={checked ? c.success : c.accent}
+                      />
+                      <View style={styles.shoppingItemContent}>
+                        <Text
+                          style={[
+                            styles.shoppingItemName,
+                            { color: checked ? c.textMuted : c.text },
+                            checked && styles.checkedName,
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text style={[styles.shoppingItemHint, { color: c.textSecondary }]}>
+                          {item.quantityHints.join('; ')}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
 
             {/* On Hand */}
             {shoppingList.requiredOnHand.length > 0 && (
               <View style={styles.listGroup}>
-                <Text style={styles.listGroupTitle}>Already on hand</Text>
+                <Text style={[styles.listGroupTitle, { color: c.textSecondary }]}>Already on hand</Text>
                 {shoppingList.requiredOnHand.map((item) => (
                   <View key={item.ingredientId} style={styles.shoppingItem}>
-                    <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                    <Ionicons name="checkmark-circle" size={18} color={c.success} />
                     <View style={styles.shoppingItemContent}>
-                      <Text style={[styles.shoppingItemName, styles.onHandName]}>
+                      <Text style={[styles.shoppingItemName, styles.onHandName, { color: c.textSecondary }]}>
                         {item.name}
                       </Text>
                     </View>
@@ -210,20 +256,41 @@ export default function ShopScreen() {
             {/* Optional */}
             {shoppingList.optionalToBuy.length > 0 && (
               <View style={styles.listGroup}>
-                <Text style={styles.listGroupTitle}>Optional</Text>
-                {shoppingList.optionalToBuy.map((item) => (
-                  <View key={item.ingredientId} style={styles.shoppingItem}>
-                    <Ionicons name="square-outline" size={18} color={colors.textMuted} />
-                    <View style={styles.shoppingItemContent}>
-                      <Text style={[styles.shoppingItemName, styles.optionalName]}>
-                        {item.name}
-                      </Text>
-                      <Text style={styles.shoppingItemHint}>
-                        {item.quantityHints.join('; ')}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
+                <Text style={[styles.listGroupTitle, { color: c.textSecondary }]}>Optional</Text>
+                {shoppingList.optionalToBuy.map((item) => {
+                  const checked = checkedIds.has(item.ingredientId);
+                  return (
+                    <Pressable
+                      key={item.ingredientId}
+                      style={styles.shoppingItem}
+                      onPress={() => toggleChecked(item.ingredientId)}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked }}
+                      accessibilityLabel={`${checked ? 'Uncheck' : 'Check'} ${item.name}, optional`}
+                    >
+                      <Ionicons
+                        name={checked ? 'checkbox' : 'square-outline'}
+                        size={18}
+                        color={checked ? c.success : c.textMuted}
+                      />
+                      <View style={styles.shoppingItemContent}>
+                        <Text style={[
+                          styles.shoppingItemName,
+                          styles.optionalName,
+                          { color: c.textMuted },
+                          checked && styles.checkedName,
+                        ]}>
+                          {item.name}
+                        </Text>
+                        {!checked && (
+                          <Text style={[styles.shoppingItemHint, { color: c.textSecondary }]}>
+                            {item.quantityHints.join('; ')}
+                          </Text>
+                        )}
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
           </View>
@@ -236,7 +303,6 @@ export default function ShopScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   contentContainer: {
     padding: spacing.lg,
@@ -254,7 +320,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSizes.xl,
     fontWeight: '700',
-    color: colors.text,
     flex: 1,
   },
   suggestBtn: {
@@ -264,11 +329,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.full,
-    backgroundColor: colors.accentLight,
   },
   suggestBtnText: {
     fontSize: fontSizes.sm,
-    color: colors.accent,
     fontWeight: '600',
   },
   addRow: {
@@ -278,26 +341,19 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: fontSizes.md,
-    color: colors.text,
-    backgroundColor: colors.white,
   },
   addInput: {
     flex: 1,
   },
   addBtn: {
-    backgroundColor: colors.accent,
     borderRadius: radii.md,
     width: 44,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  addBtnDisabled: {
-    backgroundColor: colors.textMuted,
   },
   inlineEmpty: {
     flexDirection: 'row',
@@ -305,13 +361,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radii.md,
   },
   emptyHint: {
     flex: 1,
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     lineHeight: 18,
   },
   pantryItem: {
@@ -319,14 +373,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceBorder,
   },
   pantryItemContent: {
     flex: 1,
   },
   pantryItemName: {
     fontSize: fontSizes.md,
-    color: colors.text,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -334,12 +386,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceBorder,
     marginBottom: spacing.md,
   },
   summaryText: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     fontWeight: '600',
   },
   copyBtn: {
@@ -349,11 +399,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.md,
-    backgroundColor: colors.accentLight,
   },
   copyBtnText: {
     fontSize: fontSizes.sm,
-    color: colors.accent,
     fontWeight: '600',
   },
   listGroup: {
@@ -362,7 +410,6 @@ const styles = StyleSheet.create({
   listGroupTitle: {
     fontSize: fontSizes.sm,
     fontWeight: '700',
-    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: spacing.sm,
@@ -378,19 +425,18 @@ const styles = StyleSheet.create({
   },
   shoppingItemName: {
     fontSize: fontSizes.md,
-    color: colors.text,
   },
   shoppingItemHint: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   onHandName: {
-    color: colors.textSecondary,
     textDecorationLine: 'line-through',
   },
   optionalName: {
-    color: colors.textMuted,
     fontStyle: 'italic',
+  },
+  checkedName: {
+    textDecorationLine: 'line-through',
   },
 });

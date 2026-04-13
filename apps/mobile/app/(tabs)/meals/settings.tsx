@@ -11,13 +11,22 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useDatabase } from '@/hooks/useDatabase';
+import { useTheme, useColors } from '@/hooks/useTheme';
 import { resetAndReseed } from '@/db/reset';
 import { ErrorBanner } from '@/ui/ErrorBanner';
-import { colors, spacing, radii, fontSizes } from '@/ui/theme';
+import { type ThemePreference, spacing, radii, fontSizes } from '@/ui/theme';
+
+const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
+  { value: 'system', label: 'System', icon: 'phone-portrait-outline' },
+  { value: 'light', label: 'Light', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Dark', icon: 'moon-outline' },
+];
 
 export default function MealsSettingsScreen() {
   const router = useRouter();
   const { db, isReady } = useDatabase();
+  const { preference, setPreference } = useTheme();
+  const c = useColors();
   const [working, setWorking] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -65,27 +74,58 @@ export default function MealsSettingsScreen() {
   const disabled = working || !isReady || !db;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.infoCard}>
-          <View style={styles.infoIconWrap}>
-            <Ionicons name="refresh-circle-outline" size={36} color={colors.accent} />
+        {/* ── Appearance ── */}
+        <Text style={[styles.sectionHeader, { color: c.textSecondary }]}>Appearance</Text>
+        <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
+          {THEME_OPTIONS.map((opt, idx) => (
+            <Pressable
+              key={opt.value}
+              style={[
+                styles.themeRow,
+                idx < THEME_OPTIONS.length - 1 && [styles.themeRowBorder, { borderBottomColor: c.surfaceBorder }],
+              ]}
+              onPress={() => setPreference(opt.value)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: preference === opt.value }}
+              accessibilityLabel={`${opt.label} theme`}
+            >
+              <Ionicons
+                name={opt.icon as React.ComponentProps<typeof Ionicons>['name']}
+                size={20}
+                color={c.textSecondary}
+                style={styles.themeIcon}
+              />
+              <Text style={[styles.themeLabel, { color: c.text }]}>{opt.label}</Text>
+              {preference === opt.value && (
+                <Ionicons name="checkmark" size={20} color={c.accent} />
+              )}
+            </Pressable>
+          ))}
+        </View>
+
+        {/* ── Demo data ── */}
+        <Text style={[styles.sectionHeader, { color: c.textSecondary }]}>Demo Data</Text>
+        <View style={[styles.infoCard, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
+          <View style={[styles.infoIconWrap, { backgroundColor: c.accentLight }]}>
+            <Ionicons name="refresh-circle-outline" size={36} color={c.accent} />
           </View>
-          <Text style={styles.infoTitle}>Reset demo data</Text>
-          <Text style={styles.infoSubtitle}>
+          <Text style={[styles.infoTitle, { color: c.text }]}>Reset demo data</Text>
+          <Text style={[styles.infoSubtitle, { color: c.textSecondary }]}>
             Clear the library and restore the 12 sample meals, pantry items, weekly
             plan, and history. Handy between demos when you want a clean slate.
           </Text>
         </View>
 
-        <View style={styles.warningCard}>
+        <View style={[styles.warningCard, { backgroundColor: c.dangerLight, borderColor: c.danger }]}>
           <Ionicons
             name="warning-outline"
             size={20}
-            color={colors.danger}
+            color={c.danger}
             style={styles.warningIcon}
           />
-          <Text style={styles.warningText}>
+          <Text style={[styles.warningText, { color: c.danger }]}>
             Everything in this app will be erased and replaced with sample data. You
             cannot undo this action.
           </Text>
@@ -114,10 +154,10 @@ export default function MealsSettingsScreen() {
           accessibilityHint="Wipes all data and restores sample meals"
         >
           {working ? (
-            <ActivityIndicator color={colors.white} />
+            <ActivityIndicator color="#FFFFFF" />
           ) : (
             <>
-              <Ionicons name="refresh" size={22} color={colors.white} />
+              <Ionicons name="refresh" size={22} color="#FFFFFF" />
               <Text style={styles.resetBtnText}>Reset to Sample Data</Text>
             </>
           )}
@@ -129,7 +169,7 @@ export default function MealsSettingsScreen() {
           accessibilityRole="button"
           disabled={working}
         >
-          <Text style={styles.cancelBtnText}>Cancel</Text>
+          <Text style={[styles.cancelBtnText, { color: c.textSecondary }]}>Cancel</Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -139,26 +179,57 @@ export default function MealsSettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxxl,
   },
+  sectionHeader: {
+    fontSize: fontSizes.sm,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.xs,
+  },
+  card: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginBottom: spacing.xl,
+  },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    minHeight: 48,
+  },
+  themeRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  themeIcon: {
+    marginRight: spacing.md,
+    width: 24,
+    textAlign: 'center',
+  },
+  themeLabel: {
+    flex: 1,
+    fontSize: fontSizes.md,
+    fontWeight: '500',
+  },
   infoCard: {
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: radii.xl,
     padding: spacing.xl,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   infoIconWrap: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.accentLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -166,11 +237,9 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: fontSizes.xl,
     fontWeight: '700',
-    color: colors.text,
   },
   infoSubtitle: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.sm,
     lineHeight: 22,
@@ -179,8 +248,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
-    backgroundColor: colors.dangerLight,
-    borderColor: colors.danger,
     borderWidth: 1,
     borderRadius: radii.lg,
     padding: spacing.lg,
@@ -192,7 +259,6 @@ const styles = StyleSheet.create({
   warningText: {
     flex: 1,
     fontSize: fontSizes.sm,
-    color: colors.danger,
     lineHeight: 18,
   },
   bannerWrap: {
@@ -203,7 +269,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.danger,
+    backgroundColor: '#EF4444',
     borderRadius: radii.lg,
     paddingVertical: spacing.lg,
     minHeight: 52,
@@ -217,7 +283,7 @@ const styles = StyleSheet.create({
   resetBtnText: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   cancelBtn: {
     alignItems: 'center',
@@ -227,7 +293,6 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     fontWeight: '600',
   },
 });

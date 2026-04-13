@@ -11,12 +11,14 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMeals } from '@/hooks/useMeals';
 import { useMealForm } from '@/features/meals/useMealForm';
+import { useColors } from '@/hooks/useTheme';
 import { MealFormFields, mealFormStyles } from '@/ui/MealFormFields';
-import { colors, spacing, fontSizes } from '@/ui/theme';
+import { spacing } from '@/ui/theme';
 
 export default function EditMealScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
+  const c = useColors();
   const { meals, getMealById, createMeal, updateMeal } = useMeals();
 
   const editingId = params.id ?? undefined;
@@ -71,7 +73,7 @@ export default function EditMealScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -82,17 +84,16 @@ export default function EditMealScreen() {
         />
       </ScrollView>
 
-      {/* Save / Cancel */}
-      <View style={mealFormStyles.footer}>
+      <View style={[mealFormStyles.footer, { borderTopColor: c.surfaceBorder, backgroundColor: c.surface }]}>
         <Pressable
-          style={[mealFormStyles.footerBtn, mealFormStyles.cancelBtn]}
+          style={[mealFormStyles.footerBtn, mealFormStyles.cancelBtn, { backgroundColor: c.background, borderColor: c.surfaceBorder }]}
           onPress={() => router.back()}
           accessibilityRole="button"
         >
-          <Text style={mealFormStyles.cancelBtnText}>Cancel</Text>
+          <Text style={[mealFormStyles.cancelBtnText, { color: c.textSecondary }]}>Cancel</Text>
         </Pressable>
         <Pressable
-          style={[mealFormStyles.footerBtn, mealFormStyles.saveBtn]}
+          style={[mealFormStyles.footerBtn, mealFormStyles.saveBtn, { backgroundColor: c.accent }]}
           onPress={handleSave}
           accessibilityRole="button"
         >
@@ -106,7 +107,6 @@ export default function EditMealScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.lg,

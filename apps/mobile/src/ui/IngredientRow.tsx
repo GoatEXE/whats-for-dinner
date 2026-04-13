@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, fontSizes } from './theme';
+import { useColors } from '../hooks/useTheme';
+import { spacing, fontSizes } from './theme';
 
 interface IngredientRowProps {
   name: string;
@@ -9,15 +10,16 @@ interface IngredientRowProps {
 }
 
 export function IngredientRow({ name, quantityText, isOptional }: IngredientRowProps) {
+  const c = useColors();
   return (
     <View style={styles.row}>
-      <Text style={styles.bullet}>•</Text>
+      <Text style={[styles.bullet, { color: c.accent }]}>•</Text>
       <View style={styles.content}>
-        <Text style={styles.name}>
+        <Text style={[styles.name, { color: c.text }]}>
           {name}
-          {isOptional && <Text style={styles.optional}> (optional)</Text>}
+          {isOptional && <Text style={[styles.optional, { color: c.textMuted }]}> (optional)</Text>}
         </Text>
-        {quantityText ? <Text style={styles.quantity}>{quantityText}</Text> : null}
+        {quantityText ? <Text style={[styles.quantity, { color: c.textSecondary }]}>{quantityText}</Text> : null}
       </View>
     </View>
   );
@@ -31,7 +33,6 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: fontSizes.md,
-    color: colors.accent,
     marginRight: spacing.sm,
     marginTop: 1,
   },
@@ -40,16 +41,13 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: fontSizes.md,
-    color: colors.text,
   },
   optional: {
     fontSize: fontSizes.sm,
-    color: colors.textMuted,
     fontStyle: 'italic',
   },
   quantity: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     marginTop: 1,
   },
 });

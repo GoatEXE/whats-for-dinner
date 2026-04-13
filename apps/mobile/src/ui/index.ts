@@ -1,3 +1,4 @@
+export { ActionMenu, type ActionMenuItem } from './ActionMenu';
 export { SearchBar } from './SearchBar';
 export { TagChip } from './TagChip';
 export { IngredientRow } from './IngredientRow';

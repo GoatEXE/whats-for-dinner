@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radii, fontSizes } from './theme';
+import { useColors } from '../hooks/useTheme';
+import { spacing, radii, fontSizes } from './theme';
 
 interface ErrorBannerProps {
   message: string;
@@ -20,7 +21,8 @@ export function ErrorBanner({
   onDismiss,
   tone = 'error',
 }: ErrorBannerProps) {
-  const accent = tone === 'warning' ? colors.warning : colors.error;
+  const c = useColors();
+  const accent = tone === 'warning' ? c.warning : c.error;
   return (
     <View
       style={[

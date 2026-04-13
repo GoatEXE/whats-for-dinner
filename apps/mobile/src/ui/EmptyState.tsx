@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, fontSizes, radii } from './theme';
+import { useColors } from '../hooks/useTheme';
+import { spacing, fontSizes, radii } from './theme';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -26,13 +27,14 @@ export function EmptyState({
   subtitle,
   actions,
 }: EmptyStateProps) {
+  const c = useColors();
   return (
     <View style={styles.container}>
-      <View style={styles.iconWrap}>
-        <Ionicons name={icon} size={44} color={colors.accent} />
+      <View style={[styles.iconWrap, { backgroundColor: c.accentLight }]}>
+        <Ionicons name={icon} size={44} color={c.accent} />
       </View>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+      <Text style={[styles.title, { color: c.text }]}>{title}</Text>
+      {subtitle && <Text style={[styles.subtitle, { color: c.textSecondary }]}>{subtitle}</Text>}
       {actions && actions.length > 0 && (
         <View style={styles.actions}>
           {actions.map((action, i) => {
@@ -45,7 +47,9 @@ export function EmptyState({
                 accessibilityLabel={action.accessibilityLabel ?? action.label}
                 style={({ pressed }) => [
                   styles.actionBtn,
-                  isPrimary ? styles.primaryBtn : styles.secondaryBtn,
+                  isPrimary
+                    ? { backgroundColor: c.accent }
+                    : { backgroundColor: c.accentLight, borderWidth: 1, borderColor: c.accent },
                   pressed && styles.pressed,
                 ]}
               >
@@ -53,13 +57,13 @@ export function EmptyState({
                   <Ionicons
                     name={action.icon}
                     size={18}
-                    color={isPrimary ? colors.white : colors.accent}
+                    color={isPrimary ? '#FFFFFF' : c.accent}
                   />
                 )}
                 <Text
                   style={[
                     styles.actionText,
-                    isPrimary ? styles.primaryText : styles.secondaryText,
+                    { color: isPrimary ? '#FFFFFF' : c.accent },
                   ]}
                 >
                   {action.label}
@@ -85,7 +89,6 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: colors.accentLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
@@ -93,12 +96,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.text,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     marginTop: spacing.sm,
     textAlign: 'center',
     lineHeight: 20,
@@ -120,25 +121,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     minHeight: 44,
   },
-  primaryBtn: {
-    backgroundColor: colors.accent,
-  },
-  secondaryBtn: {
-    backgroundColor: colors.accentLight,
-    borderWidth: 1,
-    borderColor: colors.accent,
-  },
   pressed: {
     opacity: 0.85,
   },
   actionText: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-  },
-  primaryText: {
-    color: colors.white,
-  },
-  secondaryText: {
-    color: colors.accent,
   },
 });

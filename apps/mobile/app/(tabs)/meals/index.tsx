@@ -9,18 +9,20 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMeals } from '@/hooks/useMeals';
+import { useColors } from '@/hooks/useTheme';
 import { SearchBar } from '@/ui/SearchBar';
 import { MealCard } from '@/ui/MealCard';
 import { EmptyState } from '@/ui/EmptyState';
 import { ErrorBanner } from '@/ui/ErrorBanner';
 import { FAB } from '@/ui/FAB';
-import { colors, spacing, fontSizes, radii } from '@/ui/theme';
+import { spacing, fontSizes, radii } from '@/ui/theme';
 import { normalizeName } from '@whats-for-dinner/domain';
 
 type FilterMode = 'all' | 'favorites' | 'archived';
 
 export default function MealsScreen() {
   const router = useRouter();
+  const c = useColors();
   const { meals, loading, error, refresh } = useMeals();
 
   // Refresh when tab gains focus (e.g. after import or reset)
@@ -77,8 +79,8 @@ export default function MealsScreen() {
   }, [router]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
+      <View style={[styles.header, { backgroundColor: c.surface, borderBottomColor: c.surfaceBorder }]}>
         <SearchBar
           value={search}
           onChangeText={setSearch}
@@ -88,7 +90,11 @@ export default function MealsScreen() {
           {(['all', 'favorites', 'archived'] as const).map((mode) => (
             <Pressable
               key={mode}
-              style={[styles.filterBtn, filter === mode && styles.filterBtnActive]}
+              style={[
+                styles.filterBtn,
+                { backgroundColor: c.background, borderColor: c.surfaceBorder },
+                filter === mode && { backgroundColor: c.accent, borderColor: c.accent },
+              ]}
               onPress={() => setFilter(mode)}
               accessibilityRole="button"
               accessibilityState={{ selected: filter === mode }}
@@ -97,14 +103,15 @@ export default function MealsScreen() {
                 <Ionicons
                   name="star"
                   size={13}
-                  color={filter === mode ? colors.white : colors.star}
+                  color={filter === mode ? '#FFFFFF' : c.star}
                   style={styles.filterIcon}
                 />
               )}
               <Text
                 style={[
                   styles.filterText,
-                  filter === mode && styles.filterTextActive,
+                  { color: c.textSecondary },
+                  filter === mode && { color: '#FFFFFF' },
                 ]}
               >
                 {mode === 'all' ? 'All' : mode === 'favorites' ? 'Favorites' : 'Archived'}
@@ -135,7 +142,7 @@ export default function MealsScreen() {
             <EmptyState
               icon="search-outline"
               title="No matches"
-              subtitle={`Nothing found for “${search}”. Try a different search, or clear it to see every meal.`}
+              subtitle={`Nothing found for "${search}". Try a different search, or clear it to see every meal.`}
               actions={[
                 {
                   label: 'Clear search',
@@ -149,7 +156,7 @@ export default function MealsScreen() {
             <EmptyState
               icon="star-outline"
               title="No favorites yet"
-              subtitle="Tap the star on any meal to mark it as a favorite and it’ll show up here."
+              subtitle="Tap the star on any meal to mark it as a favorite and it'll show up here."
               actions={[
                 {
                   label: 'Show all meals',
@@ -198,7 +205,7 @@ export default function MealsScreen() {
           error && !errorDismissed ? (
             <View style={styles.bannerWrap}>
               <ErrorBanner
-                title="Couldn’t load meals"
+                title="Couldn't load meals"
                 message={error.message}
                 onDismiss={() => setErrorDismissed(true)}
               />
@@ -215,15 +222,12 @@ export default function MealsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
-    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceBorder,
   },
   filterRow: {
     flexDirection: 'row',
@@ -236,24 +240,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.full,
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-  },
-  filterBtnActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
   },
   filterIcon: {
     marginRight: spacing.xs,
   },
   filterText: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     fontWeight: '500',
-  },
-  filterTextActive: {
-    color: colors.white,
   },
   list: {
     padding: spacing.lg,

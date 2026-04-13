@@ -11,9 +11,10 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useDatabase } from '@/hooks/useDatabase';
+import { useColors } from '@/hooks/useTheme';
 import * as plansRepo from '@/db/repos/weekly-plans-repo';
 import { EmptyState } from '@/ui/EmptyState';
-import { colors, spacing, radii, fontSizes } from '@/ui/theme';
+import { spacing, radii, fontSizes } from '@/ui/theme';
 import type { WeeklyPlanWithSlots } from '@/db/types';
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
@@ -30,6 +31,7 @@ function formatPlanText(plan: WeeklyPlanWithSlots): string {
 
 export default function HistoryScreen() {
   const router = useRouter();
+  const c = useColors();
   const { db } = useDatabase();
 
   const [archivedPlans, setArchivedPlans] = useState<WeeklyPlanWithSlots[]>([]);
@@ -70,7 +72,7 @@ export default function HistoryScreen() {
 
   return (
     <FlatList
-      style={styles.container}
+      style={[styles.container, { backgroundColor: c.background }]}
       contentContainerStyle={styles.content}
       data={archivedPlans}
       keyExtractor={(item) => item.id}
@@ -88,15 +90,16 @@ function PlanCard({
   plan: WeeklyPlanWithSlots;
   onCopy: () => void;
 }) {
+  const c = useColors();
   const assignedCount = plan.slots.filter((s) => s.mealId != null).length;
   const servedCount = plan.slots.filter((s) => s.servedAt != null).length;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
+    <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
+      <View style={[styles.cardHeader, { borderBottomColor: c.surfaceBorder }]}>
         <View>
-          <Text style={styles.cardWeek}>Week of {plan.weekStart}</Text>
-          <Text style={styles.cardSummary}>
+          <Text style={[styles.cardWeek, { color: c.text }]}>Week of {plan.weekStart}</Text>
+          <Text style={[styles.cardSummary, { color: c.textSecondary }]}>
             {assignedCount} meals planned · {servedCount} served
           </Text>
         </View>
@@ -105,23 +108,27 @@ function PlanCard({
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Copy plan text"
-          style={styles.copyBtn}
+          style={[styles.copyBtn, { backgroundColor: c.accentLight }]}
         >
-          <Ionicons name="copy-outline" size={18} color={colors.accent} />
+          <Ionicons name="copy-outline" size={18} color={c.accent} />
         </Pressable>
       </View>
 
       {plan.slots.map((slot) => (
-        <View key={slot.day} style={styles.slotRow}>
-          <Text style={styles.slotDay}>{DAY_LABELS[slot.day]}</Text>
+        <View key={slot.day} style={[styles.slotRow, { borderBottomColor: c.surfaceBorder }]}>
+          <Text style={[styles.slotDay, { color: c.textSecondary }]}>{DAY_LABELS[slot.day]}</Text>
           <Text
-            style={[styles.slotMeal, !slot.mealId && styles.slotEmpty]}
+            style={[
+              styles.slotMeal,
+              { color: c.text },
+              !slot.mealId && { color: c.textMuted, fontStyle: 'italic' },
+            ]}
             numberOfLines={1}
           >
             {slot.mealName ?? '—'}
           </Text>
           {slot.servedAt && (
-            <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+            <Ionicons name="checkmark-circle" size={16} color={c.success} />
           )}
         </View>
       ))}
@@ -132,19 +139,16 @@ function PlanCard({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxxl,
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: radii.xl,
     padding: spacing.lg,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -153,43 +157,32 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceBorder,
   },
   cardWeek: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.text,
   },
   cardSummary: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   copyBtn: {
     padding: spacing.sm,
     borderRadius: radii.md,
-    backgroundColor: colors.accentLight,
   },
   slotRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.surfaceBorder,
   },
   slotDay: {
     width: 40,
     fontSize: fontSizes.sm,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   slotMeal: {
     flex: 1,
     fontSize: fontSizes.md,
-    color: colors.text,
-  },
-  slotEmpty: {
-    color: colors.textMuted,
-    fontStyle: 'italic',
   },
 });

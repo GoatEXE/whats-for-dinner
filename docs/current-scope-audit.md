@@ -488,21 +488,24 @@ Indexes:
 - `usePlanAutofill` — autofill empty plan slots with cumulative exclusion
 
 ### Screens implemented
-- **Meals tab**: list with search/filter, detail view, edit/create form, archive/favorite actions, file import/export, reset demo data button (gear icon in header)
-- **Plan tab**: current week view with slot assignment, random fill, clear, serve, autofill, copy/share plan text, archived plans list, plan history detail, reuse/copy actions
-- **Shop tab**: pantry editor, suggestion matches, shopping list from meals or from plan, copy shopping list text
+- **Meals tab**: list with search/filter, detail view with tappable source link for URL-imported meals, edit/create form, archive/favorite actions, file import/export, reset demo data, overflow menu (⋮) for header actions
+- **Meals settings**: appearance picker (System/Light/Dark) plus reset demo data
+- **Plan tab**: this week / next week switching, slot assignment, per-day random assignment, repeat-window controls for random picks, week random-fill, clear, serve, copy/share plan text, archived plans list, plan history detail, reuse/copy actions
+- **Shop tab**: pantry editor, suggestion matches, shopping list from meals or from the viewed plan week, checkable `Need to buy` items, names-only clipboard copy
+- **Share-intent routing (Android custom dev build only)**: shared URLs route to url-import screen, shared text without URL shows fallback warning
 
 ### Test infrastructure
 - Mobile repo tests use `better-sqlite3` adapter for Node-based Vitest testing.
 - Vitest config with path aliases for `@domain`, `@contracts`, and mobile internal imports.
-- Test counts: 121 root tests + 35 mobile tests = 156 total, all passing.
+- Test counts: 121 root tests + 70 mobile tests = 191 total, all passing.
 - Mobile `tsc --noEmit` passes cleanly.
 
 ### Current scope
 - Phases 1-3 complete: local-first offline parity with the current web app.
 - Phase 4 (Firebase auth + Firestore sync) deferred per user decision.
-- Phase 5: URL import is shipped on native mobile only (CORS blocks web), and cookbook export/share is shipped with native sharing on mobile plus clipboard fallback on web.
-- Android share-intent: not implemented (requires custom dev build, deferred to Phase 5b).
+- Phase 5: URL import is shipped on native mobile only (CORS blocks web), cookbook export/share is shipped with native sharing on mobile plus clipboard fallback on web, and Android share-intent routing is wired for custom dev builds.
+- Android share-intent: first slice implemented for Android custom dev builds; real device verification still pending.
+- Appearance setting: System, Light, and Dark options, persisted independently of demo-data reset.
 - App is fully functional offline and ready for demo.
 
 ### Demo paths
@@ -527,9 +530,9 @@ Indexes:
 - Expo web support enabled for browser-based demos.
 - Android Expo Go path functional and tested.
 - Reset demo data UI available via Meals tab settings icon.
-- All core workflows tested and verified: meal library, pantry, suggestions, shopping list, weekly planning, history, import/export, URL import, cookbook export.
-- UX polish complete: natural tab navigation, copy/share integration, search/filter, and inline editing.
-- Test coverage: 139 tests passing across root and mobile repos, TypeScript strict mode clean.
-- URL import and cookbook export: work on native mobile (Android/iOS); browser preview blocked by CORS/native APIs (clipboard fallback available for export on web).
-- Known limitations: no custom app icon or splash screen yet, browser preview uses in-memory database (ephemeral), no cloud sync, no Android share-intent.
+- All core workflows tested and verified: meal library, pantry, suggestions, shopping list, weekly planning, history, import/export, URL import, cookbook export, share-intent routing, and appearance preference handling.
+- UX polish complete: natural tab navigation, copy/share integration, search/filter, inline editing, overflow menu for header actions, tappable source links, and full dark-mode support.
+- Test coverage: 191 tests passing across root and mobile repos, TypeScript strict mode clean.
+- URL import, cookbook export, and share-intent: work on native mobile (Android/iOS); browser preview blocked by CORS/native APIs (clipboard fallback available for export on web). Share-intent requires custom dev build.
+- Known limitations: no custom app icon or splash screen yet, browser preview uses in-memory database (ephemeral), no cloud sync.
 - See `docs/DEMO.md` for a complete demo walkthrough.

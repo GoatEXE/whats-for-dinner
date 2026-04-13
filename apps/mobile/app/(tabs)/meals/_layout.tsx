@@ -1,54 +1,57 @@
-import { View, Pressable } from 'react-native';
+import { View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing } from '@/ui/theme';
+import { ActionMenu, type ActionMenuItem } from '@/ui/ActionMenu';
+import { useColors } from '@/hooks/useTheme';
 
 function MealsHeaderActions() {
   const router = useRouter();
+
+  const menuItems: ActionMenuItem[] = [
+    {
+      key: 'url-import',
+      label: 'Import from URL',
+      icon: 'link-outline',
+      onPress: () => router.push('/(tabs)/meals/url-import'),
+    },
+    {
+      key: 'file-import',
+      label: 'Import from File',
+      icon: 'cloud-download-outline',
+      onPress: () => router.push('/(tabs)/meals/import'),
+    },
+    {
+      key: 'export',
+      label: 'Export Cookbook',
+      icon: 'share-outline',
+      onPress: () => router.push('/(tabs)/meals/export'),
+    },
+    {
+      key: 'settings',
+      label: 'Settings',
+      icon: 'settings-outline',
+      onPress: () => router.push('/(tabs)/meals/settings'),
+    },
+  ];
+
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginRight: 4 }}>
-      <Pressable
-        onPress={() => router.push('/(tabs)/meals/url-import')}
-        hitSlop={8}
-        accessibilityLabel="Import recipe from URL"
-        accessibilityRole="button"
-      >
-        <Ionicons name="link-outline" size={24} color={colors.accent} />
-      </Pressable>
-      <Pressable
-        onPress={() => router.push('/(tabs)/meals/import')}
-        hitSlop={8}
-        accessibilityLabel="Import recipes from file"
-        accessibilityRole="button"
-      >
-        <Ionicons name="cloud-download-outline" size={24} color={colors.accent} />
-      </Pressable>
-      <Pressable
-        onPress={() => router.push('/(tabs)/meals/export')}
-        hitSlop={8}
-        accessibilityLabel="Export cookbook"
-        accessibilityRole="button"
-      >
-        <Ionicons name="share-outline" size={24} color={colors.accent} />
-      </Pressable>
-      <Pressable
-        onPress={() => router.push('/(tabs)/meals/settings')}
-        hitSlop={8}
-        accessibilityLabel="Meals settings"
-        accessibilityRole="button"
-      >
-        <Ionicons name="settings-outline" size={24} color={colors.accent} />
-      </Pressable>
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 4 }}>
+      <ActionMenu
+        items={menuItems}
+        triggerIcon="ellipsis-horizontal"
+        accessibilityLabel="Meals actions menu"
+      />
     </View>
   );
 }
 
 export default function MealsLayout() {
+  const c = useColors();
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.surface },
-        headerTintColor: colors.text,
+        headerStyle: { backgroundColor: c.surface },
+        headerTintColor: c.text,
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     >

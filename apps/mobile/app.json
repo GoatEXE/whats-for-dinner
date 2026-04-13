@@ -14,8 +14,16 @@
       "expo-sqlite",
       "expo-document-picker",
       [
+        "expo-share-intent",
+        {
+          "disableIOS": true,
+          "androidIntentFilters": ["text/*"]
+        }
+      ],
+      [
         "expo-splash-screen",
         {
+          "image": "./assets/splash-icon.png",
           "backgroundColor": "#F97316",
           "resizeMode": "contain"
         }

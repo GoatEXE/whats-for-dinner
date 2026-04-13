@@ -4,20 +4,23 @@ import {
   Text,
   ScrollView,
   Pressable,
+  Linking,
   StyleSheet,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useMeals } from '@/hooks/useMeals';
+import { useColors } from '@/hooks/useTheme';
 import { IngredientRow } from '@/ui/IngredientRow';
 import { TagChip } from '@/ui/TagChip';
 import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { EmptyState } from '@/ui/EmptyState';
-import { colors, spacing, radii, fontSizes } from '@/ui/theme';
+import { spacing, radii, fontSizes } from '@/ui/theme';
 
 export default function MealDetailScreen() {
   const { mealId } = useLocalSearchParams<{ mealId: string }>();
   const router = useRouter();
+  const c = useColors();
   const { getMealById, toggleFavorite, archiveMeal, deleteMeal } = useMeals();
   const [showDelete, setShowDelete] = useState(false);
 
@@ -60,11 +63,11 @@ export default function MealDetailScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header with name and actions */}
         <View style={styles.headerRow}>
-          <Text style={styles.name}>{meal.name}</Text>
+          <Text style={[styles.name, { color: c.text }]}>{meal.name}</Text>
           <Pressable
             onPress={handleToggleFavorite}
             hitSlop={8}
@@ -76,7 +79,7 @@ export default function MealDetailScreen() {
             <Ionicons
               name={meal.isFavorite ? 'star' : 'star-outline'}
               size={24}
-              color={colors.star}
+              color={c.star}
             />
           </Pressable>
         </View>
@@ -85,20 +88,36 @@ export default function MealDetailScreen() {
         <View style={styles.metaRow}>
           {meal.prepMinutes != null && (
             <View style={styles.metaItem}>
-              <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-              <Text style={styles.metaText}>{meal.prepMinutes} min</Text>
+              <Ionicons name="time-outline" size={16} color={c.textSecondary} />
+              <Text style={[styles.metaText, { color: c.textSecondary }]}>{meal.prepMinutes} min</Text>
             </View>
           )}
           <View style={styles.metaItem}>
-            <Ionicons name="nutrition-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.metaText}>{meal.ingredients.length} ingredients</Text>
+            <Ionicons name="nutrition-outline" size={16} color={c.textSecondary} />
+            <Text style={[styles.metaText, { color: c.textSecondary }]}>{meal.ingredients.length} ingredients</Text>
           </View>
           {meal.isArchived && (
-            <View style={[styles.metaItem, styles.archivedBadge]}>
-              <Text style={styles.archivedText}>Archived</Text>
+            <View style={[styles.metaItem, styles.archivedBadge, { backgroundColor: c.surfaceBorder }]}>
+              <Text style={[styles.archivedText, { color: c.textSecondary }]}>Archived</Text>
             </View>
           )}
         </View>
+
+        {/* Source link */}
+        {meal.sourceUrl && meal.sourceHost && (
+          <Pressable
+            style={[styles.sourceLink, { backgroundColor: c.accentLight }]}
+            onPress={() => Linking.openURL(meal.sourceUrl!)}
+            accessibilityRole="link"
+            accessibilityLabel={`View original recipe on ${meal.sourceHost}`}
+          >
+            <Ionicons name="link-outline" size={14} color={c.accent} />
+            <Text style={[styles.sourceLinkText, { color: c.accent }]} numberOfLines={1}>
+              {meal.sourceHost}
+            </Text>
+            <Ionicons name="open-outline" size={12} color={c.textMuted} />
+          </Pressable>
+        )}
 
         {/* Tags */}
         {meal.tags.length > 0 && (
@@ -112,14 +131,14 @@ export default function MealDetailScreen() {
         {/* Notes */}
         {meal.notes && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notes</Text>
-            <Text style={styles.notes}>{meal.notes}</Text>
+            <Text style={[styles.sectionTitle, { color: c.text }]}>Notes</Text>
+            <Text style={[styles.notes, { color: c.textSecondary }]}>{meal.notes}</Text>
           </View>
         )}
 
         {/* Ingredients */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ingredients</Text>
+          <Text style={[styles.sectionTitle, { color: c.text }]}>Ingredients</Text>
           {meal.ingredients.map((ingredient) => (
             <IngredientRow
               key={ingredient.id}
@@ -132,10 +151,10 @@ export default function MealDetailScreen() {
       </ScrollView>
 
       {/* Bottom action bar */}
-      <View style={styles.actions}>
+      <View style={[styles.actions, { borderTopColor: c.surfaceBorder, backgroundColor: c.surface }]}>
         <Pressable style={styles.actionBtn} onPress={handleEdit} accessibilityRole="button">
-          <Ionicons name="pencil" size={20} color={colors.accent} />
-          <Text style={styles.actionText}>Edit</Text>
+          <Ionicons name="pencil" size={20} color={c.accent} />
+          <Text style={[styles.actionText, { color: c.accent }]}>Edit</Text>
         </Pressable>
         <Pressable
           style={styles.actionBtn}
@@ -145,9 +164,9 @@ export default function MealDetailScreen() {
           <Ionicons
             name={meal.isArchived ? 'arrow-undo' : 'archive'}
             size={20}
-            color={colors.textSecondary}
+            color={c.textSecondary}
           />
-          <Text style={styles.actionTextSecondary}>
+          <Text style={[styles.actionTextSecondary, { color: c.textSecondary }]}>
             {meal.isArchived ? 'Restore' : 'Archive'}
           </Text>
         </Pressable>
@@ -156,8 +175,8 @@ export default function MealDetailScreen() {
           onPress={() => setShowDelete(true)}
           accessibilityRole="button"
         >
-          <Ionicons name="trash" size={20} color={colors.danger} />
-          <Text style={styles.actionTextDanger}>Delete</Text>
+          <Ionicons name="trash" size={20} color={c.danger} />
+          <Text style={[styles.actionTextDanger, { color: c.danger }]}>Delete</Text>
         </Pressable>
       </View>
 
@@ -177,7 +196,6 @@ export default function MealDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.lg,
@@ -191,7 +209,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: fontSizes.xxl,
     fontWeight: '700',
-    color: colors.text,
     flex: 1,
     marginRight: spacing.md,
   },
@@ -208,18 +225,30 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
   },
   archivedBadge: {
-    backgroundColor: colors.surfaceBorder,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radii.sm,
   },
   archivedText: {
     fontSize: fontSizes.xs,
-    color: colors.textSecondary,
     fontWeight: '600',
+  },
+  sourceLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    borderRadius: radii.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  sourceLinkText: {
+    fontSize: fontSizes.sm,
+    fontWeight: '500',
+    maxWidth: 200,
   },
   tags: {
     flexDirection: 'row',
@@ -232,21 +261,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fontSizes.md,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: spacing.sm,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   notes: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     lineHeight: 22,
   },
   actions: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: colors.surfaceBorder,
-    backgroundColor: colors.surface,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
   },
@@ -259,19 +284,16 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: fontSizes.xs,
-    color: colors.accent,
     marginTop: spacing.xs,
     fontWeight: '600',
   },
   actionTextSecondary: {
     fontSize: fontSizes.xs,
-    color: colors.textSecondary,
     marginTop: spacing.xs,
     fontWeight: '600',
   },
   actionTextDanger: {
     fontSize: fontSizes.xs,
-    color: colors.danger,
     marginTop: spacing.xs,
     fontWeight: '600',
   },

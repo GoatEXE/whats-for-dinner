@@ -13,26 +13,37 @@ import { useMeals } from '@/hooks/useMeals';
 import { usePantry } from '@/hooks/usePantry';
 import { useHistory } from '@/hooks/useHistory';
 import { useWeeklyPlan } from '@/hooks/useWeeklyPlan';
+import { useColors } from '@/hooks/useTheme';
+import { useDatabase } from '@/hooks/useDatabase';
+import { useAutofill } from '@/features/plans/useAutofill';
 import { MealPickerModal } from '@/ui/MealPickerModal';
 import { RandomPickerModal } from '@/ui/RandomPickerModal';
 import { EmptyState } from '@/ui/EmptyState';
-import { colors, spacing, radii, fontSizes } from '@/ui/theme';
+import { ErrorBanner } from '@/ui/ErrorBanner';
+import { stringIdToNumber } from '@/db/ids';
+import { spacing, radii, fontSizes } from '@/ui/theme';
 import type { Meal } from '@/types';
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+const REPEAT_WINDOW_OPTIONS = [0, 3, 7, 14] as const;
 
 export default function PlanScreen() {
   const router = useRouter();
+  const c = useColors();
+  const { db } = useDatabase();
   const { meals, refresh: refreshMeals } = useMeals();
   const { items: pantryItems, refresh: refreshPantry } = usePantry();
-  const { entries: historyEntries, refresh: refreshHistory } = useHistory();
+  const { refresh: refreshHistory, getRecentMealIds } = useHistory();
   const {
     plan,
+    loading,
     assignSlot,
     clearSlot,
-    autofill,
     getPlannedMealIds,
     refresh: refreshPlan,
+    weekOffset,
+    viewCurrentWeek,
+    viewNextWeek,
   } = useWeeklyPlan();
 
   // Refresh all relevant data when tab gains focus
@@ -48,40 +59,70 @@ export default function PlanScreen() {
   const [pickerDay, setPickerDay] = useState<number | null>(null);
   const [showRandomPicker, setShowRandomPicker] = useState(false);
   const [randomTargetDay, setRandomTargetDay] = useState<number | null>(null);
+  const [repeatWindowDays, setRepeatWindowDays] = useState<number>(7);
+  const [planMessage, setPlanMessage] = useState<{
+    tone: 'error' | 'warning';
+    title?: string;
+    message: string;
+  } | null>(null);
+
+  // Build a reverse map from hashed number → original string ID so the
+  // domain layer's numeric IDs can be resolved back to DB meal IDs.
+  const numToStringId = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const m of meals) map.set(stringIdToNumber(m.id), m.id);
+    return map;
+  }, [meals]);
 
   // Compute recent meal IDs from history for the random picker (domain uses number)
   const recentMealIds = useMemo(() => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 7);
-    const cutoffStr = cutoff.toISOString().slice(0, 10);
-    return historyEntries
-      .filter((h) => h.servedOn >= cutoffStr)
-      .map((h) => Number(h.mealId) || h.mealId.charCodeAt(0));
-  }, [historyEntries]);
+    return getRecentMealIds(repeatWindowDays).map(stringIdToNumber);
+  }, [getRecentMealIds, repeatWindowDays]);
 
   // Planned meal IDs as numbers for the domain random picker
   const excludeMealIds = useMemo(() => {
-    return getPlannedMealIds().map(
-      (id) => Number(id) || id.charCodeAt(0),
+    const plannedMealIds = getPlannedMealIds();
+
+    if (randomTargetDay == null || !plan) {
+      return plannedMealIds.map(stringIdToNumber);
+    }
+
+    const currentMealId = plan.slots.find((slot) => slot.day === randomTargetDay)?.mealId;
+    if (!currentMealId) {
+      return plannedMealIds.map(stringIdToNumber);
+    }
+
+    const sameMealPlannedElsewhere = plan.slots.some(
+      (slot) => slot.day !== randomTargetDay && slot.mealId === currentMealId,
     );
-  }, [getPlannedMealIds]);
+
+    const nextMealIds = sameMealPlannedElsewhere
+      ? plannedMealIds
+      : plannedMealIds.filter((mealId) => mealId !== currentMealId);
+
+    return nextMealIds.map(stringIdToNumber);
+  }, [getPlannedMealIds, plan, randomTargetDay]);
+
+  const { autofill: autofillWeek } = useAutofill({
+    db,
+    planId: plan?.id ?? null,
+    meals,
+    pantryIngredientIds: pantryItems.map((item) => item.ingredientId),
+    recentMealIds: getRecentMealIds(repeatWindowDays),
+  });
 
   const handleSlotPress = useCallback((day: number) => {
     setPickerDay(day);
   }, []);
 
-  const handleSlotLongPress = useCallback(
-    (day: number) => {
-      const slot = plan?.slots.find((s) => s.day === day);
-      if (slot?.mealId) {
-        clearSlot(day);
-      } else {
-        setRandomTargetDay(day);
-        setShowRandomPicker(true);
-      }
-    },
-    [plan, clearSlot],
-  );
+  const openRandomPickerForDay = useCallback((day: number) => {
+    setRandomTargetDay(day);
+    setShowRandomPicker(true);
+  }, []);
+
+  const handleSlotLongPress = useCallback((day: number) => {
+    openRandomPickerForDay(day);
+  }, [openRandomPickerForDay]);
 
   const handleMealSelected = useCallback(
     (meal: Meal) => {
@@ -95,22 +136,86 @@ export default function PlanScreen() {
 
   const handleRandomAccept = useCallback(
     (mealId: number, mealName: string) => {
+      // Resolve the domain numeric ID back to the original string meal ID
+      const originalId = numToStringId.get(mealId) ?? String(mealId);
+
       if (randomTargetDay != null) {
-        assignSlot(randomTargetDay, String(mealId), mealName);
+        // Opened from a specific day slot — assign the meal to that day
+        assignSlot(randomTargetDay, originalId, mealName);
+      } else {
+        // Opened from the standalone "What's for Dinner?" button —
+        // navigate to the meal detail screen so the user can see the pick
+        router.push(`/(tabs)/meals/${originalId}`);
       }
       setShowRandomPicker(false);
       setRandomTargetDay(null);
     },
-    [randomTargetDay, assignSlot],
+    [randomTargetDay, assignSlot, numToStringId, router],
   );
 
   const handleAutofill = useCallback(() => {
-    autofill();
-  }, [autofill]);
+    const result = autofillWeek({
+      favoritesOnly: false,
+      fullMatchOnly: false,
+      excludeServedWithinDays: repeatWindowDays,
+    });
+
+    refreshPlan();
+
+    if (!result) {
+      setPlanMessage({
+        tone: 'error',
+        title: 'Random fill unavailable',
+        message: 'The plan is still loading. Try again in a moment.',
+      });
+      return;
+    }
+
+    if (result.emptyBeforeCount === 0) {
+      setPlanMessage({
+        tone: 'warning',
+        title: 'Week already filled',
+        message: 'Every day in this week already has a meal. Clear a day or use the dice button on a specific day to re-roll it.',
+      });
+      return;
+    }
+
+    if (result.noMoreCandidates) {
+      if (result.filledCount > 0) {
+        setPlanMessage({
+          tone: 'warning',
+          title: 'Partial week filled',
+          message:
+            repeatWindowDays > 0
+              ? `Filled ${result.filledCount} of ${result.emptyBeforeCount} open day${result.emptyBeforeCount === 1 ? '' : 's'} before meals started repeating within ${repeatWindowDays} day${repeatWindowDays === 1 ? '' : 's'}.`
+              : `Filled ${result.filledCount} of ${result.emptyBeforeCount} open day${result.emptyBeforeCount === 1 ? '' : 's'} before the app ran out of meals.`,
+        });
+      } else {
+        setPlanMessage({
+          tone: 'warning',
+          title: 'No meals available',
+          message:
+            repeatWindowDays > 0
+              ? `There were not enough meals outside the last ${repeatWindowDays} day${repeatWindowDays === 1 ? '' : 's'} to fill this week.`
+              : 'There were no meals available to fill this week.',
+        });
+      }
+      return;
+    }
+
+    setPlanMessage(null);
+  }, [autofillWeek, refreshPlan, repeatWindowDays]);
 
   const handleGenerateShoppingList = useCallback(() => {
-    router.push('/(tabs)/shop');
-  }, [router]);
+    if (!plan) {
+      return;
+    }
+
+    router.push({
+      pathname: '/(tabs)/shop',
+      params: { weekStart: plan.weekStart },
+    });
+  }, [plan, router]);
 
   const handleCopyPlan = useCallback(async () => {
     if (!plan) return;
@@ -130,7 +235,7 @@ export default function PlanScreen() {
     return (
       <EmptyState
         icon="calendar-outline"
-        title="Setting up this week…"
+        title={loading ? 'Loading your plan…' : 'Setting up this week…'}
         subtitle="A fresh weekly plan is being created for you. Hang tight — this only takes a moment."
       />
     );
@@ -139,29 +244,103 @@ export default function PlanScreen() {
   const hasMeals = meals.length > 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}> 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Week header */}
-        <View style={styles.weekHeader}>
-          <Text style={styles.weekLabel}>Week of {plan.weekStart}</Text>
+        <View style={styles.weekSwitchRow}>
           <Pressable
-            style={styles.autofillBtn}
-            onPress={handleAutofill}
+            style={[
+              styles.weekSwitchBtn,
+              { backgroundColor: weekOffset === 0 ? c.accent : c.surface, borderColor: c.surfaceBorder },
+            ]}
+            onPress={() => {
+              setPlanMessage(null);
+              viewCurrentWeek();
+            }}
             accessibilityRole="button"
-            accessibilityLabel="Autofill empty slots"
+            accessibilityLabel="View this week"
           >
-            <Ionicons name="flash-outline" size={16} color={colors.accent} />
-            <Text style={styles.autofillText}>Autofill</Text>
+            <Text style={[styles.weekSwitchText, { color: weekOffset === 0 ? '#FFFFFF' : c.text }]}>This week</Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.weekSwitchBtn,
+              { backgroundColor: weekOffset === 1 ? c.accent : c.surface, borderColor: c.surfaceBorder },
+            ]}
+            onPress={() => {
+              setPlanMessage(null);
+              viewNextWeek();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="View next week"
+          >
+            <Text style={[styles.weekSwitchText, { color: weekOffset === 1 ? '#FFFFFF' : c.text }]}>Next week</Text>
           </Pressable>
         </View>
 
+        {/* Week header */}
+        <View style={styles.weekHeader}>
+          <View style={styles.weekHeaderTextWrap}>
+            <Text style={[styles.weekHeaderTitle, { color: c.text }]}>Plan</Text>
+            <Text style={[styles.weekLabel, { color: c.textSecondary }]}>Week of {plan.weekStart}</Text>
+          </View>
+          <Pressable
+            style={[styles.autofillBtn, { backgroundColor: c.accentLight }]}
+            onPress={handleAutofill}
+            accessibilityRole="button"
+            accessibilityLabel="Randomly fill empty slots for this week"
+          >
+            <Ionicons name="flash-outline" size={16} color={c.accent} />
+            <Text style={[styles.autofillText, { color: c.accent }]}>Random Fill</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.repeatSection}>
+          <Text style={[styles.repeatLabel, { color: c.textSecondary }]}>Repeat window</Text>
+          <View style={styles.repeatOptions}>
+            {REPEAT_WINDOW_OPTIONS.map((days) => {
+              const isSelected = repeatWindowDays === days;
+              const label = days === 0 ? 'Off' : `${days}d`;
+
+              return (
+                <Pressable
+                  key={days}
+                  style={[
+                    styles.repeatChip,
+                    {
+                      backgroundColor: isSelected ? c.accent : c.surface,
+                      borderColor: isSelected ? c.accent : c.surfaceBorder,
+                    },
+                  ]}
+                  onPress={() => {
+                    setRepeatWindowDays(days);
+                    setPlanMessage(null);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Avoid repeats for ${label}`}
+                >
+                  <Text style={[styles.repeatChipText, { color: isSelected ? '#FFFFFF' : c.textSecondary }]}>{label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {planMessage && (
+          <ErrorBanner
+            title={planMessage.title}
+            message={planMessage.message}
+            tone={planMessage.tone}
+            onDismiss={() => setPlanMessage(null)}
+          />
+        )}
+
         {/* First-run hint when there are no meals yet */}
         {!hasMeals && (
-          <View style={styles.firstRunCard}>
-            <Ionicons name="restaurant-outline" size={22} color={colors.accent} />
+          <View style={[styles.firstRunCard, { backgroundColor: c.accentLight, borderColor: c.accent + '30' }]}>
+            <Ionicons name="restaurant-outline" size={22} color={c.accent} />
             <View style={styles.firstRunTextWrap}>
-              <Text style={styles.firstRunTitle}>Start by adding meals</Text>
-              <Text style={styles.firstRunBody}>
+              <Text style={[styles.firstRunTitle, { color: c.text }]}>Start by adding meals</Text>
+              <Text style={[styles.firstRunBody, { color: c.textSecondary }]}>
                 You need recipes before you can plan a week. Add meals on the Meals
                 tab, then come back here to drop them into days.
               </Text>
@@ -172,6 +351,7 @@ export default function PlanScreen() {
               accessibilityLabel="Open meals tab to add recipes"
               style={({ pressed }) => [
                 styles.firstRunBtn,
+                { backgroundColor: c.accent },
                 pressed && { opacity: 0.85 },
               ]}
             >
@@ -186,35 +366,70 @@ export default function PlanScreen() {
           return (
             <Pressable
               key={slot.day}
-              style={({ pressed }) => [styles.slotCard, pressed && styles.slotCardPressed]}
+              style={({ pressed }) => [
+                styles.slotCard,
+                { backgroundColor: c.surface, borderColor: c.surfaceBorder },
+                pressed && { backgroundColor: c.background },
+              ]}
               onPress={() => handleSlotPress(slot.day)}
               onLongPress={() => handleSlotLongPress(slot.day)}
               accessibilityRole="button"
               accessibilityLabel={`${DAY_LABELS[slot.day]}: ${isEmpty ? 'Empty, tap to assign' : slot.mealName}`}
-              accessibilityHint="Long press for options"
+              accessibilityHint="Use the dice button for a random meal on this day"
             >
-              <View style={styles.slotDay}>
-                <Text style={styles.slotDayText}>{DAY_LABELS[slot.day]}</Text>
+              <View style={[styles.slotDay, { backgroundColor: c.background, borderRightColor: c.surfaceBorder }]}>
+                <Text style={[styles.slotDayText, { color: c.textSecondary }]}>{DAY_LABELS[slot.day]}</Text>
               </View>
               <View style={styles.slotContent}>
                 {isEmpty ? (
-                  <View style={styles.emptySlot}>
-                    <Ionicons name="add-circle-outline" size={20} color={colors.textMuted} />
-                    <Text style={styles.emptySlotText}>Tap to assign</Text>
+                  <View style={styles.filledSlot}>
+                    <View style={styles.emptySlot}>
+                      <Ionicons name="add-circle-outline" size={20} color={c.textMuted} />
+                      <Text style={[styles.emptySlotText, { color: c.textMuted }]}>Tap to assign</Text>
+                    </View>
+                    <View style={styles.slotActions}>
+                      <Pressable
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          openRandomPickerForDay(slot.day);
+                        }}
+                        hitSlop={8}
+                        accessibilityLabel={`Randomly assign ${DAY_LABELS[slot.day]}`}
+                        accessibilityRole="button"
+                      >
+                        <Ionicons name="dice-outline" size={20} color={c.accent} />
+                      </Pressable>
+                    </View>
                   </View>
                 ) : (
                   <View style={styles.filledSlot}>
-                    <Text style={styles.slotMealName} numberOfLines={1}>
+                    <Text style={[styles.slotMealName, { color: c.text }]} numberOfLines={1}>
                       {slot.mealName}
                     </Text>
-                    <Pressable
-                      onPress={() => clearSlot(slot.day)}
-                      hitSlop={8}
-                      accessibilityLabel={`Clear ${DAY_LABELS[slot.day]}`}
-                      accessibilityRole="button"
-                    >
-                      <Ionicons name="close-circle" size={20} color={colors.textMuted} />
-                    </Pressable>
+                    <View style={styles.slotActions}>
+                      <Pressable
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          openRandomPickerForDay(slot.day);
+                        }}
+                        hitSlop={8}
+                        accessibilityLabel={`Randomly reassign ${DAY_LABELS[slot.day]}`}
+                        accessibilityRole="button"
+                      >
+                        <Ionicons name="dice-outline" size={20} color={c.accent} />
+                      </Pressable>
+                      <Pressable
+                        onPress={(event) => {
+                          event.stopPropagation();
+                          clearSlot(slot.day);
+                        }}
+                        hitSlop={8}
+                        accessibilityLabel={`Clear ${DAY_LABELS[slot.day]}`}
+                        accessibilityRole="button"
+                      >
+                        <Ionicons name="close-circle" size={20} color={c.textMuted} />
+                      </Pressable>
+                    </View>
                   </View>
                 )}
               </View>
@@ -225,24 +440,24 @@ export default function PlanScreen() {
         {/* Bottom actions */}
         <View style={styles.bottomActions}>
           <Pressable
-            style={styles.randomBtn}
+            style={[styles.randomBtn, { backgroundColor: c.accent }]}
             onPress={() => {
               setRandomTargetDay(null);
               setShowRandomPicker(true);
             }}
             accessibilityRole="button"
           >
-            <Ionicons name="dice-outline" size={20} color={colors.white} />
+            <Ionicons name="dice-outline" size={20} color="#FFFFFF" />
             <Text style={styles.randomBtnText}>What's for Dinner?</Text>
           </Pressable>
 
           <Pressable
-            style={styles.shoppingBtn}
+            style={[styles.shoppingBtn, { backgroundColor: c.accentLight }]}
             onPress={handleGenerateShoppingList}
             accessibilityRole="button"
           >
-            <Ionicons name="cart-outline" size={20} color={colors.accent} />
-            <Text style={styles.shoppingBtnText}>Generate Shopping List</Text>
+            <Ionicons name="cart-outline" size={20} color={c.accent} />
+            <Text style={[styles.shoppingBtnText, { color: c.accent }]}>Generate Shopping List</Text>
           </Pressable>
 
           <View style={styles.secondaryActions}>
@@ -252,8 +467,8 @@ export default function PlanScreen() {
               accessibilityRole="button"
               accessibilityLabel="Copy plan text"
             >
-              <Ionicons name="copy-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.secondaryBtnText}>Copy Plan</Text>
+              <Ionicons name="copy-outline" size={18} color={c.textSecondary} />
+              <Text style={[styles.secondaryBtnText, { color: c.textSecondary }]}>Copy Plan</Text>
             </Pressable>
             <Pressable
               style={styles.secondaryBtn}
@@ -261,8 +476,8 @@ export default function PlanScreen() {
               accessibilityRole="button"
               accessibilityLabel="View plan history"
             >
-              <Ionicons name="archive-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.secondaryBtnText}>History</Text>
+              <Ionicons name="archive-outline" size={18} color={c.textSecondary} />
+              <Text style={[styles.secondaryBtnText, { color: c.textSecondary }]}>History</Text>
             </Pressable>
           </View>
         </View>
@@ -283,6 +498,7 @@ export default function PlanScreen() {
         pantryItems={pantryItems}
         recentMealIds={recentMealIds}
         excludeMealIds={excludeMealIds}
+        excludeServedWithinDays={repeatWindowDays}
         onAccept={handleRandomAccept}
         onClose={() => {
           setShowRandomPicker(false);
@@ -296,22 +512,68 @@ export default function PlanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxxl,
   },
+  weekSwitchRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  weekSwitchBtn: {
+    flex: 1,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  weekSwitchText: {
+    fontSize: fontSizes.sm,
+    fontWeight: '700',
+  },
   weekHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+    gap: spacing.md,
+  },
+  weekHeaderTextWrap: {
+    flex: 1,
+  },
+  weekHeaderTitle: {
+    fontSize: fontSizes.xl,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   weekLabel: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.textSecondary,
+  },
+  repeatSection: {
+    marginBottom: spacing.lg,
+  },
+  repeatLabel: {
+    fontSize: fontSizes.sm,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+  },
+  repeatOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  repeatChip: {
+    borderRadius: radii.full,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  repeatChipText: {
+    fontSize: fontSizes.sm,
+    fontWeight: '600',
   },
   autofillBtn: {
     flexDirection: 'row',
@@ -320,39 +582,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.full,
-    backgroundColor: colors.accentLight,
   },
   autofillText: {
     fontSize: fontSizes.sm,
-    color: colors.accent,
     fontWeight: '600',
   },
   slotCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     marginBottom: spacing.sm,
     overflow: 'hidden',
-  },
-  slotCardPressed: {
-    backgroundColor: colors.surface,
   },
   slotDay: {
     width: 52,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.lg,
-    backgroundColor: colors.surface,
     borderRightWidth: 1,
-    borderRightColor: colors.surfaceBorder,
   },
   slotDayText: {
     fontSize: fontSizes.sm,
     fontWeight: '700',
-    color: colors.textSecondary,
   },
   slotContent: {
     flex: 1,
@@ -368,17 +620,21 @@ const styles = StyleSheet.create({
   },
   emptySlotText: {
     fontSize: fontSizes.md,
-    color: colors.textMuted,
     fontStyle: 'italic',
   },
   filledSlot: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  slotActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   slotMealName: {
     fontSize: fontSizes.md,
-    color: colors.text,
     fontWeight: '500',
     flex: 1,
     marginRight: spacing.sm,
@@ -392,7 +648,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.accent,
     borderRadius: radii.lg,
     paddingVertical: spacing.lg,
     minHeight: 52,
@@ -400,14 +655,13 @@ const styles = StyleSheet.create({
   randomBtnText: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   shoppingBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.accentLight,
     borderRadius: radii.lg,
     paddingVertical: spacing.lg,
     minHeight: 52,
@@ -415,7 +669,6 @@ const styles = StyleSheet.create({
   shoppingBtnText: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.accent,
   },
   secondaryActions: {
     flexDirection: 'row',
@@ -430,17 +683,14 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     fontWeight: '500',
   },
   firstRunCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.md,
-    backgroundColor: colors.accentLight,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: colors.accent + '30',
     padding: spacing.lg,
     marginBottom: spacing.lg,
   },
@@ -450,16 +700,13 @@ const styles = StyleSheet.create({
   firstRunTitle: {
     fontSize: fontSizes.md,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: 2,
   },
   firstRunBody: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     lineHeight: 18,
   },
   firstRunBtn: {
-    backgroundColor: colors.accent,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.full,
@@ -468,7 +715,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   firstRunBtnText: {
-    color: colors.white,
+    color: '#FFFFFF',
     fontSize: fontSizes.sm,
     fontWeight: '700',
   },

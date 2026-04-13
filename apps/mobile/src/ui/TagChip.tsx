@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, radii, fontSizes } from './theme';
+import { useColors } from '../hooks/useTheme';
+import { spacing, radii, fontSizes } from './theme';
 
 interface TagChipProps {
   label: string;
@@ -9,9 +10,10 @@ interface TagChipProps {
 }
 
 export function TagChip({ label, onRemove }: TagChipProps) {
+  const c = useColors();
   return (
-    <View style={styles.chip}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={[styles.chip, { backgroundColor: c.accentLight }]}>
+      <Text style={[styles.label, { color: c.accent }]}>{label}</Text>
       {onRemove && (
         <Pressable
           onPress={onRemove}
@@ -19,7 +21,7 @@ export function TagChip({ label, onRemove }: TagChipProps) {
           accessibilityLabel={`Remove tag ${label}`}
           accessibilityRole="button"
         >
-          <Ionicons name="close-circle" size={14} color={colors.accent} />
+          <Ionicons name="close-circle" size={14} color={c.accent} />
         </Pressable>
       )}
     </View>
@@ -30,7 +32,6 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.accentLight,
     borderRadius: radii.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
@@ -39,7 +40,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: fontSizes.xs,
-    color: colors.accent,
     fontWeight: '600',
     marginRight: spacing.xs,
   },

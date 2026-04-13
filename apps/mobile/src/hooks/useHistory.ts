@@ -114,6 +114,10 @@ export function useHistory(initialLimit = 20) {
 
   const getRecentMealIds = useCallback(
     (days: number) => {
+      if (days <= 0) {
+        return [] as string[];
+      }
+
       const cutoff = isoDateDaysAgo(days);
 
       return getAll()

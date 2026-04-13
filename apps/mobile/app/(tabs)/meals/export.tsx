@@ -15,13 +15,15 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as Clipboard from 'expo-clipboard';
 import { useExport, type ExportResult } from '@/features/import/useExport';
+import { useColors } from '@/hooks/useTheme';
 import { ErrorBanner } from '@/ui/ErrorBanner';
-import { colors, spacing, radii, fontSizes } from '@/ui/theme';
+import { spacing, radii, fontSizes } from '@/ui/theme';
 
 type ExportPhase = 'options' | 'sharing' | 'done';
 
 export default function ExportScreen() {
   const router = useRouter();
+  const c = useColors();
   const { exporting, error: exportError, exportMeals } = useExport();
 
   const [includeArchived, setIncludeArchived] = useState(false);
@@ -104,19 +106,19 @@ export default function ExportScreen() {
   // ─── Phase: Done ───
   if (phase === 'done' && result) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: c.background }]}>
         <ScrollView contentContainerStyle={styles.content}>
-          <View style={styles.successCard}>
+          <View style={[styles.successCard, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
             <Ionicons
               name="checkmark-circle"
               size={56}
-              color={colors.success}
+              color={c.success}
               style={styles.successIcon}
             />
-            <Text style={styles.successTitle}>Export ready</Text>
-            <Text style={styles.successSubtitle}>
+            <Text style={[styles.successTitle, { color: c.text }]}>Export ready</Text>
+            <Text style={[styles.successSubtitle, { color: c.textSecondary }]}>
               {result.summary} exported as{' '}
-              <Text style={styles.bold}>{result.filename}</Text>
+              <Text style={[styles.bold, { color: c.text }]}>{result.filename}</Text>
             </Text>
           </View>
 
@@ -144,7 +146,11 @@ export default function ExportScreen() {
 
           {/* Copy to clipboard */}
           <Pressable
-            style={[styles.actionBtn, copied && styles.actionBtnDone]}
+            style={[
+              styles.actionBtn,
+              { backgroundColor: c.surface, borderColor: c.surfaceBorder },
+              copied && { borderColor: c.success, backgroundColor: c.successLight },
+            ]}
             onPress={handleCopyToClipboard}
             accessibilityRole="button"
             accessibilityLabel="Copy export JSON to clipboard"
@@ -152,12 +158,13 @@ export default function ExportScreen() {
             <Ionicons
               name={copied ? 'checkmark' : 'clipboard-outline'}
               size={20}
-              color={copied ? colors.success : colors.accent}
+              color={copied ? c.success : c.accent}
             />
             <Text
               style={[
                 styles.actionBtnText,
-                copied && styles.actionBtnTextDone,
+                { color: c.accent },
+                copied && { color: c.success },
               ]}
             >
               {copied ? 'Copied!' : 'Copy to Clipboard'}
@@ -167,18 +174,18 @@ export default function ExportScreen() {
           {/* Share again (native only) */}
           {Platform.OS !== 'web' && (
             <Pressable
-              style={styles.actionBtn}
+              style={[styles.actionBtn, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}
               onPress={handleExportAndShare}
               accessibilityRole="button"
               accessibilityLabel="Share again"
             >
-              <Ionicons name="share-outline" size={20} color={colors.accent} />
-              <Text style={styles.actionBtnText}>Share Again</Text>
+              <Ionicons name="share-outline" size={20} color={c.accent} />
+              <Text style={[styles.actionBtnText, { color: c.accent }]}>Share Again</Text>
             </Pressable>
           )}
 
           <Pressable
-            style={styles.primaryBtn}
+            style={[styles.primaryBtn, { backgroundColor: c.accent }]}
             onPress={() => router.back()}
             accessibilityRole="button"
           >
@@ -190,7 +197,7 @@ export default function ExportScreen() {
             onPress={handleReset}
             accessibilityRole="button"
           >
-            <Text style={styles.secondaryBtnText}>Export Again</Text>
+            <Text style={[styles.secondaryBtnText, { color: c.accent }]}>Export Again</Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -199,33 +206,33 @@ export default function ExportScreen() {
 
   // ─── Phase: Options (default) ───
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Hero card */}
-        <View style={styles.heroCard}>
-          <View style={styles.heroIconWrap}>
-            <Ionicons name="share-outline" size={36} color={colors.accent} />
+        <View style={[styles.heroCard, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
+          <View style={[styles.heroIconWrap, { backgroundColor: c.accentLight }]}>
+            <Ionicons name="share-outline" size={36} color={c.accent} />
           </View>
-          <Text style={styles.heroTitle}>Export Cookbook</Text>
-          <Text style={styles.heroSubtitle}>
+          <Text style={[styles.heroTitle, { color: c.text }]}>Export Cookbook</Text>
+          <Text style={[styles.heroSubtitle, { color: c.textSecondary }]}>
             Export your meals as a JSON file you can share with family, friends,
             or import on another device.
           </Text>
         </View>
 
         {/* Options */}
-        <View style={styles.optionRow}>
+        <View style={[styles.optionRow, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
           <View style={styles.optionLabel}>
-            <Text style={styles.optionTitle}>Include archived meals</Text>
-            <Text style={styles.optionHint}>
+            <Text style={[styles.optionTitle, { color: c.text }]}>Include archived meals</Text>
+            <Text style={[styles.optionHint, { color: c.textMuted }]}>
               Also export meals you've previously archived. Imported copies come back as active meals.
             </Text>
           </View>
           <Switch
             value={includeArchived}
             onValueChange={setIncludeArchived}
-            trackColor={{ true: colors.accent, false: colors.surfaceBorder }}
-            thumbColor={colors.white}
+            trackColor={{ true: c.accent, false: c.surfaceBorder }}
+            thumbColor={c.white}
           />
         </View>
 
@@ -244,6 +251,7 @@ export default function ExportScreen() {
         <Pressable
           style={[
             styles.primaryBtn,
+            { backgroundColor: c.accent },
             (exporting || phase === 'sharing') && styles.primaryBtnDisabled,
           ]}
           onPress={handleExportAndShare}
@@ -253,14 +261,14 @@ export default function ExportScreen() {
         >
           {exporting || phase === 'sharing' ? (
             <View style={styles.btnRow}>
-              <ActivityIndicator color={colors.white} size="small" />
+              <ActivityIndicator color="#FFFFFF" size="small" />
               <Text style={styles.primaryBtnText}>
                 {phase === 'sharing' ? 'Opening share…' : 'Preparing…'}
               </Text>
             </View>
           ) : (
             <View style={styles.btnRow}>
-              <Ionicons name="share-outline" size={20} color={colors.white} />
+              <Ionicons name="share-outline" size={20} color="#FFFFFF" />
               <Text style={styles.primaryBtnText}>Export & Share</Text>
             </View>
           )}
@@ -271,9 +279,9 @@ export default function ExportScreen() {
           <Ionicons
             name="information-circle-outline"
             size={16}
-            color={colors.textMuted}
+            color={c.textMuted}
           />
-          <Text style={styles.tipText}>
+          <Text style={[styles.tipText, { color: c.textMuted }]}>
             The exported file is compatible with the Import Recipes screen.
             Anyone with this app can import your cookbook.
           </Text>
@@ -286,7 +294,6 @@ export default function ExportScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.lg,
@@ -296,18 +303,15 @@ const styles = StyleSheet.create({
   // ── Hero card ──
   heroCard: {
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: radii.xl,
     padding: spacing.xl,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   heroIconWrap: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.accentLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -315,11 +319,9 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontSize: fontSizes.xl,
     fontWeight: '700',
-    color: colors.text,
   },
   heroSubtitle: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.sm,
     lineHeight: 22,
@@ -330,11 +332,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
     borderRadius: radii.lg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     marginBottom: spacing.lg,
   },
   optionLabel: {
@@ -344,11 +344,9 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.text,
   },
   optionHint: {
     fontSize: fontSizes.sm,
-    color: colors.textMuted,
     marginTop: 2,
   },
 
@@ -356,7 +354,6 @@ const styles = StyleSheet.create({
   primaryBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accent,
     borderRadius: radii.lg,
     paddingVertical: spacing.lg,
     marginTop: spacing.md,
@@ -368,7 +365,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   secondaryBtn: {
     alignItems: 'center',
@@ -378,7 +375,6 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     fontSize: fontSizes.md,
-    color: colors.accent,
     fontWeight: '600',
   },
   btnRow: {
@@ -393,36 +389,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.white,
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     paddingVertical: spacing.lg,
     marginBottom: spacing.md,
     minHeight: 52,
   },
-  actionBtnDone: {
-    borderColor: colors.success,
-    backgroundColor: colors.successLight,
-  },
   actionBtnText: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.accent,
-  },
-  actionBtnTextDone: {
-    color: colors.success,
   },
 
   // ── Success card ──
   successCard: {
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: radii.xl,
     padding: spacing.xl,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   successIcon: {
     marginBottom: spacing.md,
@@ -430,18 +414,15 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: fontSizes.xl,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   successSubtitle: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   bold: {
     fontWeight: '700',
-    color: colors.text,
   },
 
   // ── Misc ──
@@ -458,7 +439,6 @@ const styles = StyleSheet.create({
   tipText: {
     flex: 1,
     fontSize: fontSizes.sm,
-    color: colors.textMuted,
     lineHeight: 18,
   },
 });

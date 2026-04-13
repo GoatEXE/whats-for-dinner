@@ -1,12 +1,14 @@
 import { Stack } from 'expo-router';
-import { colors } from '@/ui/theme';
+import { useColors } from '@/hooks/useTheme';
 
 export default function PlanLayout() {
+  const c = useColors();
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.surface },
-        headerTintColor: colors.text,
+        headerStyle: { backgroundColor: c.surface },
+        headerTintColor: c.text,
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     >

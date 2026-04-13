@@ -12,11 +12,13 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { useFileImport } from '@/features/import/useFileImport';
+import { useColors } from '@/hooks/useTheme';
 import { ErrorBanner } from '@/ui/ErrorBanner';
-import { colors, spacing, radii, fontSizes } from '@/ui/theme';
+import { spacing, radii, fontSizes } from '@/ui/theme';
 
 export default function ImportScreen() {
   const router = useRouter();
+  const c = useColors();
   const { importing, result, error, importFromJson, reset } = useFileImport();
   const [fileName, setFileName] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export default function ImportScreen() {
       setLocalError(
         err instanceof Error
           ? err.message
-          : "We couldn’t read that file. Make sure it’s a JSON export from the web app.",
+          : "We couldn't read that file. Make sure it's a JSON export from the web app.",
       );
     }
   }, [importFromJson, reset]);
@@ -60,16 +62,16 @@ export default function ImportScreen() {
   }, [router]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: c.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Instruction card */}
-        <View style={styles.infoCard}>
-          <View style={styles.infoIconWrap}>
-            <Ionicons name="cloud-download-outline" size={36} color={colors.accent} />
+        <View style={[styles.infoCard, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
+          <View style={[styles.infoIconWrap, { backgroundColor: c.accentLight }]}>
+            <Ionicons name="cloud-download-outline" size={36} color={c.accent} />
           </View>
-          <Text style={styles.infoTitle}>Import recipes</Text>
-          <Text style={styles.infoSubtitle}>
-            Pick a JSON file exported from the web app and we’ll bring every meal,
+          <Text style={[styles.infoTitle, { color: c.text }]}>Import recipes</Text>
+          <Text style={[styles.infoSubtitle, { color: c.textSecondary }]}>
+            Pick a JSON file exported from the web app and we'll bring every meal,
             ingredient, and tag onto this device. Duplicates are skipped automatically.
           </Text>
         </View>
@@ -79,6 +81,7 @@ export default function ImportScreen() {
           <Pressable
             style={({ pressed }) => [
               styles.pickBtn,
+              { backgroundColor: c.accent },
               pressed && styles.pickBtnPressed,
               importing && styles.pickBtnDisabled,
             ]}
@@ -88,10 +91,10 @@ export default function ImportScreen() {
             accessibilityLabel="Choose a recipe file"
           >
             {importing ? (
-              <ActivityIndicator color={colors.white} />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
               <>
-                <Ionicons name="document-outline" size={22} color={colors.white} />
+                <Ionicons name="document-outline" size={22} color="#FFFFFF" />
                 <Text style={styles.pickBtnText}>Choose File</Text>
               </>
             )}
@@ -102,7 +105,7 @@ export default function ImportScreen() {
         {localError && (
           <View style={styles.bannerWrap}>
             <ErrorBanner
-              title="Couldn’t read file"
+              title="Couldn't read file"
               message={localError}
               onDismiss={() => setLocalError(null)}
             />
@@ -124,22 +127,22 @@ export default function ImportScreen() {
         {result && (
           <View style={styles.resultsSection}>
             {fileName && (
-              <Text style={styles.fileLabel}>
-                <Ionicons name="document-text-outline" size={14} color={colors.textSecondary} />{' '}
+              <Text style={[styles.fileLabel, { color: c.textSecondary }]}>
+                <Ionicons name="document-text-outline" size={14} color={c.textSecondary} />{' '}
                 {fileName}
               </Text>
             )}
 
             {/* Summary */}
-            <View style={styles.summaryCard}>
+            <View style={[styles.summaryCard, { backgroundColor: c.surface, borderColor: c.surfaceBorder }]}>
               <Ionicons
                 name="checkmark-circle"
                 size={36}
-                color={colors.success}
+                color={c.success}
                 style={styles.successIcon}
               />
-              <Text style={styles.summaryTitle}>Import complete</Text>
-              <Text style={styles.summarySubtitle}>
+              <Text style={[styles.summaryTitle, { color: c.text }]}>Import complete</Text>
+              <Text style={[styles.summarySubtitle, { color: c.textSecondary }]}>
                 {result.summary.importedCount > 0
                   ? `${result.summary.importedCount} meal${result.summary.importedCount === 1 ? '' : 's'} added to your library.`
                   : 'Nothing new was imported — everything was already here.'}
@@ -148,27 +151,27 @@ export default function ImportScreen() {
                 <StatBadge
                   label="Imported"
                   count={result.summary.importedCount}
-                  color={colors.success}
+                  color={c.success}
                 />
                 <StatBadge
                   label="Skipped"
                   count={result.summary.skippedCount}
-                  color={colors.warning}
+                  color={c.warning}
                 />
                 <StatBadge
                   label="Failed"
                   count={result.summary.failedCount}
-                  color={colors.error}
+                  color={c.error}
                 />
               </View>
             </View>
 
             {/* Skipped details */}
             {result.skipped.length > 0 && (
-              <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>Skipped (duplicates)</Text>
+              <View style={[styles.detailSection, { backgroundColor: c.surface }]}>
+                <Text style={[styles.detailTitle, { color: c.text }]}>Skipped (duplicates)</Text>
                 {result.skipped.map((item, i) => (
-                  <Text key={i} style={styles.detailItem}>
+                  <Text key={i} style={[styles.detailItem, { color: c.textSecondary }]}>
                     • {item.name}
                   </Text>
                 ))}
@@ -177,10 +180,10 @@ export default function ImportScreen() {
 
             {/* Failed details */}
             {result.failed.length > 0 && (
-              <View style={styles.detailSection}>
-                <Text style={styles.detailTitle}>Failed</Text>
+              <View style={[styles.detailSection, { backgroundColor: c.surface }]}>
+                <Text style={[styles.detailTitle, { color: c.text }]}>Failed</Text>
                 {result.failed.map((item, i) => (
-                  <Text key={i} style={styles.detailItem}>
+                  <Text key={i} style={[styles.detailItem, { color: c.textSecondary }]}>
                     • {item.name ?? 'Unknown'}: {item.reason}
                   </Text>
                 ))}
@@ -189,7 +192,7 @@ export default function ImportScreen() {
 
             {/* Done button */}
             <Pressable
-              style={styles.doneBtn}
+              style={[styles.doneBtn, { backgroundColor: c.accent }]}
               onPress={handleDone}
               accessibilityRole="button"
             >
@@ -202,7 +205,7 @@ export default function ImportScreen() {
               onPress={() => { reset(); setFileName(null); }}
               accessibilityRole="button"
             >
-              <Text style={styles.anotherBtnText}>Import Another File</Text>
+              <Text style={[styles.anotherBtnText, { color: c.accent }]}>Import Another File</Text>
             </Pressable>
           </View>
         )}
@@ -223,7 +226,6 @@ function StatBadge({ label, count, color }: { label: string; count: number; colo
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.lg,
@@ -231,18 +233,15 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     alignItems: 'center',
-    backgroundColor: colors.white,
     borderRadius: radii.xl,
     padding: spacing.xl,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   infoIconWrap: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.accentLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -255,7 +254,6 @@ const styles = StyleSheet.create({
   },
   summarySubtitle: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: -spacing.sm,
     marginBottom: spacing.lg,
@@ -265,11 +263,9 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: fontSizes.xl,
     fontWeight: '700',
-    color: colors.text,
   },
   infoSubtitle: {
     fontSize: fontSizes.md,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginTop: spacing.sm,
     lineHeight: 22,
@@ -279,7 +275,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.accent,
     borderRadius: radii.lg,
     paddingVertical: spacing.lg,
     minHeight: 52,
@@ -293,29 +288,25 @@ const styles = StyleSheet.create({
   pickBtnText: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   resultsSection: {
     marginTop: spacing.sm,
   },
   fileLabel: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     marginBottom: spacing.md,
     textAlign: 'center',
   },
   summaryCard: {
-    backgroundColor: colors.white,
     borderRadius: radii.xl,
     padding: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     alignItems: 'center',
   },
   summaryTitle: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: spacing.lg,
   },
   summaryRow: {
@@ -340,25 +331,21 @@ const styles = StyleSheet.create({
   },
   detailSection: {
     marginTop: spacing.lg,
-    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.lg,
   },
   detailTitle: {
     fontSize: fontSizes.md,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   detailItem: {
     fontSize: fontSizes.sm,
-    color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   doneBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accent,
     borderRadius: radii.lg,
     paddingVertical: spacing.lg,
     marginTop: spacing.xl,
@@ -367,7 +354,7 @@ const styles = StyleSheet.create({
   doneBtnText: {
     fontSize: fontSizes.lg,
     fontWeight: '700',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   anotherBtn: {
     alignItems: 'center',
@@ -377,7 +364,6 @@ const styles = StyleSheet.create({
   },
   anotherBtnText: {
     fontSize: fontSizes.md,
-    color: colors.accent,
     fontWeight: '600',
   },
 });

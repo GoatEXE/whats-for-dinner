@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { addWeeksToIsoDate, getWeekStartIsoDate } from '../db/repo-helpers';
 import * as plansRepo from '../db/repos/weekly-plans-repo';
 import type { WeeklyPlanWithSlots } from '../db/types';
 import type { WeeklyPlan, WeeklyPlanSlot } from '../types';
@@ -30,6 +31,11 @@ export interface UseWeeklyPlanReturn {
   plan: WeeklyPlan | null;
   loading: boolean;
   error: string | null;
+  weekOffset: number;
+  viewedWeekStart: string;
+  setWeekOffset: (offset: number) => void;
+  viewCurrentWeek: () => void;
+  viewNextWeek: () => void;
   refresh: () => void;
   createPlan: (weekStart: string) => WeeklyPlan;
   archivePlan: (planId: string) => void;
@@ -40,17 +46,23 @@ export interface UseWeeklyPlanReturn {
   getPlannedMealIds: () => string[];
 }
 
-export function useWeeklyPlan(): UseWeeklyPlanReturn {
+export function useWeeklyPlan(fixedWeekStart?: string): UseWeeklyPlanReturn {
   const { db, isReady, error: databaseError } = useDatabase();
   const [plan, setPlan] = useState<WeeklyPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const viewedWeekStart = useMemo(
+    () => fixedWeekStart ?? addWeeksToIsoDate(getWeekStartIsoDate(), weekOffset),
+    [fixedWeekStart, weekOffset],
+  );
 
   const refresh = useCallback(() => {
     if (!db) return;
     setLoading(true);
     try {
-      const current = plansRepo.getOrCreateCurrent(db);
+      const current = plansRepo.getOrCreateByWeekStart(db, viewedWeekStart);
       setPlan(toUiPlan(current));
       setError(null);
     } catch (err) {
@@ -58,7 +70,7 @@ export function useWeeklyPlan(): UseWeeklyPlanReturn {
     } finally {
       setLoading(false);
     }
-  }, [db]);
+  }, [db, viewedWeekStart]);
 
   useEffect(() => {
     if (databaseError) {
@@ -68,6 +80,18 @@ export function useWeeklyPlan(): UseWeeklyPlanReturn {
     if (!isReady || !db) return;
     refresh();
   }, [databaseError, db, isReady, refresh]);
+
+  const viewCurrentWeek = useCallback(() => {
+    if (!fixedWeekStart) {
+      setWeekOffset(0);
+    }
+  }, [fixedWeekStart]);
+
+  const viewNextWeek = useCallback(() => {
+    if (!fixedWeekStart) {
+      setWeekOffset(1);
+    }
+  }, [fixedWeekStart]);
 
   const createPlan = useCallback(
     (weekStart: string) => {
@@ -147,6 +171,11 @@ export function useWeeklyPlan(): UseWeeklyPlanReturn {
     plan,
     loading,
     error,
+    weekOffset,
+    viewedWeekStart,
+    setWeekOffset,
+    viewCurrentWeek,
+    viewNextWeek,
     refresh,
     createPlan,
     archivePlan,
