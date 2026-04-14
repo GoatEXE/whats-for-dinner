@@ -8,6 +8,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "platforms": ["ios", "android", "web"],
+    "icon": "./assets/icon.png",
     "primaryColor": "#F97316",
     "plugins": [
       "expo-router",
@@ -23,7 +24,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
+          "image": "./assets/splash.png",
           "backgroundColor": "#F97316",
           "resizeMode": "contain"
         }
@@ -36,6 +37,7 @@
     "android": {
       "package": "com.whatsfordinner.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F97316"
       }
     },
