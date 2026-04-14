@@ -9,6 +9,10 @@
     "web": "expo start --web",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "build:development": "npx eas-cli build --platform android --profile development",
+    "build:preview": "npx eas-cli build --platform android --profile preview",
+    "build:production": "npx eas-cli build --platform android --profile production",
+    "submit:production": "npx eas-cli submit --platform android --profile production --latest",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
