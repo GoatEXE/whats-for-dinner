@@ -41,7 +41,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.whatsfordinner.app",
+      "package": "com.sunchipstudio.whatsfordinner",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F97316"
