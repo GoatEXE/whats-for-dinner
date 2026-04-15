@@ -7,7 +7,11 @@
     "scheme": "whats-for-dinner",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "icon": "./assets/icon.png",
     "primaryColor": "#F97316",
     "plugins": [
@@ -18,7 +22,9 @@
         "expo-share-intent",
         {
           "disableIOS": true,
-          "androidIntentFilters": ["text/*"]
+          "androidIntentFilters": [
+            "text/*"
+          ]
         }
       ],
       [
@@ -26,7 +32,7 @@
         {
           "image": "./assets/splash.png",
           "backgroundColor": "#F97316",
-          "resizeMode": "contain"
+          "resizeMode": "cover"
         }
       ]
     ],
@@ -49,6 +55,13 @@
       "shortName": "Dinner",
       "themeColor": "#F97316",
       "backgroundColor": "#FFFFFF"
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e0742a4d-31cf-45b4-9896-cc94d7463412"
+      }
+    },
+    "owner": "goat.exe"
   }
 }
