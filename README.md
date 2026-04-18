@@ -1,12 +1,12 @@
 # What's for Dinner
 
-What's for Dinner is a mobile-first meal planning app built with Expo, React Native, and local SQLite. The Android app is now the primary product direction. The legacy Node/Express web app remains in the repo as a temporary fallback while offboarding work is in progress.
+What's for Dinner is a mobile-first meal planning app built with Expo, React Native, and local SQLite. The Android app is now the primary product direction, and the legacy Node/Express web runtime has been removed from the repo.
 
 ## Current status
 
 - Primary runtime: `apps/mobile`
 - Android distribution: internal testing is active, closed testing is next
-- Legacy web app: frozen, no net-new feature work, retirement plan in `docs/web-offboarding-plan.md`
+- Legacy web runtime: retired from the repository
 - Cloud sync/auth: deferred for now
 
 ## Primary quick start
@@ -81,10 +81,11 @@ The mobile app currently supports:
 
 Current verified counts:
 
-- Root tests: 121 passing
+- Root tests: 62 passing
 - Mobile tests: 70 passing
-- Total: 191 passing
+- Total: 132 passing
 - Mobile typecheck: clean
+- Shared package typecheck: clean
 
 Useful commands:
 
@@ -122,27 +123,8 @@ See `docs/web-to-mobile-cutover.md` for the full cutover steps.
 apps/mobile/         Expo / React Native app, active runtime
 packages/domain/     Shared business logic
 packages/contracts/  Shared Zod schemas and portable envelope types
-src/                 Legacy Express runtime, pending retirement
-public/              Legacy web UI, pending retirement
-docs/                Active plans, demo docs, and offboarding docs
+docs/                Active plans, demo docs, and migration/offboarding notes
 ```
-
-## Legacy web app fallback (deprecated)
-
-The legacy web app is still available as a temporary migration bridge while Play testing stabilizes.
-
-```bash
-npm install
-npm run legacy:web:start
-```
-
-Open http://localhost:3000.
-
-Current policy for the legacy web app:
-
-- fallback and migration bridge only
-- no net-new feature work
-- final runtime removal deferred until the mobile testing cycle is stable
 
 ## Helpful docs
 

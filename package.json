@@ -7,7 +7,6 @@
     "packages/*"
   ],
   "description": "Mobile-first meal planning workspace built with Expo, React Native, and shared TypeScript packages.",
-  "main": "src/server.js",
   "scripts": {
     "dev": "npm run mobile:start",
     "start": "npm run mobile:start",
@@ -17,48 +16,28 @@
     "mobile:test": "npm --workspace apps/mobile run test",
     "mobile:typecheck": "npm --workspace apps/mobile run typecheck",
     "mobile:lint": "npm --workspace apps/mobile run lint",
-    "legacy:web:dev": "node --watch src/server.js",
-    "legacy:web:start": "node src/server.js",
-    "legacy:web:migrate": "node src/db/migrate.js",
-    "legacy:web:seed": "node src/db/seed.js",
-    "legacy:web:db:init": "npm run legacy:web:migrate && npm run legacy:web:seed",
-    "migrate": "npm run legacy:web:migrate",
-    "seed": "npm run legacy:web:seed",
-    "db:init": "npm run legacy:web:db:init",
     "lint": "eslint .",
-    "format": "prettier --check .",
-    "typecheck": "tsc --project tsconfig.json --noEmit",
-    "test": "vitest run",
-    "legacy:web:test:ui": "playwright test --config e2e/playwright.config.js",
-    "legacy:web:test:ui:update": "playwright test --config e2e/playwright.config.js --update-snapshots",
-    "test:ui": "npm run legacy:web:test:ui",
-    "test:ui:update": "npm run legacy:web:test:ui:update"
+    "typecheck": "npm --workspace @whats-for-dinner/contracts run typecheck && npm --workspace @whats-for-dinner/domain run typecheck",
+    "test": "vitest run"
   },
   "engines": {
     "node": ">=22"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
-    "dotenv": "^16.4.7",
-    "express": "^5.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
     "@eslint/js": "^9.24.0",
-    "@playwright/test": "^1.59.1",
-    "@types/better-sqlite3": "^7.6.12",
     "@expo/vector-icons": "15.0.3",
-    "@types/express": "^5.0.1",
+    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.14.1",
     "eslint": "^9.24.0",
     "globals": "^16.0.0",
-    "prettier": "^3.5.3",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-screens": "4.16.0",
-    "supertest": "^7.1.0",
     "typescript": "^5.8.3",
     "vitest": "^3.0.9"
   }

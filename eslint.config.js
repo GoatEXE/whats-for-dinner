@@ -3,17 +3,11 @@ const globals = require("globals");
 
 module.exports = [
   {
-    ignores: ["node_modules/**", "data/**", "coverage/**"],
+    ignores: ["node_modules/**", "coverage/**"],
   },
   js.configs.recommended,
   {
-    files: [
-      "src/**/*.js",
-      "e2e/**/*.js",
-      "eslint.config.js",
-      "vitest.config.js",
-      "e2e/playwright.config.js",
-    ],
+    files: ["eslint.config.js", "vitest.config.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "script",
@@ -23,30 +17,6 @@ module.exports = [
     },
     rules: {
       "no-console": "off",
-    },
-  },
-  {
-    files: ["test/**/*.js"],
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "script",
-      globals: {
-        ...globals.node,
-        describe: "readonly",
-        it: "readonly",
-        expect: "readonly",
-        afterEach: "readonly",
-      },
-    },
-  },
-  {
-    files: ["public/**/*.js"],
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
-      globals: {
-        ...globals.browser,
-      },
     },
   },
 ];
