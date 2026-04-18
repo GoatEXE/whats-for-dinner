@@ -1,4 +1,4 @@
-name: Update Playwright snapshots
+name: Update legacy web Playwright snapshots
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   update-snapshots:
-    name: Refresh visual regression snapshots
+    name: Refresh legacy web visual regression snapshots
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -30,7 +30,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox
 
-      - name: Update Playwright snapshots
+      - name: Update legacy web Playwright snapshots
         run: >-
           npx playwright test
           --config e2e/playwright.config.js
@@ -54,5 +54,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "test: update Playwright snapshots"
+          git commit -m "test: update legacy web Playwright snapshots"
           git push origin HEAD:${BRANCH_NAME}

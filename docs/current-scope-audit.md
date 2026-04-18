@@ -5,10 +5,12 @@ Compiled from the current repository state for React Native/Expo migration plann
 ## 1) API endpoints
 
 ### Health / metadata
+
 - `GET /health` — returns `{ status, environment, dbPath }` for basic app/db health.
 - `GET /api/ingredients` — returns the ingredient catalog used for autocomplete and matching.
 
 ### Meals
+
 - `GET /api/meals` — lists active meals by default; supports query filters `favorite`, `archived`, `tag`, and `q` (name/notes search).
 - `GET /api/meals/export` — exports all active meals in a portable recipe envelope JSON and sets a download-friendly filename.
 - `POST /api/meals` — creates a meal with ingredients/tags/favorite state.
@@ -19,23 +21,28 @@ Compiled from the current repository state for React Native/Expo migration plann
 - `POST /api/meals/:id/favorite` — toggles or sets favorite status.
 
 ### Pantry
+
 - `GET /api/pantry` — lists saved pantry items.
 - `PUT /api/pantry` — replaces the entire pantry with the provided items.
 - `POST /api/pantry/items` — adds or upserts one pantry item.
 - `DELETE /api/pantry/items/:ingredientId` — removes one pantry item.
 
 ### Ingredient suggestions / meal matching
+
 - `POST /api/suggestions/matches` — finds candidate meals against pantry and/or ad hoc ingredients.
 - `GET /api/suggestions/random` — picks one random meal subject to filters.
 
 ### Shopping list
+
 - `POST /api/shopping-list/generate` — builds a consolidated shopping list from selected meals plus optional pantry/on-hand overrides.
 
 ### Meal history
+
 - `GET /api/history` — lists recent meal history, with a `limit` query parameter.
 - `POST /api/history` — records a meal as served in history.
 
 ### Weekly plans
+
 - `POST /api/weekly-plans` — creates a new weekly plan for a Monday date; archives any previous active plan if needed.
 - `POST /api/weekly-plans/from/:id` — creates a new weekly plan by copying another plan’s slot assignments.
 - `GET /api/weekly-plans/current` — returns the active weekly plan.
@@ -49,6 +56,7 @@ Compiled from the current repository state for React Native/Expo migration plann
 ## 2) Database schema
 
 ### `meals`
+
 - `id` INTEGER PK AUTOINCREMENT
 - `name` TEXT NOT NULL
 - `normalized_name` TEXT NOT NULL UNIQUE
@@ -60,29 +68,35 @@ Compiled from the current repository state for React Native/Expo migration plann
 - `updated_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 Relationships:
+
 - parent to `meal_ingredients.meal_id` (`ON DELETE CASCADE`)
 - parent to `meal_tags.meal_id` (`ON DELETE CASCADE`)
 - parent to `meal_history.meal_id` (`ON DELETE CASCADE`)
 - referenced by `weekly_plan_slots.meal_id` (`ON DELETE SET NULL`)
 
 Indexes/triggers:
+
 - `idx_meals_archived_favorite (is_archived, is_favorite)`
 - trigger `trg_meals_updated_at` updates `updated_at` on writes
 
 ### `ingredients`
+
 - `id` INTEGER PK AUTOINCREMENT
 - `name` TEXT NOT NULL
 - `normalized_name` TEXT NOT NULL UNIQUE
 - `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 Relationships:
+
 - parent to `meal_ingredients.ingredient_id` (`ON DELETE RESTRICT`)
 - parent to `pantry_items.ingredient_id` (`ON DELETE CASCADE`)
 
 Indexes:
+
 - `idx_ingredients_normalized_name (normalized_name)`
 
 ### `meal_ingredients`
+
 - `meal_id` INTEGER NOT NULL
 - `ingredient_id` INTEGER NOT NULL
 - `quantity_text` TEXT
@@ -91,21 +105,26 @@ Indexes:
 - PK: `(meal_id, ingredient_id)`
 
 Relationships:
+
 - `meal_id` → `meals.id` (`ON DELETE CASCADE`)
 - `ingredient_id` → `ingredients.id` (`ON DELETE RESTRICT`)
 
 ### `pantry_items`
+
 - `ingredient_id` INTEGER PK
 - `quantity_text` TEXT
 - `updated_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 Relationships:
+
 - `ingredient_id` → `ingredients.id` (`ON DELETE CASCADE`)
 
 Indexes:
+
 - `idx_pantry_updated_at (updated_at)`
 
 ### `meal_history`
+
 - `id` INTEGER PK AUTOINCREMENT
 - `meal_id` INTEGER NOT NULL
 - `served_on` TEXT NOT NULL (ISO date)
@@ -113,33 +132,41 @@ Indexes:
 - `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 Relationships:
+
 - `meal_id` → `meals.id` (`ON DELETE CASCADE`)
 
 Indexes:
+
 - `idx_history_served_on (served_on)`
 
 ### `tags`
+
 - `id` INTEGER PK AUTOINCREMENT
 - `name` TEXT NOT NULL
 - `normalized_name` TEXT NOT NULL UNIQUE
 - `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 Relationships:
+
 - parent to `meal_tags.tag_id` (`ON DELETE CASCADE`)
 
 ### `meal_tags`
+
 - `meal_id` INTEGER NOT NULL
 - `tag_id` INTEGER NOT NULL
 - PK: `(meal_id, tag_id)`
 
 Relationships:
+
 - `meal_id` → `meals.id` (`ON DELETE CASCADE`)
 - `tag_id` → `tags.id` (`ON DELETE CASCADE`)
 
 Indexes:
+
 - `idx_meal_tags_tag_id (tag_id)`
 
 ### `weekly_plans`
+
 - `id` INTEGER PK AUTOINCREMENT
 - `week_start` TEXT NOT NULL
 - `is_archived` INTEGER NOT NULL DEFAULT 0
@@ -147,15 +174,18 @@ Indexes:
 - `updated_at` TEXT NOT NULL DEFAULT (SQLite precise timestamp)
 
 Relationships:
+
 - parent to `weekly_plan_slots.plan_id` (`ON DELETE CASCADE`)
 
 Indexes/constraints:
+
 - unique active week start: `idx_weekly_plans_active_week_start` on `(week_start)` where `is_archived = 0`
 - only one active plan: `idx_weekly_plans_single_active` on `(is_archived)` where `is_archived = 0`
 - `idx_weekly_plans_is_archived_week_start (is_archived, week_start DESC)`
 - trigger `trg_weekly_plans_updated_at` keeps `updated_at` monotonic
 
 ### `weekly_plan_slots`
+
 - `plan_id` INTEGER NOT NULL
 - `day` INTEGER NOT NULL CHECK `0..6`
 - `meal_id` INTEGER
@@ -163,18 +193,22 @@ Indexes/constraints:
 - PK: `(plan_id, day)`
 
 Relationships:
+
 - `plan_id` → `weekly_plans.id` (`ON DELETE CASCADE`)
 - `meal_id` → `meals.id` (`ON DELETE SET NULL`)
 
 Indexes:
+
 - `idx_weekly_plan_slots_meal_id (meal_id)`
 
 ### Migration note
+
 - `003_weekly_plans_hardening.sql` archives older active plans so only one active plan remains after migration.
 
 ## 3) Business logic
 
 ### Ingredient resolution and normalization
+
 - Ingredient and tag names are normalized before persistence/lookups (`normalizeName`, `normalizeTag`).
 - Pantry input may be by `ingredientId` or `name`; names can create catalog ingredients.
 - Suggestions/shopping can resolve ad hoc ingredient names differently depending on the feature:
@@ -182,17 +216,20 @@ Indexes:
   - shopping list generation resolves by name without persisting unknown names.
 
 ### Meal CRUD
+
 - Meal creation and update are transactional: create/update meal row, then replace all ingredient/tag relationships.
 - Duplicate meal names are rejected via `normalized_name` uniqueness and surfaced as `409`.
 - Archiving is soft delete (`is_archived = 1`), not row deletion.
 - Favorite toggle can either explicitly set a boolean or flip the current value.
 
 ### Import/export
+
 - Export emits a portable envelope: `{ format, version, exportedAt, meals[] }` and strips internal ids.
 - Import validates the envelope and each meal individually.
 - Import deduplicates by normalized meal name; invalid meals are reported in `failed`, duplicates in `skipped`.
 
 ### Ingredient matching
+
 - `buildMatch()` computes required vs optional ingredient matches per meal.
 - Match score is based on required ingredients only.
 - Sorting prefers:
@@ -204,6 +241,7 @@ Indexes:
 - `includePartial=false` filters out partial matches.
 
 ### Random meal picker
+
 - Candidate meals come from active non-archived meals, optionally favorites-only.
 - Random selection excludes meals served within a configurable lookback window.
 - Optional exclusion list can remove explicitly blocked meals.
@@ -211,6 +249,7 @@ Indexes:
 - Empty candidate set throws `404`.
 
 ### Shopping list generation
+
 - Selected meal ids are deduplicated while preserving order.
 - All meal ingredients are aggregated by ingredient id across meals.
 - Required ingredients are split into:
@@ -220,6 +259,7 @@ Indexes:
 - Output includes a summary and `copyText` plain-text export.
 
 ### Weekly planning
+
 - Only one active weekly plan exists at a time.
 - New plan creation archives any prior active plan and inserts seven empty slots.
 - Reuse-from-source copies slot assignments and notes into a new week; served state is not copied.
@@ -231,12 +271,14 @@ Indexes:
 - Archived plan detail preserves meal summaries even when the meal itself has been archived later.
 
 ### Pantry
+
 - Pantry replacement is transactional and fully replaces the prior pantry.
 - Items are deduped by ingredient id after input resolution.
 
 ## 4) Frontend features
 
 ### App shell / navigation
+
 - Tabbed layout with three main tabs:
   - **Plan**
   - **Shop**
@@ -245,12 +287,14 @@ Indexes:
 - Global refresh button reloads all data.
 
 ### Plan tab
+
 - **Quick picker**: random meal picker with favorites/full-match/recent-history filters.
 - **Weekly plan**: create a weekly plan, assign meals to days, random-fill a day, clear a day, add notes, mark served, autofill empty days, and copy/share plan text.
 - **Past plans**: expandable archive of old weekly plans, with reuse and copy actions.
 - **Recent history**: list of recently served meals.
 
 ### Shop tab
+
 - **Shopping list**:
   - manual selection from meal cards in Meals tab
   - generate from current weekly plan
@@ -260,11 +304,13 @@ Indexes:
 - **Ingredient matches**: pantry-based and ad hoc pantry-ready meal suggestions.
 
 ### Meals tab
+
 - **Meal editor**: create/edit meals with name, prep time, notes, tags, favorite flag, and a dynamic ingredient list.
 - **Meal library**: searchable cards with favorite/archive/edit/serve/add-to-list actions.
 - **Import/Export** buttons for recipe data.
 
 ### UI components / behaviors
+
 - Status banner for success/error/warning feedback.
 - Confirmation/prompt modal dialog used for destructive actions and plan creation/reuse.
 - Datalist autocomplete for ingredient names.
@@ -272,6 +318,7 @@ Indexes:
 ## 5) Data models / Zod schemas
 
 ### Meals (`src/modules/meals/meals.schemas.js`)
+
 - `ingredientInputSchema`
   - `name` string 1..120, trimmed
   - `quantityText` nullable/trimmed string
@@ -298,6 +345,7 @@ Indexes:
   - `isFavorite` booleanish
 
 ### Pantry (`src/modules/pantry/pantry.schemas.js`)
+
 - `pantryItemSchema`
   - `ingredientId` positive integer optional
   - `name` string optional
@@ -307,6 +355,7 @@ Indexes:
 - `pantryDeleteParamSchema` — positive integer `ingredientId`
 
 ### Suggestions (`src/modules/suggestions/suggestions.schemas.js`)
+
 - `matchBodySchema`
   - `ingredientIds` positive integer array optional
   - `ingredientNames` string array optional
@@ -320,6 +369,7 @@ Indexes:
   - `excludeServedWithinDays` integer 0..365, default `0`
 
 ### Shopping list (`src/modules/shopping-list/shopping-list.schemas.js`)
+
 - `shoppingListGenerateSchema`
   - `mealIds` positive integer array 1..25
   - `useSavedPantry` strict booleanish, default `true`
@@ -328,6 +378,7 @@ Indexes:
   - `includeOptional` strict booleanish, default `false`
 
 ### History (`src/modules/history/history.schemas.js`)
+
 - `historyQuerySchema`
   - `limit` integer 1..100, default `20`
 - `historyWriteSchema`
@@ -336,6 +387,7 @@ Indexes:
   - `source` enum: `manual | random | match | plan`, default `manual`
 
 ### Weekly plans (`src/modules/weekly-plans/weekly-plans.schemas.js`)
+
 - `createPlanSchema`
   - `weekStart` valid ISO date and must be a Monday
 - `updateSlotSchema`
@@ -353,11 +405,13 @@ Indexes:
 - `archivedPlansQuerySchema` — `limit` integer 1..100, default `10`
 
 ### Shared validation
+
 - `src/lib/validation.js` provides the `validate()` middleware and `booleanish()` coercion helper.
 
 ## 6) Tests
 
 ### Unit tests
+
 - `test/unit/ingredient-resolution.test.js`
   - dedupe/order behavior for ingredient resolution
   - optional sorting
@@ -382,6 +436,7 @@ Indexes:
   - autofill cumulative exclusions and partial-failure handling
 
 ### Integration tests
+
 - `test/integration/app.test.js`
   - health endpoint
   - meal CRUD/favorite/archive
@@ -400,6 +455,7 @@ Indexes:
   - random slot, autofill, serve, clear, and notes behavior
 
 ### E2E / UI tests
+
 - `e2e/tests/a11y.pw.js` — accessibility coverage
 - `e2e/tests/clipboard.pw.js` — copy-to-clipboard flows
 - `e2e/tests/interactions.pw.js` — UI interaction smoke coverage
@@ -410,12 +466,14 @@ Indexes:
 - `e2e/tests/visual.pw.js` — visual regression coverage
 
 ### Test harness
+
 - `test/helpers/test-app.js` creates isolated db/app contexts for tests.
 - Playwright config lives in `e2e/playwright.config.js`.
 
 ## 7) Import/export functionality
 
 ### Existing recipe data import/export
+
 - **Export endpoint:** `GET /api/meals/export`
   - emits the meal recipe envelope
   - excludes internal ids and timestamps
@@ -427,6 +485,7 @@ Indexes:
   - reports validation failures per meal
 
 ### Recipe URL import (mobile app only)
+
 - **Mobile URL import screen:** paste recipe URL → fetch HTML → extract JSON-LD structured data → review/edit → save
 - Extraction logic in `packages/domain/src/recipe-scraper.ts` (pure function, portable)
 - Parses schema.org Recipe JSON-LD from most recipe sites (AllRecipes, Food Network, NYT Cooking, Budget Bytes, etc.)
@@ -437,6 +496,7 @@ Indexes:
 - Manual fallback: if extraction fails, pre-fills source URL and lets user enter manually
 
 ### Cookbook export/sharing (mobile app only)
+
 - **Mobile export screen:** export the meal library as shareable JSON via the native share sheet.
 - Current option: export active meals only, or include archived meals as well.
 - Archived meals export as recipe content only. When imported elsewhere they come back as active meals.
@@ -447,15 +507,18 @@ Indexes:
 - Current scope is meals only. Pantry/history/weekly plans are not included.
 
 ### Copy/export text features
+
 - Weekly plan text export/copy from the Plan tab.
 - Archived plan copy from plan history detail.
 - Shopping list plain-text copy, including combined plan + shopping list share pack.
 
 ### Non-file import-like behaviors
+
 - Pantry and ingredient name entry can resolve ad hoc names into the catalog for matching/shopping.
 - These are not bulk import/export paths, but they do create persistent catalog records in some flows.
 
 ## Migration notes for Expo/React Native
+
 - The current app is a single-page, server-served web UI with three tabs and many inline workflows.
 - The backend API surface is already fairly clean and can likely be reused as-is by a mobile client.
 - The heaviest migration areas are the weekly-plan workflow, shopping-list copy/export, import/export, and all modal/prompt/clipboard interactions.
@@ -467,6 +530,7 @@ Indexes:
 **Branch:** `mobile-app`
 
 ### Architecture
+
 - App scaffold with Expo Router + 3-tab layout (Plan, Shop, Meals).
 - Shared packages:
   - `packages/domain` — ported business logic for suggestions, shopping list, random picker, weekly plans, normalization, and import/export
@@ -476,6 +540,7 @@ Indexes:
 - All repos support soft deletes and sync-ready metadata (`deleted_at`, `updated_at`).
 
 ### Feature hooks
+
 - `useMeals` — meal CRUD, search, archive, favorite
 - `usePantry` — pantry add/remove/bulk-set
 - `useHistory` — meal history recording and recent meal tracking
@@ -488,6 +553,7 @@ Indexes:
 - `usePlanAutofill` — autofill empty plan slots with cumulative exclusion
 
 ### Screens implemented
+
 - **Meals tab**: list with search/filter, detail view with tappable source link for URL-imported meals, edit/create form, archive/favorite actions, file import/export, reset demo data, overflow menu (⋮) for header actions
 - **Meals settings**: appearance picker (System/Light/Dark) plus reset demo data
 - **Plan tab**: this week / next week switching, slot assignment, per-day random assignment, repeat-window controls for random picks, week random-fill, clear, serve, copy/share plan text, archived plans list, plan history detail, reuse/copy actions
@@ -495,12 +561,14 @@ Indexes:
 - **Share-intent routing (Android custom dev build only)**: shared URLs route to url-import screen, shared text without URL shows fallback warning
 
 ### Test infrastructure
+
 - Mobile repo tests use `better-sqlite3` adapter for Node-based Vitest testing.
 - Vitest config with path aliases for `@domain`, `@contracts`, and mobile internal imports.
 - Test counts: 121 root tests + 70 mobile tests = 191 total, all passing.
 - Mobile `tsc --noEmit` passes cleanly.
 
 ### Current scope
+
 - Phases 1-3 complete: local-first offline parity with the current web app.
 - Phase 4 (Firebase auth + Firestore sync) deferred per user decision.
 - Phase 5: URL import is shipped on native mobile only (CORS blocks web), cookbook export/share is shipped with native sharing on mobile plus clipboard fallback on web, and Android share-intent routing is wired for custom dev builds.
@@ -511,6 +579,7 @@ Indexes:
 ### Demo paths
 
 #### Browser preview
+
 - Command: `cd apps/mobile && npm run web`
 - Opens at http://localhost:8081
 - Uses sql.js with in-memory database
@@ -518,6 +587,7 @@ Indexes:
 - Good for quick UI demos and feature walkthroughs
 
 #### Android Expo Go
+
 - Command: `cd apps/mobile && npx expo start --go --clear`
 - Open Expo Go first, then scan the QR code from inside the app
 - Full SQLite persistence across app restarts
@@ -526,6 +596,7 @@ Indexes:
 - Fallback for network issues: `cd apps/mobile && npx expo start --go --tunnel --clear`
 
 ### Demo-ready state
+
 - Auto-seeding on first launch with 12 realistic meals, pantry staples, a pre-filled weekly plan, and recent meal history.
 - Expo web support enabled for browser-based demos.
 - Android Expo Go path functional and tested.
@@ -534,5 +605,5 @@ Indexes:
 - UX polish complete: natural tab navigation, copy/share integration, search/filter, inline editing, overflow menu for header actions, tappable source links, and full dark-mode support.
 - Test coverage: 191 tests passing across root and mobile repos, TypeScript strict mode clean.
 - URL import, cookbook export, and share-intent: work on native mobile (Android/iOS); browser preview blocked by CORS/native APIs (clipboard fallback available for export on web). Share-intent requires custom dev build.
-- Known limitations: no custom app icon or splash screen yet, browser preview uses in-memory database (ephemeral), no cloud sync.
+- Known limitations: browser preview uses in-memory database (ephemeral), no cloud sync, and Android share-intent still requires a custom dev build rather than Expo Go.
 - See `docs/DEMO.md` for a complete demo walkthrough.

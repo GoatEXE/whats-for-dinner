@@ -1,251 +1,153 @@
 # What's for Dinner
 
-A pragmatic meal planning app built with Node.js, Express, SQLite, and a small vanilla web UI.
+What's for Dinner is a mobile-first meal planning app built with Expo, React Native, and local SQLite. The Android app is now the primary product direction. The legacy Node/Express web app remains in the repo as a temporary fallback while offboarding work is in progress.
 
-## Features
+## Current status
 
-- **Meal library** — CRUD with ingredient lists, prep time, notes, favorites, archive, and tags
-- **Pantry tracking** — maintain on-hand ingredient inventory
-- **Meal suggestions** — match suggestions based on pantry or ad hoc ingredient names; random picker with filters for favorites, pantry-ready meals, and recent-history exclusion
-- **Weekly planning** — create and manage 7-day meal plans; assign meals manually, fill slots randomly with filters, or auto-fill all empty days at once; mark meals as served; reuse past plans as starting points for new weeks
-- **Shopping lists** — generate combined shopping lists from selected meals or the full weekly plan versus pantry ingredients; deduplicate shared ingredients across meals; copy-friendly plain text export
-- **Plan sharing** — copy weekly plan text or combined plan-plus-shopping-list in one action
-- **Meal history** — track recently served dinners with source attribution (manual or from plan)
-- **Dockerized deployment** — SQLite persistence with volume support
-- **Migrations and seeding** — checked-in SQL migrations and sample seed data
-- **Testing and validation** — Zod validation, centralized error handling, and automated test coverage
+- Primary runtime: `apps/mobile`
+- Android distribution: internal testing is active, closed testing is next
+- Legacy web app: frozen, no net-new feature work, retirement plan in `docs/web-offboarding-plan.md`
+- Cloud sync/auth: deferred for now
 
-## Stack
+## Primary quick start
 
-- Node.js 22
-- Express 5
-- SQLite via `better-sqlite3`
-- Zod validation
-- Vitest + Supertest
-- ESLint + Prettier
-
-## Run locally
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Copy env file if you want custom settings:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Start the app:
-
-   ```bash
-   npm run start
-   ```
-
-The server automatically:
-
-- validates env
-- runs migrations
-- seeds sample data if the database is empty
-
-Open http://localhost:3000
-
-## Run with Docker
+### Browser preview (fastest, ephemeral)
 
 ```bash
-docker compose up --build
-```
-
-This starts the app on http://localhost:3000 and persists SQLite data in the `whats-for-dinner-data` Docker volume.
-
-## Weekly planning workflow
-
-1. **Create a plan** — Start a new 7-day plan for the upcoming week (Monday–Sunday)
-2. **Fill slots** — Assign meals manually, use per-slot random fill with filters, or auto-fill all empty days at once
-3. **Generate shopping list** — One-click shopping list generation for all planned meals
-4. **Track progress** — Mark meals as served during the week
-5. **Reuse plans** — Copy a past week's plan as a starting point for a new week
-
-The app maintains one active weekly plan at a time. When you create a new plan for a different week, the current plan is automatically archived and remains accessible in plan history.
-
-## Useful scripts
-
-```bash
-npm run migrate
-npm run seed
-npm run test
-npm run lint
-npm run typecheck
-npm run format
-```
-
-## Environment variables
-
-| Name            | Default                                                                              | Description                                      |
-| --------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| `PORT`          | `3000`                                                                               | HTTP port                                        |
-| `DB_PATH`       | `./data/whats-for-dinner.sqlite` locally / `/data/whats-for-dinner.sqlite` in Docker | SQLite database path                             |
-| `SEED_ON_EMPTY` | `true`                                                                               | Seeds sample data when the database has no meals |
-
-## API overview
-
-**Health & catalog:**
-- `GET /health`
-- `GET /api/ingredients`
-
-**Meals:**
-- `GET /api/meals`
-- `POST /api/meals`
-- `GET /api/meals/:id`
-- `PATCH /api/meals/:id`
-- `DELETE /api/meals/:id`
-- `POST /api/meals/:id/favorite`
-
-**Pantry:**
-- `GET /api/pantry`
-- `PUT /api/pantry`
-- `POST /api/pantry/items`
-- `DELETE /api/pantry/items/:ingredientId`
-
-**Suggestions:**
-- `POST /api/suggestions/matches`
-- `GET /api/suggestions/random`
-
-**Weekly plans:**
-- `POST /api/weekly-plans` — create a new weekly plan
-- `POST /api/weekly-plans/from/:id` — create a new plan from an archived plan
-- `GET /api/weekly-plans/current` — get the active weekly plan
-- `POST /api/weekly-plans/current/autofill` — auto-fill empty plan slots with random meals
-- `PATCH /api/weekly-plans/current/slots/:day` — assign or clear a meal for a specific day
-- `POST /api/weekly-plans/current/slots/:day/random` — fill a slot with a random meal
-- `POST /api/weekly-plans/current/slots/:day/serve` — mark a planned meal as served
-- `GET /api/weekly-plans/history` — list past archived plans
-- `GET /api/weekly-plans/history/:id` — get a specific plan by ID
-
-**Shopping list:**
-- `POST /api/shopping-list/generate`
-
-**History:**
-- `GET /api/history`
-- `POST /api/history`
-
-## Shopping list generation
-
-`POST /api/shopping-list/generate` generates a shopping list from one or more meals. This endpoint is used both for standalone meal selections and when generating a list from the current weekly plan.
-
-Request body:
-
-```json
-{
-  "mealIds": [1, 2],
-  "useSavedPantry": true,
-  "ingredientIds": [5],
-  "ingredientNames": ["Milk"],
-  "includeOptional": false
-}
-```
-
-Defaults and behavior:
-
-- `mealIds` is required
-- `useSavedPantry` defaults to `true`
-- `includeOptional` defaults to `false`
-- `ingredientIds` and `ingredientNames` are optional ad hoc request inputs layered on top of the saved pantry for that one request
-- `ingredientNames` are normalized for matching against existing catalog ingredients, but unknown names are ignored and are **not** persisted into `/api/ingredients`
-- boolean inputs must be real booleans or the exact strings `"true"` / `"false"`; other values fail validation with `400`
-
-Response highlights:
-
-- `selectedMeals`: `{ id, name }` summaries for the requested meals
-- `availableIngredients`: the deduplicated pantry/on-hand ingredient set used for comparison
-- `requiredOnHand`: unique required ingredients already covered by the available set
-- `requiredToBuy`: unique required ingredients still needed
-- `optionalToBuy`: optional-only ingredients still needed when `includeOptional=true`
-- `summary`: selected meal / on-hand / to-buy counts
-- `copyText`: copy/paste-friendly plain text block for docs or notes
-
-When the same ingredient appears in multiple selected meals, the response keeps one ingredient entry and aggregates `mealNames` and `quantityHints` instead of attempting quantity arithmetic.
-
-## Notes
-
-- Ingredient matching uses normalized exact-name matching.
-- Quantities are stored as display text only; unit conversion is intentionally out of scope.
-- Archived meals are hidden from normal meal lists and suggestion flows, but remain in past weekly plans where they were originally assigned.
-- Weekly plan autofill and per-slot random fill respect the same filters as the standalone random picker (favorites, pantry-ready, avoid recent history).
-- When reusing a past plan, meal assignments and notes are copied; served status is not.
-
-## Mobile App
-
-An offline-first React Native mobile app built with Expo and local SQLite. The mobile app reaches feature parity with the web app and runs entirely offline without a backend server.
-
-**Branch:** `mobile-app` (Phases 1-3 complete, demo-ready)
-
-### Quick start
-
-#### Browser preview (fastest)
-
-```bash
-cd apps/mobile
 npm install
-npm run web
+npm run mobile:web
 ```
 
-Opens at http://localhost:8081. Good for quick feature walkthroughs. **Note:** Browser preview uses sql.js with an in-memory database, so all data resets on page refresh.
+Opens at http://localhost:8081.
 
-#### Android device (persistent storage)
+Notes:
 
-```bash
-cd apps/mobile
-npx expo start --go --clear
-```
+- Uses sql.js with an in-memory database
+- Data resets on page refresh
+- Good for walkthroughs, screenshots, and quick UI checks
 
-Open Expo Go on Android first, then scan the QR code from inside Expo Go. This provides full SQLite persistence and the real mobile experience. If LAN networking is flaky, retry with `npx expo start --go --tunnel --clear`.
-
-#### Android share-intent dev build (required for Share → What's for Dinner?)
-
-The Android share-intent receiver is wired into the mobile app, but **it does not work in Expo Go**. To test sharing a recipe URL/text from Chrome or another Android app into What's for Dinner, install a custom dev client/dev build once:
+### Android device with Expo Go (persistent local storage)
 
 ```bash
-cd apps/mobile
 npm install
-npx expo run:android
-npm run start:dev-client
+npm run mobile:start
 ```
 
-After the native dev build is installed, open the dev client instead of Expo Go. Android should then offer **What's for Dinner?** in the system share sheet for URL/text shares, routing directly into the existing **Import from URL** flow.
+If LAN discovery is flaky, retry from `apps/mobile` with:
 
-### First launch
+```bash
+cd apps/mobile
+npx expo start --go --tunnel --clear
+```
 
-The app automatically seeds realistic sample data on first launch:
+### Android release/testing builds
 
-- 12 complete meals with ingredients and tags (Taco Tuesday, Spaghetti Bolognese, Chicken Curry, etc.)
-- Pantry stocked with common staples
-- Current weekly plan with 4 meals assigned
-- Recent meal history for testing the random picker
+```bash
+cd apps/mobile
+npm run build:preview
+npm run build:production
+```
 
-All sample data is fully editable. To reset demo data, tap the settings icon in the Meals tab header.
+Helpful root wrappers for day-to-day work:
 
-### Current scope
+```bash
+npm run mobile:start
+npm run mobile:web
+npm run mobile:test
+npm run mobile:typecheck
+npm run mobile:lint
+```
 
-- ✅ Full offline feature parity with the web app
-- ✅ Local SQLite persistence (Android/iOS)
-- ✅ Browser preview via sql.js in-memory database
-- ✅ Recipe JSON import/export
-- ✅ Cookbook export/sharing from mobile app
-- ✅ Recipe URL import (native mobile only; CORS blocks browser preview)
-- ✅ Shopping list clipboard copy with checkable buy-list items
-- ✅ Weekly plan switching for this week/next week, repeat-window random picks, random fill, and copy
-- ✅ Dark mode support (System/Light/Dark appearance setting, persists across sessions)
-- ⏸️ Phase 4 (Firebase auth + cloud sync) deferred
-- ✅ Android share-intent URL/text routing (Android custom dev client/dev build only; not Expo Go)
+- `build:preview` produces an installable internal-testing APK
+- `build:production` produces the Play-uploadable AAB
 
-### Testing
+## Mobile feature set
+
+The mobile app currently supports:
+
+- offline meal library management
+- pantry/on-hand tracking
+- pantry-aware suggestions and random meal picking
+- weekly planning for this week and next week
+- random fill with repeat-window controls
+- shopping list generation with checkable buy-list items and names-only clipboard copy
+- recipe JSON import/export
+- recipe URL import on native mobile
+- cookbook export/share
+- dark mode with persisted System / Light / Dark preference
+- Android share-intent routing in a custom dev build
+
+## Testing and verification
+
+Current verified counts:
 
 - Root tests: 121 passing
 - Mobile tests: 70 passing
-- Total: 191 tests passing
-- TypeScript strict mode: clean
+- Total: 191 passing
+- Mobile typecheck: clean
 
-See `docs/DEMO.md` for a complete demo walkthrough and `docs/migration-plan.md` for the mobile architecture overview.
+Useful commands:
+
+```bash
+npm run mobile:typecheck
+npm run mobile:test
+cd apps/mobile && npx expo export --platform android --output-dir dist-check
+```
+
+## Web to mobile migration
+
+The currently supported migration path is meal-library export/import.
+
+What moves today:
+
+- meals
+- ingredients
+- tags
+- prep time
+- notes
+- favorite state
+
+What does not move today:
+
+- pantry state
+- weekly plans
+- meal history
+- archived meals that are still archived at export time
+
+See `docs/web-to-mobile-cutover.md` for the full cutover steps.
+
+## Repo layout
+
+```text
+apps/mobile/         Expo / React Native app, active runtime
+packages/domain/     Shared business logic
+packages/contracts/  Shared Zod schemas and portable envelope types
+src/                 Legacy Express runtime, pending retirement
+public/              Legacy web UI, pending retirement
+docs/                Active plans, demo docs, and offboarding docs
+```
+
+## Legacy web app fallback (deprecated)
+
+The legacy web app is still available as a temporary migration bridge while Play testing stabilizes.
+
+```bash
+npm install
+npm run legacy:web:start
+```
+
+Open http://localhost:3000.
+
+Current policy for the legacy web app:
+
+- fallback and migration bridge only
+- no net-new feature work
+- final runtime removal deferred until the mobile testing cycle is stable
+
+## Helpful docs
+
+- `docs/DEMO.md`
+- `docs/migration-plan.md`
+- `docs/web-offboarding-plan.md`
+- `docs/web-to-mobile-cutover.md`
+- `docs/google-play-closed-testing-plan.md`

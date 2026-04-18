@@ -121,6 +121,7 @@ All sample data is real and editable.
 **Limitation:** Share-intent requires custom dev build (not Expo Go). See README.md for setup.
 
 **Notes:**
+
 - Cookbook export JSON is compatible with the Import Recipes screen.
 - URL import works on Android/iOS only. Browser preview is blocked by CORS; use file import or clipboard export instead on web.
 
@@ -157,7 +158,7 @@ This demo shows local-first offline functionality only. Not yet implemented:
 
 - Cloud sync or backup (Phase 4 deferred)
 - Production-tested Android share-intent build flow (the first slice is wired, but still needs custom dev build + real device verification)
-- Custom app icon or splash screen (placeholder assets only)
+- Closed-testing distribution is still in progress
 
 The current scope is full offline feature parity with the web app plus a demo-ready sample data experience.
 

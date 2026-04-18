@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Backend + UI tests
+    name: Shared + mobile checks (with legacy web transition coverage)
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -31,23 +31,19 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium firefox
 
-      - name: Run backend tests
+      - name: Run shared/root tests
         run: npm test
 
-      # Temporary: keep mobile checks non-blocking until root npm ci/package-lock.json
-      # is refreshed to include newly added apps/mobile dependencies.
       - name: Run mobile repo tests
-        continue-on-error: true
-        run: cd apps/mobile && npx vitest run
+        run: npm run mobile:test
 
       - name: Mobile typecheck
-        continue-on-error: true
-        run: cd apps/mobile && npx tsc --noEmit
+        run: npm run mobile:typecheck
 
-      - name: Run UI tests
+      - name: Run legacy web UI tests
         run: npm run test:ui
 
-      - name: Upload Playwright test artifacts
+      - name: Upload legacy Playwright test artifacts
         if: failure()
         uses: actions/upload-artifact@v4
         with:
