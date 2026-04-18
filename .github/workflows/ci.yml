@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Backend + UI tests
+    name: Shared + mobile checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -28,20 +28,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium firefox
-
-      - name: Run backend tests
+      - name: Run shared/root tests
         run: npm test
 
-      - name: Run UI tests
-        run: npm run test:ui
+      - name: Run shared package typechecks
+        run: npm run typecheck
 
-      - name: Upload Playwright test artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results
-          path: |
-            e2e/test-results
-          if-no-files-found: ignore
+      - name: Run mobile repo tests
+        run: npm run mobile:test
+
+      - name: Mobile typecheck
+        run: npm run mobile:typecheck

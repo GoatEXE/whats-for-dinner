@@ -1,63 +1,106 @@
-# Current Scope Audit
+# Current Mobile Scope Audit
 
-Date: 2026-04-02 (updated 2026-04-07)
+Last updated: 2026-04-18
 
-## Verdict
+## Supported product
 
-The scoped roadmap in `docs/v1.1-*` through `docs/v1.6-*` is **fully landed** in the current codebase. The backend and frontend both implement shopping lists, weekly planning, plan reuse, plan copy, combined plan/share copy, and weekly autofill.
+- Primary runtime: Expo / React Native mobile app in `apps/mobile`
+- Distribution status: Android internal testing is active; closed testing is the next release milestone
+- Repo state: mobile-only workspace with shared packages in `packages/domain` and `packages/contracts`
+- Cloud/Firebase sync: deferred by current product decision
 
-**V1.7 (tabbed layout)** is also complete as of 2026-04-07.
+## Shipped mobile scope
 
-All previously identified gaps have been resolved:
-- ✅ Per-slot random fill now sends filters (fixed in v1.7)
-- ✅ Archived plans refresh after plan creation (fixed in v1.7)
-- ✅ README updated to document weekly-plan scope (fixed 2026-04-07)
+The supported mobile experience now includes:
 
-## Priority Findings (All Resolved)
+- offline meal CRUD with favorites, archive, tags, notes, and prep time
+- pantry / on-hand management
+- pantry-aware suggestions and random meal picking
+- weekly planning for this week and next week
+- repeat-window random fill and per-day random assignment
+- shopping list generation for the viewed week
+- checkable buy-list items and names-only clipboard copy
+- recipe JSON import / export
+- recipe URL import on native mobile
+- cookbook export / share
+- dark mode with persisted System / Light / Dark preference
+- Android share-intent routing in a custom dev build
+- demo-data seeding and reset flow
 
-### ~~bug~~ FIXED
+## Supported demo and validation paths
 
-1. **~~Per-slot Random ignores the documented plan/random filters in the UI~~** — **FIXED in v1.7**
-   - **Resolution:** `fillPlanSlotRandom` now sends `state.weeklyAutofillOptions` (which includes `favoritesOnly`, `fullMatchOnly`, `excludeServedWithinDays`) to the backend. The autofill UI also exposes these filter controls.
-   - **Verification:** `public/app.js` line ~1018 shows `body: JSON.stringify(state.weeklyAutofillOptions)`
+Use these in order of preference:
 
-### ~~risk~~ FIXED
+1. **Google Play internal testing build** — preferred for product demos and tester validation
+2. **Expo Go on Android** — preferred local-development fallback for live device demos
+3. **Android custom dev build** — only when validating native share-intent behavior
 
-2. **~~Creating a new week does not refresh the Past plans list after the old active plan is archived~~** — **FIXED in v1.7**
-   - **Resolution:** `createWeeklyPlan()` and `reusePlan()` now call `await loadData()` after plan creation, which refreshes `state.archivedPlans` and rerenders the history panel.
-   - **Verification:** `public/app.js` line ~981 shows `await loadData()` after plan creation
+The Expo web preview still exists as an engineering convenience, but it is not the primary demo path and should not be treated as the supported product surface.
 
-3. **~~README is stale versus the implemented scope~~** — **FIXED 2026-04-07**
-   - **Resolution:** README now documents weekly planning, shopping lists, plan sharing, and the full `/api/weekly-plans/*` endpoint set. Features section expanded, API overview reorganized by domain, and weekly planning workflow added.
-   - **Verification:** `README.md` lines 10–19 (features), lines 89–117 (API overview)
+## Quality snapshot
 
-## Feature Matrix
+- Domain tests: 62 passing
+- Mobile tests: 70 passing
+- Total: 132 passing
+- Root/shared typecheck: clean
+- Mobile typecheck: clean
+- Android release pipeline: configured with EAS
+- CI emphasis: domain and mobile checks are the required validation path
 
-| Feature / slice | Expected capability | Status | Evidence paths |
-|---|---|---|---|
-| V1.1 Shopping list | Generate combined shopping list from selected meals vs pantry/ad hoc on-hand inputs; dedupe shared ingredients; copy-friendly text; frontend selection/copy flow | **landed** | `src/modules/shopping-list/shopping-list.routes.js`, `src/modules/shopping-list/shopping-list.service.js`, `public/index.html`, `public/app.js`, `test/unit/shopping-list.service.test.js`, `test/integration/app.test.js` |
-| V1.2 Weekly planning | Active weekly plan with 7 slots, create/current/history/detail APIs, assign/clear/serve, frontend panel, plan-to-shopping-list flow | **landed** | `src/db/migrations/002_weekly_plans.sql`, `src/modules/weekly-plans/weekly-plans.routes.js`, `src/modules/weekly-plans/weekly-plans.service.js`, `src/modules/weekly-plans/weekly-plans.repo.js`, `public/app.js`, `public/index.html`, `test/integration/weekly-plans.test.js` |
-| V1.2 per-slot random filters | Slot-level random fill should respect favorites/full-match/recent-history filters | **landed** | `docs/v1.2-weekly-planning.md`, `src/modules/weekly-plans/weekly-plans.schemas.js`, `src/modules/weekly-plans/weekly-plans.service.js`, `public/app.js` |
-| V1.3 Plan reuse | Reuse archived plan into a new week, copy meals/notes, archive displaced active plan, frontend action from past plans | **landed** | `src/modules/weekly-plans/weekly-plans.routes.js`, `src/modules/weekly-plans/weekly-plans.service.js`, `src/modules/weekly-plans/weekly-plans.repo.js`, `public/app.js`, `test/integration/weekly-plans.test.js`, `test/unit/weekly-plans.service.test.js` |
-| V1.4 Weekly plan copy | Copy active weekly plan as plain text | **landed** | `public/app.js` (`formatWeeklyPlanText`, `copyWeeklyPlan`, render action), `test/integration/weekly-plans.test.js` (plan data shape coverage) |
-| V1.5 Weekly share pack | Copy plan + freshly generated shopping list in one combined clipboard action; update shopping-list panel state too | **landed** | `public/app.js` (`copyPlanAndShoppingList`, `generateShoppingListForCurrentPlan`, weekly plan footer rendering) |
-| V1.6 Weekly autofill | Backend batch autofill of empty slots with summary metadata; frontend button and status handling; preserve existing assignments/notes | **landed** | `src/modules/weekly-plans/weekly-plans.routes.js`, `src/modules/weekly-plans/weekly-plans.service.js`, `src/modules/weekly-plans/weekly-plans.schemas.js`, `public/app.js`, `test/integration/weekly-plans.test.js`, `test/unit/weekly-plans.service.test.js` |
-| V1.7 Tabbed layout | Three-tab structure (Plan/Shop/Meals) with mobile bottom-bar, cross-tab navigation, accessibility landmarks | **landed** | `public/index.html`, `public/app.js`, `public/styles.css` |
-| README / repo-level contract alignment | Top-level docs should reflect current scope and available APIs | **landed** | `README.md`, `src/modules/weekly-plans/*`, `public/app.js`, `test/integration/weekly-plans.test.js` |
+## Deferred and remaining work
 
-## ~~Scope Gaps to Fix Before Cleanup~~ — All Resolved
+### Deferred
 
-~~1. Wire per-slot random filters in the weekly-plan UI~~ — **FIXED in v1.7**
-~~2. Refresh Past plans after creating/replacing a weekly plan~~ — **FIXED in v1.7**
-~~3. Update `README.md`~~ — **FIXED 2026-04-07**
+- Firebase auth and Firestore sync (Phase 4)
+- cross-device backup / sync UX
 
-## Not Scope Gaps / Nice-to-Have Polish
+### Remaining Phase 5 / release work
 
-- Archived plan copy support exists in the UI even though `docs/v1.4-weekly-plan-copy.md` scoped copy primarily around the active plan. This is additive, not a scope problem.
-- The codebase has stronger test coverage for weekly planning than the docs strictly require (`test/integration/weekly-plans.test.js`, `test/unit/weekly-plans.*.test.js`).
-- `docs/architecture.md` is an initial proposal, not a strict feature checklist. The important current-scope slices are the v1.1-v1.6 docs, which are mostly implemented.
+- stable tester cycle through Play
+- closed-testing rollout and release QA follow-through
+- decision on any post-Phase-5 cookbook export enhancements
+- decision on whether broader historical migration tooling is still worth building
 
-## Validation Run
+## Historical import support
 
-- Inspected repo docs and implementation under `README.md`, `docs/`, `src/`, and `public/`
-- Ran test suite: `npm test` → **42 tests passed**
+If you already have a cookbook JSON export from a legacy web-app checkout, the mobile app still imports it.
+
+That historical path does not cover:
+
+- pantry state
+- weekly plans
+- meal history
+- archived meals unless they were made active before export
+
+See `docs/web-to-mobile-cutover.md` for the exact historical transition steps.
+
+## Web offboarding status
+
+Completed:
+
+- removed the legacy runtime, browser UI, Docker assets, and web-only tests
+- simplified scripts and CI around the mobile-only workspace
+- preserved cutover/offboarding docs only as historical reference
+- kept cookbook JSON import compatibility for historical exports
+
+## Active docs
+
+Use these first:
+
+- `README.md`
+- `docs/current-plan.md`
+- `docs/DEMO.md`
+- `docs/migration-plan.md`
+- `docs/phase5-plan.md`
+- `docs/google-play-closed-testing-plan.md`
+
+## Historical docs
+
+These docs remain available as reference only:
+
+- `docs/web-offboarding-plan.md`
+- `docs/web-to-mobile-cutover.md`
+
+## Historical reference policy
+
+Web-era design and implementation docs removed during offboarding should be retrieved from git history if needed. The remaining docs in `docs/` describe either the current mobile-only repo state or a clearly labeled historical transition path.

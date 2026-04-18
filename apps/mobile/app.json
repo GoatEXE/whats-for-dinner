@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "What's for Dinner?",
+    "slug": "whats-for-dinner",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "whats-for-dinner",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "icon": "./assets/icon.png",
+    "primaryColor": "#F97316",
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-document-picker",
+      [
+        "expo-share-intent",
+        {
+          "disableIOS": true,
+          "androidIntentFilters": [
+            "text/*"
+          ]
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#F97316",
+          "imageWidth": 200
+        }
+      ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.sunchipstudio.whatsfordinner",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.sunchipstudio.whatsfordinner",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F97316"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.svg",
+      "name": "What's for Dinner?",
+      "shortName": "Dinner",
+      "themeColor": "#F97316",
+      "backgroundColor": "#FFFFFF"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e0742a4d-31cf-45b4-9896-cc94d7463412"
+      }
+    },
+    "owner": "goat.exe"
+  }
+}
