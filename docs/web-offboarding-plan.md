@@ -11,7 +11,8 @@ Do not execute final removal until the mobile app has completed at least one sta
 ## Execution status
 
 - Started on 2026-04-18.
-- Current execution slice: Phase 1 and Phase 2 work, specifically the migration path, README cleanup, current-status refresh, and mobile-first script/CI defaults.
+- Phase 1 (migration/offboarding path): ✅ complete.
+- Phase 2 (documentation cleanup): ✅ complete.
 - Final runtime/code removal is still intentionally deferred until Play testing is stable.
 
 ## Current Repo State
@@ -21,11 +22,11 @@ The legacy web app is still represented in these areas:
 - Runtime and API: `src/`
 - Browser UI: `public/`
 - Container deployment: `Dockerfile`, `docker-compose.yml`
-- Root scripts: `package.json` still starts the Express server
+- Root scripts: mobile-first by default, with explicit `legacy:web:*` commands retained during transition
 - Web/backend tests: `test/`, `e2e/`
-- Active docs still reference the web app, web architecture, and web-era milestones
+- Remaining web references in docs are now limited to transition/reference material
 
-The mobile app already covers the primary product direction, but legacy-user offboarding still needs a documented migration path.
+The mobile app already covers the primary product direction, and the repo now has a documented migration path plus a cleaned-up active docs set.
 
 ## Phase 0, Cutover Decision
 
@@ -58,27 +59,18 @@ The mobile app already covers the primary product direction, but legacy-user off
 
 ## Phase 2, Documentation Cleanup
 
-### Tasks
+**Status:** ✅ complete
 
-- Rewrite `README.md` so the mobile app is the primary entry point
-- Remove or rewrite web-first guidance in active docs
-- Review and retire or archive these likely web-era docs:
-  - `docs/architecture.md`
-  - `docs/current-plan.md`
-  - `docs/cleanup-backlog.md`
-  - `docs/v1.1-shopping-list.md`
-  - `docs/v1.2-weekly-planning.md`
-  - `docs/v1.3-plan-reuse.md`
-  - `docs/v1.4-weekly-plan-copy.md`
-  - `docs/v1.5-weekly-share-pack.md`
-  - `docs/v1.6-weekly-autofill.md`
-  - `docs/v1.7-tabbed-layout.md`
-  - `docs/v1.8-ui-test-harness.md`
-- Update any remaining migration docs so they describe the mobile-first repo state
+### Completed work
 
-### Recommendation
+- Rewrote/updated active docs so the mobile app is the primary entry point
+- Removed obsolete web-era docs that were only useful during the Express/web implementation phase
+- Updated remaining migration/offboarding docs so they describe the mobile-first repo state
+- Kept only the explicit transition references that still matter (`docs/web-to-mobile-cutover.md`, `docs/google-play-closed-testing-plan.md`, deferred mobile planning docs)
 
-Remove old docs from the active set unless there is a concrete operational reason to keep them. Git history is usually enough.
+### Result
+
+Old web-era docs are no longer part of the active docs set. Git history is the fallback reference when historical implementation detail is needed.
 
 ## Phase 3, Legacy Runtime Removal
 

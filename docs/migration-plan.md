@@ -1,5 +1,7 @@
 # React Native / Expo Migration Plan
 
+> Status update (2026-04-18): Phases 1-3 are complete and the mobile app is now the primary supported product. The legacy web app remains only as a frozen migration bridge pending final runtime removal. Keep this document as the migration record plus roadmap for deferred follow-up work.
+
 ## Executive summary
 
 Build the mobile app **next to** the current web app, not by mutating the current Express app into a mobile backend. The safest path is:
@@ -41,7 +43,7 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Manual sync status UI and error recovery
   - **Status:** Not started. Deferred per user decision to focus on presentability and local-first functionality.
 
-- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🟡 Partial (URL import, cookbook export, and share-intent routing shipped; migration cutover pending)
+- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🟡 Partial (mobile import/export work shipped; legacy cutover and final web retirement still pending)
   - ✅ Domain-layer recipe extractor (schema.org JSON-LD parser)
   - ✅ Mobile URL import screen with fetch + review/edit workflow
   - ✅ Source metadata storage (`source_url`, `source_host`)
@@ -53,7 +55,7 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - ✅ Shopping list polish: interactive checkboxes for `Need to buy` and names-only clipboard copy
   - ✅ Local on-device recipe parser (current no-cloud implementation)
   - 🔲 Migration runbook for legacy data
-  - 🔲 Web app retirement
+  - 🟡 Legacy web offboarding in progress: cutover guide and docs cleanup complete; final runtime/code removal still pending
   - **Limitation:** URL import, cookbook export, and share-intent work on native mobile only; browser preview blocked by CORS/native APIs. Share-intent requires custom dev build (not Expo Go).
 
 **Planned follow-up work (post-Phase 5):**
@@ -63,7 +65,7 @@ Build the mobile app **next to** the current web app, not by mutating the curren
 
 ## Executive summary (continued)
 
-Build the mobile app **next to** the current web app, not by mutating the current Express app into a mobile backend. The safest path is:
+The migration was executed by building the mobile app **next to** the legacy web app, not by mutating the Express app into a mobile backend. That approach preserved a working reference implementation during parity work and let the mobile app become the primary supported runtime before final retirement of the old stack.
 
 - keep the current app as the behavior oracle until parity is proven;
 - move the core business rules into shared pure TypeScript domain code;
@@ -93,8 +95,9 @@ That gives you offline reliability, preserves the current relational logic, and 
    - Rebuild those as pure TS modules that can run on-device.
 
 3. **Keep the current app until parity and migration are proven.**
-   - Do not retire the web app early.
-   - Treat it as a working reference implementation and migration bridge.
+   - This guidance was followed during the migration.
+   - The web app served as the behavior oracle and migration bridge.
+   - The mobile app is now primary; keep the web app only as a temporary bridge until final removal.
 
 4. **Use serverless only where it adds value.**
    - Auth, Firestore sync, and recipe-page parsing fit Firebase well.
@@ -134,8 +137,8 @@ packages/
 functions/                  # (Phase 4 deferred; not yet created)
   src/
     # Future: migration helpers or cloud-only features if needed
-src/                        # current Express app remains intact during migration
-public/                     # current web UI remains intact during migration
+src/                        # legacy web runtime (frozen; pending removal)
+public/                     # legacy web UI (frozen; pending removal)
 docs/
   migration-plan.md
 ```
@@ -434,7 +437,7 @@ Complete local parity for the planning workflow before introducing sync complexi
 ### Exit criteria
 
 - The mobile app reaches full functional parity with the current app while offline/local-only.
-- At this point the old app can remain as fallback, but the mobile feature surface is complete.
+- This milestone is complete. The old app remained as fallback during cutover work, but the mobile feature surface is now the supported runtime.
 
 ---
 
@@ -477,7 +480,7 @@ Add cloud identity and sync **after** local behavior is stable.
 
 ### Goal
 
-Finish the mobile-native import experience and create a safe cutover path away from the web app.
+Finish the remaining cutover work around the already-shipped mobile-native import experience and create a safe final path away from the web app.
 
 ### Build
 
@@ -495,7 +498,7 @@ Finish the mobile-native import experience and create a safe cutover path away f
 
 - Phase 1 app shell
 - Phase 2 meal import/save
-- Phase 4 Firebase/Functions environment
+- No Firebase dependency for the current local parser/share flow; any future cloud helpers remain optional
 
 ### Validate independently
 

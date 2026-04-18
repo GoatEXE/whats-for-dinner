@@ -40,7 +40,7 @@ The mobile app is now the main supported experience and includes:
 
 Offboarding has started, but final removal has not.
 
-Completed in the first execution slice:
+Completed so far:
 
 - mobile-first README rewrite
 - documented web-to-mobile cutover path for current users
@@ -48,6 +48,7 @@ Completed in the first execution slice:
 - root scripts switched to mobile-first defaults, with explicit `legacy:web:*` commands kept for fallback use
 - CI shifted to mobile-required checks while retaining legacy web transition coverage
 - legacy web app explicitly marked as fallback-only
+- Phase 2 docs cleanup completed, with obsolete web-era planning docs removed from `docs/`
 
 Not started intentionally:
 
@@ -80,7 +81,7 @@ See `docs/web-to-mobile-cutover.md` for the exact migration steps.
 
 1. Finish the first Play testing cycle, then expand into closed testing
 2. Validate the mobile install/update path with testers
-3. Continue docs cleanup so active docs stop presenting the Express app as the default path
+3. Prepare the final legacy runtime/code removal slice now that docs cleanup is complete
 4. After a stable tester cycle, remove legacy runtime code, legacy tests, and legacy deployment assets
 
 ## Active docs
@@ -88,6 +89,7 @@ See `docs/web-to-mobile-cutover.md` for the exact migration steps.
 Use these first:
 
 - `README.md`
+- `docs/current-scope-audit.md`
 - `docs/DEMO.md`
 - `docs/migration-plan.md`
 - `docs/web-offboarding-plan.md`
@@ -96,16 +98,4 @@ Use these first:
 
 ## Historical docs
 
-These older docs are still in the repo for reference, but they are not the current source of truth for the supported runtime direction:
-
-- `docs/architecture.md`
-- `docs/cleanup-backlog.md`
-- `docs/v1.1-shopping-list.md`
-- `docs/v1.2-weekly-planning.md`
-- `docs/v1.3-plan-reuse.md`
-- `docs/v1.4-weekly-plan-copy.md`
-- `docs/v1.5-weekly-share-pack.md`
-- `docs/v1.6-weekly-autofill.md`
-- `docs/v1.7-tabbed-layout.md`
-- `docs/v1.8-ui-test-harness.md`
-- `docs/plans/plan-recipe-import-export.md`
+Web-era design and implementation docs were removed during Phase 2 docs cleanup. If you need those old planning artifacts, use git history rather than treating them as active project guidance.
