@@ -29,6 +29,17 @@ cd apps/mobile
 npx expo start --go --tunnel --clear
 ```
 
+### Quick preview: browser
+
+If you only need a fast UI preview from the repo:
+
+```bash
+npm install
+npm run mobile:web
+```
+
+Use this for quick walkthroughs, screenshots, and layout checks. It is not the primary demo path, and browser preview uses an in-memory database.
+
 ### Custom dev build only
 
 Use an Android custom dev build only when you specifically need to demo or verify share-intent behavior.
@@ -134,10 +145,9 @@ This demo shows the current local-first mobile product. Not yet implemented:
 - Production-verified Android share-intent rollout for the public tester path
 - Full legacy-data migration beyond meal-library export / import
 
-The legacy web app remains only as a temporary migration bridge and rollback reference.
 
 ## Known limitations
 
-- URL import and cookbook sharing are native-mobile features; they are not the primary browser demo path
+- URL import and cookbook sharing are native-mobile features; browser preview is best treated as a quick UI preview
 - Android share-intent still requires a custom dev build rather than Expo Go
 - iOS has not yet had the same level of testing as Android

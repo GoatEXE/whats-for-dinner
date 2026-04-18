@@ -1,10 +1,10 @@
 # Web to Mobile Cutover Guide
 
+> Historical reference only: the legacy web app has been removed from the current repo. Keep this guide only for understanding the old cookbook export/import path.
+
 ## Purpose
 
-This is the currently supported migration path for moving from the legacy web app into the mobile app while web offboarding is in progress.
-
-The mobile app is now the primary supported runtime. The legacy web app remains available temporarily as a fallback and migration bridge until the final cutover is complete.
+This document records the migration path that moved cookbook data from the legacy web app into the mobile app during cutover.
 
 ## What migrates today
 
@@ -36,20 +36,9 @@ Important note about archived meals:
 
 ## Step 1: export from the legacy web app
 
-If you still need to run the legacy web app locally:
+The current repo no longer contains the legacy web app. If you still need a historical export, use the last web-supported tag/commit from git history and perform the export from that checkout.
 
-```bash
-npm install
-npm run legacy:web:start
-```
-
-Then open:
-
-```text
-http://localhost:3000
-```
-
-From the web UI:
+From the historical web UI:
 
 1. Open the **Meals** tab
 2. Click **Export**
@@ -82,7 +71,7 @@ Expected behavior:
 
 ## Step 3: verify the imported library
 
-After import, spot-check a few meals and compare against the web app.
+After import, spot-check a few meals against the historical export file.
 
 Recommended verification:
 
@@ -100,13 +89,9 @@ Once the mobile import looks correct:
 - rebuild pantry state manually in mobile
 - rebuild current/next weekly plans manually in mobile
 
-## Support status during offboarding
+## Historical support status
 
-Current support policy:
-
-- mobile app is the primary supported runtime
-- legacy web app is frozen and exists only as a temporary bridge
-- final runtime removal is intentionally deferred until Play testing is stable
+This cutover path is retained only as historical reference. The current repo supports the mobile app only.
 
 ## Related docs
 

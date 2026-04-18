@@ -6,29 +6,34 @@ Retire the legacy Node/Express + vanilla web app cleanly and leave the repo as a
 
 ## Recommendation
 
-Do not execute final removal until the mobile app has completed at least one stable Google Play testing cycle. The web app can stay as a fallback/reference until tester installs and core flows are validated.
+Historical note: this plan is now complete. The repo has been cut over to the mobile-only Expo workspace, and the legacy web runtime has been removed.
 
 ## Execution status
 
 - Started on 2026-04-18.
-- Phase 1 (migration/offboarding path): ✅ complete.
+- Phase 0 (cutover decision): ✅ complete.
+- Phase 1 (user migration and offboarding): ✅ complete.
 - Phase 2 (documentation cleanup): ✅ complete.
-- Final runtime/code removal is still intentionally deferred until Play testing is stable.
+- Phase 3 (legacy runtime removal): ✅ complete.
+- Phase 4 (test and CI cleanup): ✅ complete.
+- Phase 5 (final cutover): ✅ complete.
 
 ## Current Repo State
 
-The legacy web app is still represented in these areas:
+The repo is now mobile-only:
 
-- Runtime and API: `src/`
-- Browser UI: `public/`
-- Container deployment: `Dockerfile`, `docker-compose.yml`
-- Root scripts: mobile-first by default, with explicit `legacy:web:*` commands retained during transition
-- Web/backend tests: `test/`, `e2e/`
-- Remaining web references in docs are now limited to transition/reference material
-
-The mobile app already covers the primary product direction, and the repo now has a documented migration path plus a cleaned-up active docs set.
+- Active runtime: `apps/mobile/`
+- Shared packages: `packages/domain/`, `packages/contracts/`
+- Removed legacy runtime/API: `src/`
+- Removed browser UI: `public/`
+- Removed deployment assets: `Dockerfile`, `docker-compose.yml`
+- Removed web/backend tests: `test/`, `e2e/`
+- Root scripts now point to the mobile app with no legacy web script aliases
+- Remaining web references in docs are explicitly historical only
 
 ## Phase 0, Cutover Decision
+
+**Status:** ✅ complete
 
 ### Goals
 
@@ -43,6 +48,8 @@ The mobile app already covers the primary product direction, and the repo now ha
 - Whether old docs are deleted outright or moved to an archive folder
 
 ## Phase 1, User Migration and Offboarding
+
+**Status:** ✅ complete
 
 ### Tasks
 
@@ -74,6 +81,8 @@ Old web-era docs are no longer part of the active docs set. Git history is the f
 
 ## Phase 3, Legacy Runtime Removal
 
+**Status:** ✅ complete
+
 ### Tasks
 
 - Remove legacy runtime and UI code:
@@ -92,6 +101,8 @@ Old web-era docs are no longer part of the active docs set. Git history is the f
 
 ## Phase 4, Test and CI Cleanup
 
+**Status:** ✅ complete
+
 ### Tasks
 
 - Remove legacy backend and browser-E2E coverage that only validates the retired app:
@@ -109,6 +120,8 @@ Old web-era docs are no longer part of the active docs set. Git history is the f
 - Optional Android release/export smoke build
 
 ## Phase 5, Final Cutover
+
+**Status:** ✅ complete
 
 ### Tasks
 
@@ -131,6 +144,8 @@ Old web-era docs are no longer part of the active docs set. Git history is the f
 - **Tester disruption**: removing the web app before mobile distribution is stable increases support burden
 
 ## Exit Criteria
+
+All exit criteria are met:
 
 - No active doc tells users to run the Express app
 - No CI job depends on `src/`, `public/`, Docker, or Playwright web flows

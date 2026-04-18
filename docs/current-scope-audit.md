@@ -6,7 +6,7 @@ Last updated: 2026-04-18
 
 - Primary runtime: Expo / React Native mobile app in `apps/mobile`
 - Distribution status: Android internal testing is active; closed testing is the next release milestone
-- Legacy web app: frozen migration bridge only, not an active product direction
+- Repo state: mobile-only workspace with shared packages in `packages/domain` and `packages/contracts`
 - Cloud/Firebase sync: deferred by current product decision
 
 ## Shipped mobile scope
@@ -39,12 +39,13 @@ The Expo web preview still exists as an engineering convenience, but it is not t
 
 ## Quality snapshot
 
-- Root tests: 121 passing
+- Domain tests: 62 passing
 - Mobile tests: 70 passing
-- Total: 191 passing
+- Total: 132 passing
+- Root/shared typecheck: clean
 - Mobile typecheck: clean
 - Android release pipeline: configured with EAS
-- CI emphasis: mobile tests and mobile typecheck are the required path during offboarding
+- CI emphasis: domain and mobile checks are the required validation path
 
 ## Deferred and remaining work
 
@@ -53,43 +54,34 @@ The Expo web preview still exists as an engineering convenience, but it is not t
 - Firebase auth and Firestore sync (Phase 4)
 - cross-device backup / sync UX
 
-### Remaining Phase 5 / cutover work
+### Remaining Phase 5 / release work
 
-- final legacy-data migration runbook
-- decision on whether pantry / history / weekly plans get a one-time migration path
 - stable tester cycle through Play
-- final legacy web runtime removal
+- closed-testing rollout and release QA follow-through
+- decision on any post-Phase-5 cookbook export enhancements
+- decision on whether broader historical migration tooling is still worth building
 
-## Migration support for legacy users
+## Historical import support
 
-Supported today:
+If you already have a cookbook JSON export from a legacy web-app checkout, the mobile app still imports it.
 
-- export active meals from the legacy web app
-- import that cookbook JSON into the mobile app
-
-Not migrated today:
+That historical path does not cover:
 
 - pantry state
 - weekly plans
 - meal history
-- archived meals unless they are made active before export
+- archived meals unless they were made active before export
 
-See `docs/web-to-mobile-cutover.md` for the exact transition steps.
+See `docs/web-to-mobile-cutover.md` for the exact historical transition steps.
 
 ## Web offboarding status
 
 Completed:
 
-- mobile-first README and root workflow updates
-- cutover guide for existing web users
-- mobile-focused current-status docs
-- docs cleanup pass removing obsolete web-era planning docs
-
-Still intentionally deferred:
-
-- removal of `src/`, `public/`, Docker assets, and legacy tests
-- final CI cleanup for retired web-only checks
-- last web-supported tag / final cutover commit
+- removed the legacy runtime, browser UI, Docker assets, and web-only tests
+- simplified scripts and CI around the mobile-only workspace
+- preserved cutover/offboarding docs only as historical reference
+- kept cookbook JSON import compatibility for historical exports
 
 ## Active docs
 
@@ -100,10 +92,15 @@ Use these first:
 - `docs/DEMO.md`
 - `docs/migration-plan.md`
 - `docs/phase5-plan.md`
+- `docs/google-play-closed-testing-plan.md`
+
+## Historical docs
+
+These docs remain available as reference only:
+
 - `docs/web-offboarding-plan.md`
 - `docs/web-to-mobile-cutover.md`
-- `docs/google-play-closed-testing-plan.md`
 
 ## Historical reference policy
 
-Web-era design and implementation docs removed during offboarding should be retrieved from git history if needed. The remaining docs in `docs/` should describe the mobile-first repo state or an explicit transition path.
+Web-era design and implementation docs removed during offboarding should be retrieved from git history if needed. The remaining docs in `docs/` describe either the current mobile-only repo state or a clearly labeled historical transition path.

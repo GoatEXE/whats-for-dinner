@@ -2,6 +2,8 @@
 
 > Produced 2026-04-12. Branch: `mobile-app`. No cloud dependencies.
 
+> Status update (2026-04-18): The shipped Phase 5 scope is complete for the current local-first mobile app. Current verification snapshot: 62 domain tests + 70 mobile tests = 132 passing.
+
 ## Problem Statement
 
 Adding meals manually (name, each ingredient, tags, notes) is the biggest friction point in the app. The #1 quality-of-life feature users would feel immediately is **pasting a recipe URL and having the app extract meal data automatically**. This eliminates the tedious per-field data entry that discourages building a real meal library.
@@ -185,19 +187,20 @@ All three were sequential. WP1 landed first, then WP2, then the WP3 polish/doc p
 - ✅ Meals header overflow menu: import, export, and reset actions moved to overflow menu (⋮) instead of inline icons.
 
 **Shipped (Phase 5d - partial):**
-- ✅ Android share-intent receiver: first slice wired via `expo-share-intent`, routes shared URLs to `url-import` screen, fallback warning for shared text without URL. **Requires custom dev build (not Expo Go).** Needs real device testing.
+- ✅ Android share-intent receiver: first slice wired via `expo-share-intent`, routes shared URLs to `url-import` screen, fallback warning for shared text without URL. **Requires custom dev build (not Expo Go).** Wider rollout validation is still deferred.
 
 **Shipped (Phase 5e - local polish):**
 - ✅ Weekly planning polish: this week / next week switching, repeat-window chips for random picks, week random-fill with graceful partial-fill messaging, and per-day dice actions.
 - ✅ Viewed-week shopping handoff: Generate Shopping List now follows the week selected on the Plan tab.
 - ✅ Shopping list polish: checkable `Need to buy` rows plus names-only clipboard copy for quicker real-world shopping use.
 
-**Deferred to Phase 5b+ (future work):**
+**Deferred follow-up work:**
 - Enhanced cookbook export: add filters (favorites-only, by tag), optionally include pantry state or archived meals
 - Microdata/RDFa fallback parsing (JSON-LD covers 90%+ of sites)
 - Image display for `imageUrl` field
 - Native branding assets (PNG icons)
 - Batch URL import
+- Wider release-path validation for Android share-intent beyond the custom dev build workflow
 
 ## Recommended First Commit
 

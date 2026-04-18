@@ -7,27 +7,28 @@ Distribute the mobile app through Google Play closed testing so testers install 
 Relevant facts from the repo today:
 
 - Mobile app config exists in `apps/mobile/app.json`
-- Android package is already set: `com.whatsfordinner.app`
+- Android package is already set: `com.sunchipstudio.whatsfordinner`
 - App name is already set: `What's for Dinner?`
+- Google Play internal testing is already active; closed testing is the next rollout step
 - The app is local-first/offline-only today, with no sign-in or cloud sync
-- There is currently no `eas.json`
+- `apps/mobile/eas.json` already exists with development, preview, and production Android build profiles
 - There are no committed Android release artifacts or keystores in the repo
-- Branding is incomplete:
-  - existing: `apps/mobile/assets/favicon.svg`, placeholder `apps/mobile/assets/splash-icon.png`
-  - missing: production app icon, adaptive icon foreground, store graphics, screenshots
-- CI does not currently build a Play-ready release artifact
+- Branding is still incomplete:
+  - existing: app icon/adaptive icon assets plus `apps/mobile/assets/favicon.svg` and `apps/mobile/assets/splash-icon.png`
+  - still needed for stronger store presentation: polished store graphics and screenshot set
+- CI does not currently build a Play-ready release artifact automatically
 
 ## Recommendation
 Use this rollout path:
 
-1. **Internal testing** for us first
-2. **Closed testing** for external testers second
+1. **Internal testing** is already active for our own validation
+2. **Closed testing** is the next step for external testers
 3. Delay any full public launch planning until at least one stable closed-testing cycle is complete
 
 ## Phase 0, Product and Release Decisions
 ### Decide and lock
 - Final Android app name
-- Final package identity, keeping `com.whatsfordinner.app` unless there is a strong reason to change it now
+- Confirm the existing package identity `com.sunchipstudio.whatsfordinner` remains locked for the Play rollout
 - Support email address
 - Privacy-policy hosting location
 - Versioning strategy for `version` and Android `versionCode`
@@ -39,7 +40,7 @@ Use this rollout path:
 ## Phase 1, Google Play Console Setup
 ### Tasks
 - Create or confirm Google Play Console access
-- Create the app entry in Play Console
+- Confirm the existing app entry in Play Console
 - Set organization/contact details
 - Decide the tester-management approach:
   - email allowlist
@@ -71,8 +72,8 @@ Do this early. Closed testing is technically possible without perfect polish, bu
 Produce a signed Android App Bundle (`.aab`) suitable for Play Console upload.
 
 ### Tasks
-- Add `eas.json` for repeatable Expo Application Services builds
-- Define at least:
+- Keep `apps/mobile/eas.json` as the repeatable Expo Application Services build config
+- Confirm it continues to define at least:
   - an internal/preview profile
   - a production/store profile
 - Configure Android signing strategy
@@ -122,8 +123,8 @@ Treat Android share-intent as optional for the first testing wave unless release
 
 ## Phase 6, Internal Testing Track
 ### Tasks
-- Upload the first build to Play internal testing
-- Install it ourselves from Play
+- Continue shipping builds through Play internal testing
+- Install them ourselves from Play
 - Verify install/update behavior and obvious device-specific issues
 - Fix any release-only bugs before inviting outside testers
 
@@ -156,13 +157,13 @@ Treat Android share-intent as optional for the first testing wave unless release
 ## Repo Changes Likely Needed
 - `apps/mobile/app.json` updates for final branding and versioning
 - `apps/mobile/assets/` additions for icon/adaptive icon/store-ready artwork
-- New `eas.json`
+- Ongoing `apps/mobile/eas.json` maintenance as release needs evolve
 - README/docs updates for tester install and release process
 - Possibly CI updates if you want automated release validation or EAS integration
 
 ## Risks
 - **Branding gap**: placeholder assets will make the test build look unfinished
-- **No release pipeline yet**: without EAS config, every build step is ad hoc
+- **Release pipeline still needs routine validation**: EAS config exists, but Play delivery and signing still need repeated end-to-end checks
 - **Policy blocking**: privacy policy and Play declarations can delay rollout even when the app itself works
 - **Release-only bugs**: Expo Go success does not guarantee release-build success
 - **Identity churn**: changing package/app identity late creates avoidable rework
@@ -175,8 +176,8 @@ Treat Android share-intent as optional for the first testing wave unless release
 - The release process is documented and repeatable
 
 ## Recommended Immediate Next Actions
-1. Lock app identity and tester-support email
+1. Lock any remaining release metadata, including tester-support email
 2. Create real icon/splash/store artwork
-3. Add `eas.json` and produce the first signed Android `.aab`
-4. Create the Play Console app entry and complete required listing/policy fields
-5. Run internal testing before inviting external testers
+3. Use the existing `apps/mobile/eas.json` flow to produce the next signed Android `.aab`
+4. Complete the remaining Play Console listing/policy fields for closed testing
+5. Move from internal testing into closed testing once the next release candidate is validated

@@ -6,7 +6,7 @@ Last updated: 2026-04-18
 
 - Primary runtime: Expo / React Native mobile app in `apps/mobile`
 - Distribution status: Android internal testing is active, closed testing is next
-- Legacy web app: frozen fallback only, offboarding is now in progress
+- Repo state: mobile-only workspace with shared packages in `packages/domain` and `packages/contracts`
 - Cloud/Firebase work: deferred per current project decision
 
 ## Mobile scope shipped
@@ -29,60 +29,45 @@ The mobile app is now the main supported experience and includes:
 
 ## Quality snapshot
 
-- Root tests: 121 passing
+- Domain tests: 62 passing
 - Mobile tests: 70 passing
-- Total: 191 passing
+- Total: 132 passing
+- Root/shared typecheck: clean
 - Mobile typecheck: clean
 - Android preview and production build pipeline: configured with EAS
-- CI now treats mobile tests and mobile typecheck as required while legacy web UI coverage remains during transition
+- CI emphasis: domain and mobile checks are the active validation path
 
 ## Web offboarding status
 
-Offboarding has started, but final removal has not.
+Web offboarding is complete.
 
-Completed so far:
+Completed work:
 
-- mobile-first README rewrite
-- documented web-to-mobile cutover path for current users
-- repo status doc refreshed around the mobile-first direction
-- root scripts switched to mobile-first defaults, with explicit `legacy:web:*` commands kept for fallback use
-- CI shifted to mobile-required checks while retaining legacy web transition coverage
-- legacy web app explicitly marked as fallback-only
-- Phase 2 docs cleanup completed, with obsolete web-era planning docs removed from `docs/`
+- removed the legacy runtime, browser UI, Docker assets, and web-only tests from the repo
+- simplified root scripts to mobile-first defaults with no legacy web commands
+- cleaned up active docs around the mobile-only workspace state
+- retained historical cutover/offboarding docs only as reference material
+- kept recipe import/export compatibility for historical cookbook JSON exports
 
-Not started intentionally:
+## Historical import compatibility
 
-- removal of `src/`, `public/`, Docker assets, or legacy tests
-- CI removal of backend/Playwright jobs
-- final web cutover tag
+If you already have a cookbook JSON export from a legacy web-app checkout, the mobile app still imports it.
 
-Why removal is still deferred:
-
-- the offboarding plan calls for at least one stable Play testing cycle first
-- the legacy web app is still useful as a migration bridge and rollback reference
-
-## Current migration support
-
-Supported today:
-
-- export active meals from the legacy web app
-- import that cookbook JSON into the mobile app
-
-Not migrated today:
+Not covered by that historical export path:
 
 - pantry state
 - weekly plans
 - meal history
-- archived meals unless they are made active before export
+- archived meals unless they were made active before export
 
-See `docs/web-to-mobile-cutover.md` for the exact migration steps.
+See `docs/web-to-mobile-cutover.md` for the historical cutover details.
 
 ## Immediate next steps
 
-1. Finish the first Play testing cycle, then expand into closed testing
-2. Validate the mobile install/update path with testers
-3. Prepare the final legacy runtime/code removal slice now that docs cleanup is complete
-4. After a stable tester cycle, remove legacy runtime code, legacy tests, and legacy deployment assets
+1. Finish the current Play internal-testing cycle and expand into closed testing
+2. Validate the install/update path with testers on real devices
+3. Decide which deferred Phase 5 follow-ups are worth shipping next
+4. Keep the mobile demo and release docs aligned with the shipped app surface
 
 ## Active docs
 
@@ -92,10 +77,12 @@ Use these first:
 - `docs/current-scope-audit.md`
 - `docs/DEMO.md`
 - `docs/migration-plan.md`
-- `docs/web-offboarding-plan.md`
-- `docs/web-to-mobile-cutover.md`
+- `docs/phase5-plan.md`
 - `docs/google-play-closed-testing-plan.md`
 
 ## Historical docs
 
-Web-era design and implementation docs were removed during Phase 2 docs cleanup. If you need those old planning artifacts, use git history rather than treating them as active project guidance.
+These docs still exist in `docs/`, but they are historical reference rather than current workflow guidance:
+
+- `docs/web-offboarding-plan.md`
+- `docs/web-to-mobile-cutover.md`

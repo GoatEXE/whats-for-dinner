@@ -37,7 +37,7 @@
       ]
     ],
     "ios": {
-      "bundleIdentifier": "com.whatsfordinner.app",
+      "bundleIdentifier": "com.sunchipstudio.whatsfordinner",
       "supportsTablet": true
     },
     "android": {

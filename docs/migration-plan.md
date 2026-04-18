@@ -1,6 +1,6 @@
 # React Native / Expo Migration Plan
 
-> Status update (2026-04-18): Phases 1-3 are complete and the mobile app is now the primary supported product. The legacy web app remains only as a frozen migration bridge pending final runtime removal. Keep this document as the migration record plus roadmap for deferred follow-up work.
+> Status update (2026-04-18): Phases 1-3 are complete, web offboarding is complete, and the repo is now mobile-only. Phase 4 remains deferred. Phase 5 shipped for the current local-first mobile scope, with only optional follow-up work left for later. Keep this document as the migration record plus roadmap for deferred follow-up work.
 
 ## Executive summary
 
@@ -34,7 +34,7 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Plan text copy/share
   - Shopping list from active plan
 
-**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI plus an appearance setting (System/Light/Dark) in Meals settings, this week / next week plan switching, repeat-window random planning controls, and all core workflows tested and working offline. Test coverage: 121 root tests + 70 mobile tests = 191 passing. See `docs/DEMO.md` for the full walkthrough.
+**Demo-ready milestone reached:** The mobile app includes polished sample data auto-seeding (12 realistic meals, pantry staples, pre-filled weekly plan, recent history), Expo web support for browser demos via sql.js in-memory database, Android Expo Go support after dependency/runtime/router fixes, reset demo data UI plus an appearance setting (System/Light/Dark) in Meals settings, this week / next week plan switching, repeat-window random planning controls, and all core workflows tested and working offline. Test coverage: 62 domain tests + 70 mobile tests = 132 passing. See `docs/DEMO.md` for the full walkthrough.
 
 - **Phase 4 — Firebase auth, Firestore sync, and production data safety** — ⏸️ **Deferred**
   - Google sign-in -> Firebase Auth
@@ -43,7 +43,7 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - Manual sync status UI and error recovery
   - **Status:** Not started. Deferred per user decision to focus on presentability and local-first functionality.
 
-- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — 🟡 Partial (mobile import/export work shipped; legacy cutover and final web retirement still pending)
+- **Phase 5 — Recipe URL import, Android share-intent, migration cutover** — ✅ Complete for the shipped scope
   - ✅ Domain-layer recipe extractor (schema.org JSON-LD parser)
   - ✅ Mobile URL import screen with fetch + review/edit workflow
   - ✅ Source metadata storage (`source_url`, `source_host`)
@@ -54,9 +54,9 @@ Build the mobile app **next to** the current web app, not by mutating the curren
   - ✅ Weekly planning polish: this week / next week switching, repeat-window random fill, per-day dice actions, and viewed-week shopping-list handoff
   - ✅ Shopping list polish: interactive checkboxes for `Need to buy` and names-only clipboard copy
   - ✅ Local on-device recipe parser (current no-cloud implementation)
-  - 🔲 Migration runbook for legacy data
-  - 🟡 Legacy web offboarding in progress: cutover guide and docs cleanup complete; final runtime/code removal still pending
-  - **Limitation:** URL import, cookbook export, and share-intent work on native mobile only; browser preview blocked by CORS/native APIs. Share-intent requires custom dev build (not Expo Go).
+  - ✅ Historical migration runbook for legacy cookbook data (`docs/web-to-mobile-cutover.md`)
+  - ✅ Web offboarding complete: legacy runtime/code removed from the repo; historical cutover docs retained only as reference
+  - **Limitation:** URL import, cookbook export, and share-intent work on native mobile only; browser preview is blocked by CORS/native APIs. Share-intent requires custom dev build (not Expo Go).
 
 **Planned follow-up work (post-Phase 5):**
 - Enhanced cookbook export: add filters (favorites-only, by tag), optionally include pantry state or archived meals
@@ -97,7 +97,7 @@ That gives you offline reliability, preserves the current relational logic, and 
 3. **Keep the current app until parity and migration are proven.**
    - This guidance was followed during the migration.
    - The web app served as the behavior oracle and migration bridge.
-   - The mobile app is now primary; keep the web app only as a temporary bridge until final removal.
+   - The repo is now mobile-only after parity, migration documentation, and runtime removal were completed.
 
 4. **Use serverless only where it adds value.**
    - Auth, Firestore sync, and recipe-page parsing fit Firebase well.
@@ -105,7 +105,7 @@ That gives you offline reliability, preserves the current relational logic, and 
 
 ### 1.2 Recommended target structure
 
-Add the mobile app into the existing repo without disrupting the current codebase.
+During migration, the mobile app was added into the existing repo without disrupting the current codebase.
 
 ```text
 apps/
@@ -137,8 +137,8 @@ packages/
 functions/                  # (Phase 4 deferred; not yet created)
   src/
     # Future: migration helpers or cloud-only features if needed
-src/                        # legacy web runtime (frozen; pending removal)
-public/                     # legacy web UI (frozen; pending removal)
+src/                        # historical legacy web runtime during migration; now removed
+public/                     # historical legacy web UI during migration; now removed
 docs/
   migration-plan.md
 ```
