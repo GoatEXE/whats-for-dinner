@@ -207,7 +207,7 @@ export default function UrlImportScreen() {
 
           <MealFormFields
             formHook={formHook}
-            notesLabel="Notes / Instructions"
+            notesLabel="Instructions"
             errors={formErrors}
             headerContent={sourceBadge}
           />

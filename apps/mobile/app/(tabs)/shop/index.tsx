@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { normalizeName } from '@whats-for-dinner/domain';
 import {
   View,
   Text,
@@ -40,17 +41,6 @@ export default function ShopScreen() {
   const [newIngredient, setNewIngredient] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Local checkbox state for "Need to buy" items
-  const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
-  const toggleChecked = useCallback((id: number) => {
-    setCheckedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
   // Get planned meals for shopping list
   const plannedMealIds = getPlannedMealIds();
   const plannedMeals = useMemo(
@@ -58,6 +48,27 @@ export default function ShopScreen() {
     [meals, plannedMealIds],
   );
   const { result: shoppingList } = useShoppingList(plannedMeals, pantryItems);
+  const pantryNames = useMemo(
+    () => new Set(pantryItems.map((item) => normalizeName(item.name))),
+    [pantryItems],
+  );
+
+  const isInPantry = useCallback(
+    (ingredientName: string) => pantryNames.has(normalizeName(ingredientName)),
+    [pantryNames],
+  );
+
+  const toggleShoppingItem = useCallback(
+    (ingredientName: string) => {
+      if (isInPantry(ingredientName)) {
+        removeItem(ingredientName);
+        return;
+      }
+
+      addItem(ingredientName);
+    },
+    [addItem, isInPantry, removeItem],
+  );
 
   const handleAddPantryItem = useCallback(() => {
     const name = newIngredient.trim();
@@ -71,9 +82,10 @@ export default function ShopScreen() {
     if (!shoppingList) return '';
 
     return [...shoppingList.requiredToBuy, ...shoppingList.optionalToBuy]
+      .filter((item) => !isInPantry(item.name))
       .map((item) => item.name)
       .join('\n');
-  }, [shoppingList]);
+  }, [isInPantry, shoppingList]);
 
   const handleCopy = useCallback(async () => {
     if (!copyText) return;
@@ -134,7 +146,7 @@ export default function ShopScreen() {
           </View>
         ) : (
           pantryItems.map((item) => (
-            <View key={item.ingredientId} style={[styles.pantryItem, { borderBottomColor: c.surfaceBorder }]}>
+            <View key={item.ingredientId} style={[styles.pantryItem, { borderBottomColor: c.surfaceBorder }]}> 
               <View style={styles.pantryItemContent}>
                 <Text style={[styles.pantryItemName, { color: c.text }]}>{item.name}</Text>
               </View>
@@ -175,7 +187,7 @@ export default function ShopScreen() {
         ) : (
           <View>
             {/* Summary */}
-            <View style={[styles.summaryRow, { borderBottomColor: c.surfaceBorder }]}>
+            <View style={[styles.summaryRow, { borderBottomColor: c.surfaceBorder }]}> 
               <Text style={[styles.summaryText, { color: c.textSecondary }]}>
                 {shoppingList.summary.selectedMealCount} meal
                 {shoppingList.summary.selectedMealCount !== 1 ? 's' : ''} ·{' '}
@@ -201,12 +213,12 @@ export default function ShopScreen() {
               <View style={styles.listGroup}>
                 <Text style={[styles.listGroupTitle, { color: c.textSecondary }]}>Need to buy</Text>
                 {shoppingList.requiredToBuy.map((item) => {
-                  const checked = checkedIds.has(item.ingredientId);
+                  const checked = isInPantry(item.name);
                   return (
                     <Pressable
                       key={item.ingredientId}
                       style={styles.shoppingItem}
-                      onPress={() => toggleChecked(item.ingredientId)}
+                      onPress={() => toggleShoppingItem(item.name)}
                       accessibilityRole="checkbox"
                       accessibilityState={{ checked }}
                       accessibilityLabel={`${checked ? 'Uncheck' : 'Check'} ${item.name}`}
@@ -240,16 +252,39 @@ export default function ShopScreen() {
             {shoppingList.requiredOnHand.length > 0 && (
               <View style={styles.listGroup}>
                 <Text style={[styles.listGroupTitle, { color: c.textSecondary }]}>Already on hand</Text>
-                {shoppingList.requiredOnHand.map((item) => (
-                  <View key={item.ingredientId} style={styles.shoppingItem}>
-                    <Ionicons name="checkmark-circle" size={18} color={c.success} />
-                    <View style={styles.shoppingItemContent}>
-                      <Text style={[styles.shoppingItemName, styles.onHandName, { color: c.textSecondary }]}>
-                        {item.name}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
+                {shoppingList.requiredOnHand.map((item) => {
+                  const checked = isInPantry(item.name);
+                  return (
+                    <Pressable
+                      key={item.ingredientId}
+                      style={styles.shoppingItem}
+                      onPress={() => toggleShoppingItem(item.name)}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked }}
+                      accessibilityLabel={`Uncheck ${item.name}`}
+                    >
+                      <Ionicons
+                        name={checked ? 'checkbox' : 'square-outline'}
+                        size={18}
+                        color={c.success}
+                      />
+                      <View style={styles.shoppingItemContent}>
+                        <Text
+                          style={[
+                            styles.shoppingItemName,
+                            checked && styles.onHandName,
+                            { color: checked ? c.textSecondary : c.text },
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text style={[styles.shoppingItemHint, { color: c.textSecondary }]}>
+                          {item.quantityHints.join('; ')}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
 
@@ -258,12 +293,12 @@ export default function ShopScreen() {
               <View style={styles.listGroup}>
                 <Text style={[styles.listGroupTitle, { color: c.textSecondary }]}>Optional</Text>
                 {shoppingList.optionalToBuy.map((item) => {
-                  const checked = checkedIds.has(item.ingredientId);
+                  const checked = isInPantry(item.name);
                   return (
                     <Pressable
                       key={item.ingredientId}
                       style={styles.shoppingItem}
-                      onPress={() => toggleChecked(item.ingredientId)}
+                      onPress={() => toggleShoppingItem(item.name)}
                       accessibilityRole="checkbox"
                       accessibilityState={{ checked }}
                       accessibilityLabel={`${checked ? 'Uncheck' : 'Check'} ${item.name}, optional`}
@@ -274,12 +309,14 @@ export default function ShopScreen() {
                         color={checked ? c.success : c.textMuted}
                       />
                       <View style={styles.shoppingItemContent}>
-                        <Text style={[
-                          styles.shoppingItemName,
-                          styles.optionalName,
-                          { color: c.textMuted },
-                          checked && styles.checkedName,
-                        ]}>
+                        <Text
+                          style={[
+                            styles.shoppingItemName,
+                            styles.optionalName,
+                            { color: checked ? c.textSecondary : c.textMuted },
+                            checked && styles.checkedName,
+                          ]}
+                        >
                           {item.name}
                         </Text>
                         {!checked && (

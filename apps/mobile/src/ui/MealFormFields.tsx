@@ -27,7 +27,7 @@ export interface MealFormFieldsProps {
 export function MealFormFields({
   formHook,
   autoFocusName = false,
-  notesLabel = 'Notes',
+  notesLabel = 'Instructions',
   errors,
   headerContent,
 }: MealFormFieldsProps) {
@@ -81,11 +81,11 @@ export function MealFormFields({
         style={[styles.input, styles.multiline, { borderColor: c.surfaceBorder, color: c.text, backgroundColor: c.surface }]}
         value={form.notes}
         onChangeText={(text) => setField('notes', text)}
-        placeholder="Optional notes"
+        placeholder="Add instructions"
         placeholderTextColor={c.textMuted}
         multiline
         numberOfLines={3}
-        accessibilityLabel="Notes"
+        accessibilityLabel="Instructions"
       />
 
       <Text style={[styles.label, { color: c.text }]}>Prep time (minutes)</Text>

@@ -1,3 +1,4 @@
+import { normalizeName } from '@whats-for-dinner/domain';
 import { useCallback, useEffect, useState } from 'react';
 
 import * as pantryRepo from '../db/repos/pantry-repo';
@@ -15,6 +16,16 @@ function toUiPantryEntry(item: { ingredientId: string; name: string }) {
     name: item.name,
     quantityText: null,
   } satisfies PantryEntry;
+}
+
+function resolveIngredientIdForRemoval(items: PantryEntry[], input: string) {
+  const normalizedInput = normalizeName(input);
+
+  return (
+    items.find((item) => item.ingredientId === input)?.ingredientId ??
+    items.find((item) => normalizeName(item.name) === normalizedInput)?.ingredientId ??
+    input
+  );
 }
 
 export function usePantry() {
@@ -80,12 +91,13 @@ export function usePantry() {
   );
 
   const removeItem = useCallback(
-    (ingredientId: string) => {
+    (input: string) => {
       if (!db) {
         throw new Error('Database is not ready');
       }
 
       try {
+        const ingredientId = resolveIngredientIdForRemoval(items, input);
         const nextItems = pantryRepo.removeItem(db, ingredientId).map(toUiPantryEntry);
         setItems(nextItems);
         setError(null);
@@ -96,7 +108,7 @@ export function usePantry() {
         throw nextError;
       }
     },
-    [db],
+    [db, items],
   );
 
   const bulkSet = useCallback(

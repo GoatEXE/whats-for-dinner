@@ -2,8 +2,6 @@ import type { PropsWithChildren } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 import { initializeDatabase } from "../db/database";
-import { isDatabaseEmpty } from "../db/is-empty";
-import { seedSampleData } from "../db/seed";
 import type { DatabaseHandle } from "../db/types";
 
 interface DatabaseContextValue {
@@ -26,17 +24,6 @@ export function DatabaseProvider({ children }: PropsWithChildren) {
       try {
         const database = await initializeDatabase();
         if (cancelled) return;
-
-        // Auto-seed sample data on first launch so the app is demo-ready.
-        if (isDatabaseEmpty(database)) {
-          try {
-            seedSampleData(database);
-          } catch (seedError) {
-            // Seeding is best-effort. Log but do not block app startup.
-            // eslint-disable-next-line no-console
-            console.warn("Sample data seed failed:", seedError);
-          }
-        }
 
         setDb(database);
         setIsReady(true);

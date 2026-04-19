@@ -15,7 +15,7 @@ export default function ShopLayout() {
       <Stack.Screen name="index" options={{ title: 'Shop' }} />
       <Stack.Screen
         name="suggestions"
-        options={{ title: 'Suggestions' }}
+        options={{ title: 'What Can I Make?' }}
       />
     </Stack>
   );

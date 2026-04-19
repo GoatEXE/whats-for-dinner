@@ -9,9 +9,8 @@
  * browser.
  *
  * Trade-offs:
- * - Data is kept in memory and lost on page refresh. That is acceptable for
- *   the demo flow because `seedSampleData` auto-runs on empty, so every
- *   reload gives a freshly seeded dataset.
+ * - Data is kept in memory and lost on page refresh, so web sessions start
+ *   empty after each reload.
  * - First page load waits for the sql.js WASM module to download (~1 MB).
  *   A loading spinner ("Loading your kitchen…") is already rendered by
  *   DatabaseGate while this happens.
